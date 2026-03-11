@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Pockets from './pages/Pockets';
 import Categories from './pages/Categories';
+import Admin from './pages/Admin';
 
 const basename = import.meta.env.BASE_URL || '/';
 
@@ -32,6 +33,16 @@ function App() {
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/pockets" element={<Pockets />} />
             <Route path="/categories" element={<Categories />} />
+            
+            {/* ─── Admin Only ─── */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Admin />
+                </ProtectedRoute>
+              } 
+            />
           </Route>
 
           {/* ─── Fallback ─── */}

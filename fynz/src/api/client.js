@@ -105,4 +105,15 @@ export const transactions = {
     summary: () => request('/transactions/summary'),
 };
 
+// ─── Admin ────────────────────────────────────────────────────
+export const admin = {
+    users: {
+        list: () => request('/admin/users'),
+        updateRole: (id, role) =>
+            request(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+        remove: (id) =>
+            request(`/admin/users/${id}`, { method: 'DELETE' }),
+    },
+};
+
 export { ApiError };

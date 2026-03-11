@@ -2,17 +2,18 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 
-const navItems = [
-    { to: '/', icon: '📊', label: 'Dashboard' },
-    { to: '/transactions', icon: '💸', label: 'Transacciones' },
-    { to: '/pockets', icon: '🏦', label: 'Bolsillos' },
-    { to: '/categories', icon: '🏷️', label: 'Categorías' },
-];
-
 export default function Layout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const navItems = [
+        { to: '/', icon: '📊', label: 'Dashboard' },
+        { to: '/transactions', icon: '💸', label: 'Transacciones' },
+        { to: '/pockets', icon: '🏦', label: 'Bolsillos' },
+        { to: '/categories', icon: '🏷️', label: 'Categorías' },
+        ...(user?.role === 'admin' ? [{ to: '/admin', icon: '🛡️', label: 'Administración' }] : []),
+    ];
 
     const handleLogout = () => {
         logout();
