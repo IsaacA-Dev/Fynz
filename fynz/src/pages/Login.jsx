@@ -1,13 +1,23 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (location.state?.registered) {
+            setSuccess('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
+            // Limpiar el estado para que no aparezca el mensaje si refresca
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,6 +45,12 @@ export default function Login() {
                 {/* Card */}
                 <div className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">Iniciar Sesión</h2>
+
+                    {success && (
+                        <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-600 text-sm animate-slide-up">
+                            {success}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm animate-slide-up">

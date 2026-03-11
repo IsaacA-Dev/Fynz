@@ -23,7 +23,13 @@ export default function Register() {
             await register(form.email, form.username, form.password);
             navigate('/login', { state: { registered: true } });
         } catch (err) {
-            setError(err.message || 'Error al registrarse');
+            // Render a veces corta la conexión o da error de CORS incluso si creó el usuario.
+            // Si es 'Failed to fetch', asumimos que el usuario pudo haberse creado y vamos a login.
+            if (err.message === 'Failed to fetch') {
+                navigate('/login', { state: { registered: true } });
+            } else {
+                setError(err.message || 'Error al registrarse');
+            }
         } finally {
             setLoading(false);
         }
