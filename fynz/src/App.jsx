@@ -9,9 +9,6 @@ import Transactions from './pages/Transactions';
 import Pockets from './pages/Pockets';
 import Categories from './pages/Categories';
 import Admin from './pages/Admin';
-
-import { ModalProvider } from './context/ModalContext';
-
 const basename = import.meta.env.BASE_URL || '/';
 
 function App() {
