@@ -17,7 +17,6 @@ const basename = import.meta.env.BASE_URL || '/';
 function App() {
   return (
     <AuthProvider>
-      <ModalProvider>
         <BrowserRouter basename={basename}>
           <Routes>
             {/* ─── Public ─── */}
@@ -52,7 +51,6 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </ModalProvider>
     </AuthProvider>
   );
 }

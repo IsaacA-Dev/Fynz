@@ -1,5 +1,5 @@
+import { useState, useEffect } from 'react';
 import { transactions as txApi, categories as catApi, pockets as pkApi } from '../api/client';
-import { useModal } from '../context/ModalContext';
 
 export default function Transactions() {
     const [txList, setTxList] = useState([]);
@@ -14,7 +14,6 @@ export default function Transactions() {
     });
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState(null);
-    const { confirm } = useModal();
 
     useEffect(() => {
         loadSupport();
@@ -53,15 +52,6 @@ export default function Transactions() {
 
     const handleCreate = async (e) => {
         e.preventDefault();
-        
-        const ok = await confirm({
-            title: 'Guardar Transacción',
-            message: '¿Estás seguro de que deseas registrar este movimiento?',
-            type: 'info',
-            confirmText: 'Registrar',
-        });
-        if (!ok) return;
-
         setSaving(true);
         setMsg(null);
         try {
@@ -88,13 +78,7 @@ export default function Transactions() {
     };
 
     const handleDelete = async (id) => {
-        const ok = await confirm({
-            title: 'Eliminar Transacción',
-            message: '¿Estás seguro de que deseas eliminar este movimiento? Esta acción es irreversible.',
-            type: 'danger',
-            confirmText: 'Eliminar',
-        });
-        if (!ok) return;
+        if (!window.confirm('¿Eliminar esta transacción?')) return;
 
         try {
             await txApi.remove(id);

@@ -1,12 +1,11 @@
+import { useState, useEffect } from 'react';
 import { admin } from '../api/client';
-import { useModal } from '../context/ModalContext';
 
 export default function Admin() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [actionLoading, setActionLoading] = useState(null);
-    const { confirm } = useModal();
 
     const fetchUsers = async () => {
         try {
@@ -28,14 +27,6 @@ export default function Admin() {
     const handleUpdateRole = async (userId, currentRole) => {
         const newRole = currentRole === 'admin' ? 'user' : 'admin';
         
-        const ok = await confirm({
-            title: 'Actualizar Permisos',
-            message: `¿Cambiar el rol de este usuario a ${newRole.toUpperCase()}?`,
-            type: 'warning',
-            confirmText: 'Actualizar',
-        });
-        if (!ok) return;
-
         setActionLoading(userId);
         try {
             await admin.users.updateRole(userId, newRole);
@@ -48,13 +39,7 @@ export default function Admin() {
     };
 
     const handleDeleteUser = async (userId, username) => {
-        const ok = await confirm({
-            title: 'Eliminar Usuario',
-            message: `¿Estás seguro de que quieres eliminar al usuario "${username}"? Esta acción no se puede deshacer.`,
-            type: 'danger',
-            confirmText: 'Eliminar',
-        });
-        if (!ok) return;
+        if (!window.confirm(`¿Estás seguro de que quieres eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) return;
 
         setActionLoading(userId);
         try {
