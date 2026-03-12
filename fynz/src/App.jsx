@@ -1,4 +1,3 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -9,12 +8,14 @@ import Transactions from './pages/Transactions';
 import Pockets from './pages/Pockets';
 import Categories from './pages/Categories';
 import Admin from './pages/Admin';
-const basename = import.meta.env.BASE_URL || '/';
+import { ModalProvider } from './context/ModalContext';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   return (
     <AuthProvider>
-        <BrowserRouter basename={basename}>
+      <ModalProvider>
+        <HashRouter>
           <Routes>
             {/* ─── Public ─── */}
             <Route path="/login" element={<Login />} />
@@ -47,7 +48,8 @@ function App() {
             {/* ─── Fallback ─── */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
+      </ModalProvider>
     </AuthProvider>
   );
 }

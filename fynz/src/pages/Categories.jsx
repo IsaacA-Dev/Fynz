@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { categories as catApi } from '../api/client';
+import { useModal } from '../context/ModalContext';
 
 export default function Categories() {
     const [categoriesList, setCategoriesList] = useState([]);
@@ -9,6 +10,7 @@ export default function Categories() {
     const [formData, setFormData] = useState({ name: '', icon: '', color: '#667eea' });
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState(null);
+    const { confirm } = useModal();
 
     useEffect(() => {
         loadCategories();
@@ -39,6 +41,17 @@ export default function Categories() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const ok = await confirm({
+            title: editingId ? 'Actualizar Categoría' : 'Crear Categoría',
+            message: editingId 
+                ? '¿Confirmas los cambios en esta categoría?' 
+                : '¿Deseas crear esta nueva categoría para tus gastos?',
+            type: 'info',
+            confirmText: editingId ? 'Actualizar' : 'Crear',
+        });
+        if (!ok) return;
+
         setSaving(true);
         setMsg(null);
         try {
@@ -65,7 +78,13 @@ export default function Categories() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Eliminar esta categoría?')) return;
+        const ok = await confirm({
+            title: 'Eliminar Categoría',
+            message: '¿Estás seguro de que deseas eliminar esta categoría? Se desvinculará de tus transacciones.',
+            type: 'danger',
+            confirmText: 'Eliminar',
+        });
+        if (!ok) return;
 
         try {
             await catApi.remove(id);
