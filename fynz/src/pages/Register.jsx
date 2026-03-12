@@ -70,7 +70,7 @@ export default function Register() {
                                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200
                   focus:border-fynz-500 focus:ring-4 focus:ring-fynz-100
                   outline-none transition-all text-sm"
-                                placeholder="isaac"
+                                placeholder="Nombre de usuario"
                             />
                         </div>
 
