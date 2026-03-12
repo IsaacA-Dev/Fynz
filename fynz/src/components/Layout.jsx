@@ -8,11 +8,11 @@ export default function Layout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const navItems = [
-        { to: '/', icon: '📊', label: 'Dashboard' },
-        { to: '/transactions', icon: '💸', label: 'Transacciones' },
-        { to: '/pockets', icon: '🏦', label: 'Bolsillos' },
-        { to: '/categories', icon: '🏷️', label: 'Categorías' },
-        ...(user?.role === 'admin' ? [{ to: '/admin', icon: '🛡️', label: 'Administración' }] : []),
+        { to: '.', icon: '📊', label: 'Dashboard' },
+        { to: 'transactions', icon: '💸', label: 'Transacciones' },
+        { to: 'pockets', icon: '🏦', label: 'Bolsillos' },
+        { to: 'categories', icon: '🏷️', label: 'Categorías' },
+        ...(user?.role === 'admin' ? [{ to: 'admin', icon: '🛡️', label: 'Administración' }] : []),
     ];
 
     const handleLogout = () => {
