@@ -1,16 +1,56 @@
-# React + Vite
+# 💰 Fynz - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Una aplicación web moderna y minimalista para la gestión de finanzas personales, construida con **React 19** y **Vite**.
 
-Currently, two official plugins are available:
+## 🚀 Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Dashboard Intuitivo:** Visualización rápida de ingresos, egresos y balance total.
+- **Gestión de Transacciones:** Registro detallado de movimientos con filtrado avanzado.
+- **Bolsillos (Pockets):** Organiza tus ahorros en diferentes contenedores con metas específicas.
+- **Categorías Personalizadas:** Clasifica tus gastos para un mejor análisis.
+- **Panel de Admin:** Gestión de usuarios y roles (solo para administradores).
+- **Diseño Moderno:** Interfaz fluida y responsiva utilizando **Tailwind CSS 4**.
 
-## React Compiler
+## 🛠️ Stack Tecnológico
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework:** [React 19](https://react.dev/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
+- **Estilos:** [Tailwind CSS 4](https://tailwindcss.com/)
+- **Enrutado:** [React Router Dom 7](https://reactrouter.com/)
+- **Iconos:** [Heroicons](https://heroicons.com/) / [Lucide](https://lucide.dev/) (según disponibilidad)
 
-## Expanding the ESLint configuration
+## 📦 Instalación y Configuración
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Clona el repositorio:**
+   ```bash
+   git clone <url-del-repo>
+   cd fynz/fynz
+   ```
+
+2. **Instala las dependencias:**
+   ```bash
+   npm install
+   ```
+
+3. **Configura las variables de entorno:**
+   Crea un archivo `.env` en la raíz del proyecto:
+   ```env
+   VITE_API_URL=http://localhost:3000
+   ```
+
+4. **Inicia el servidor de desarrollo:**
+   ```bash
+   npm run dev
+   ```
+
+## 🏗️ Estructura del Proyecto
+
+- `src/api`: Cliente de API centralizado (fetch wrapper).
+- `src/components`: Componentes reutilizables (Botones, Formularios, Layout).
+- `src/context`: Estados globales (Autenticación).
+- `src/pages`: Vistas principales de la aplicación.
+- `src/hooks`: Lógica de React personalizada.
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia MIT.

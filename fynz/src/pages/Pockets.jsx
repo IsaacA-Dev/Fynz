@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { pockets as pkApi } from '../api/client';
+import { useModal } from '../context/ModalContext';
 
 export default function Pockets() {
     const [pocketsList, setPocketsList] = useState([]);
@@ -9,6 +9,7 @@ export default function Pockets() {
     const [formData, setFormData] = useState({ name: '', target_amount: '', color: '#667eea', icon: '💰' });
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState(null);
+    const { confirm } = useModal();
 
     const icons = ['💰', '🏖️', '🛡️', '🚗', '🎓', '🏠', '💍', '📱', '🎮', '✈️', '🍕', '🏥', '👶', '🎁'];
 
@@ -46,6 +47,17 @@ export default function Pockets() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const ok = await confirm({
+            title: editingId ? 'Actualizar Bolsillo' : 'Crear Bolsillo',
+            message: editingId 
+                ? '¿Confirmas los cambios realizados en el bolsillo?' 
+                : '¿Deseas crear este nuevo bolsillo de ahorro?',
+            type: 'info',
+            confirmText: editingId ? 'Actualizar' : 'Crear',
+        });
+        if (!ok) return;
+
         setSaving(true);
         setMsg(null);
         try {
@@ -73,7 +85,14 @@ export default function Pockets() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('¿Eliminar este bolsillo?')) return;
+        const ok = await confirm({
+            title: 'Eliminar Bolsillo',
+            message: '¿Estás seguro de que deseas eliminar este bolsillo? Se perderán los datos asociados.',
+            type: 'danger',
+            confirmText: 'Eliminar',
+        });
+        if (!ok) return;
+
         try {
             await pkApi.remove(id);
             setMsg({ type: 'success', text: 'Bolsillo eliminado' });

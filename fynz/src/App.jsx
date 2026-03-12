@@ -10,45 +10,49 @@ import Pockets from './pages/Pockets';
 import Categories from './pages/Categories';
 import Admin from './pages/Admin';
 
+import { ModalProvider } from './context/ModalContext';
+
 const basename = import.meta.env.BASE_URL || '/';
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename={basename}>
-        <Routes>
-          {/* ─── Public ─── */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+      <ModalProvider>
+        <BrowserRouter basename={basename}>
+          <Routes>
+            {/* ─── Public ─── */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* ─── Protected (with Layout) ─── */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/pockets" element={<Pockets />} />
-            <Route path="/categories" element={<Categories />} />
-            
-            {/* ─── Admin Only ─── */}
-            <Route 
-              path="/admin" 
+            {/* ─── Protected (with Layout) ─── */}
+            <Route
               element={
-                <ProtectedRoute adminOnly>
-                  <Admin />
+                <ProtectedRoute>
+                  <Layout />
                 </ProtectedRoute>
-              } 
-            />
-          </Route>
+              }
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/pockets" element={<Pockets />} />
+              <Route path="/categories" element={<Categories />} />
+              
+              {/* ─── Admin Only ─── */}
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute adminOnly>
+                    <Admin />
+                  </ProtectedRoute>
+                } 
+              />
+            </Route>
 
-          {/* ─── Fallback ─── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* ─── Fallback ─── */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ModalProvider>
     </AuthProvider>
   );
 }
