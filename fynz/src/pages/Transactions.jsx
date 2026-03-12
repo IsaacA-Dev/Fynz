@@ -145,7 +145,7 @@ export default function Transactions() {
                     <h3 className="font-bold text-gray-800">Registrar movimiento</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Type */}
-                        <div>
+                        <div className="sm:col-span-2">
                             <label className="block text-xs font-medium text-gray-500 mb-1.5">Tipo *</label>
                             <div className="flex gap-2">
                                 {['income', 'expense', 'transfer'].map((t) => {
@@ -155,12 +155,12 @@ export default function Transactions() {
                                             key={t}
                                             type="button"
                                             onClick={() => setFormData({ ...formData, type: t })}
-                                            className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border-2 transition-all cursor-pointer ${formData.type === t
+                                            className={`flex-1 py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold border-2 transition-all cursor-pointer ${formData.type === t
                                                     ? `${cfg.bg} ${cfg.border} ${cfg.color}`
                                                     : 'border-gray-200 text-gray-400 hover:border-gray-300'
                                                 }`}
                                         >
-                                            {cfg.icon} {cfg.label}
+                                            <span className="hidden sm:inline">{cfg.icon} </span>{cfg.label}
                                         </button>
                                     );
                                 })}
@@ -315,16 +315,16 @@ export default function Transactions() {
                             return (
                                 <div
                                     key={tx.id}
-                                    className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50/50 transition-colors group"
+                                    className="flex items-center gap-3 px-4 py-3.5 sm:px-5 sm:py-4 hover:bg-gray-50/50 transition-colors group"
                                 >
-                                    <div className={`w-11 h-11 rounded-xl ${cfg.bg} flex items-center justify-center text-lg shrink-0`}>
+                                    <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${cfg.bg} flex items-center justify-center text-base sm:text-lg shrink-0`}>
                                         {cfg.icon}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-gray-800 truncate">
                                             {tx.description || 'Sin descripción'}
                                         </p>
-                                        <div className="flex items-center gap-2 mt-0.5">
+                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                             <span className="text-xs text-gray-400">{fmtDate(tx.date || tx.created_at)}</span>
                                             {cat && (
                                                 <span
@@ -341,9 +341,9 @@ export default function Transactions() {
                                     </span>
                                     <button
                                         onClick={() => handleDelete(tx.id)}
-                                        className="opacity-0 group-hover:opacity-100 p-2 rounded-lg
-                      text-gray-400 hover:text-red-500 hover:bg-red-50
-                      transition-all duration-200 cursor-pointer"
+                                        className="sm:opacity-0 sm:group-hover:opacity-100 p-2 rounded-lg
+                      text-gray-400 hover:text-red-500 active:text-red-600 hover:bg-red-50 active:bg-red-100
+                      transition-all duration-200 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                                         title="Eliminar"
                                     >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -361,25 +361,25 @@ export default function Transactions() {
 
             {/* ─── Pagination ─── */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 animate-slide-up">
+                <div className="flex items-center justify-center gap-2 animate-slide-up pb-2">
                     <button
                         disabled={currentPage <= 1}
                         onClick={() => setPagination((p) => ({ ...p, offset: p.offset - p.limit }))}
-                        className="px-4 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium
-              hover:border-fynz-500 hover:text-fynz-500 disabled:opacity-40
-              transition-all cursor-pointer disabled:cursor-not-allowed"
+                        className="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-medium
+              hover:border-fynz-500 hover:text-fynz-500 active:bg-fynz-50 disabled:opacity-40
+              transition-all cursor-pointer disabled:cursor-not-allowed min-h-[44px]"
                     >
                         ← Anterior
                     </button>
-                    <span className="text-sm text-gray-500 px-3">
-                        Página {currentPage} de {totalPages}
+                    <span className="text-sm text-gray-500 px-2 sm:px-3">
+                        {currentPage} / {totalPages}
                     </span>
                     <button
                         disabled={currentPage >= totalPages}
                         onClick={() => setPagination((p) => ({ ...p, offset: p.offset + p.limit }))}
-                        className="px-4 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium
-              hover:border-fynz-500 hover:text-fynz-500 disabled:opacity-40
-              transition-all cursor-pointer disabled:cursor-not-allowed"
+                        className="px-4 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-medium
+              hover:border-fynz-500 hover:text-fynz-500 active:bg-fynz-50 disabled:opacity-40
+              transition-all cursor-pointer disabled:cursor-not-allowed min-h-[44px]"
                     >
                         Siguiente →
                     </button>

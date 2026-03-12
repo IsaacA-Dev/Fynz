@@ -92,23 +92,25 @@ export default function Layout() {
             </aside>
 
             {/* ─── Main Content ─── */}
-            <div className="flex-1 flex flex-col min-h-screen">
+            <div className="flex-1 flex flex-col min-h-screen min-h-[100dvh]">
                 {/* Topbar mobile */}
-                <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-30">
+                <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-30"
+                    style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+                >
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                         <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                     <h1 className="text-lg font-bold text-gradient">💰 Fynz</h1>
-                    <div className="w-10" />
+                    <div className="w-[44px]" />
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 p-4 lg:p-8 animate-fade-in">
+                <main className="flex-1 p-4 lg:p-8 pb-[calc(1rem+env(safe-area-inset-bottom))] animate-fade-in">
                     <Outlet />
                 </main>
             </div>

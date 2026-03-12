@@ -190,7 +190,7 @@ export default function Categories() {
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
                         Del sistema ({systemCats.length})
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
                         {systemCats.map((cat) => (
                             <div
                                 key={cat.id}
@@ -238,10 +238,10 @@ export default function Categories() {
                                 <div className="w-4 h-1 rounded-full" style={{ backgroundColor: cat.color }} />
 
                                 {/* Actions */}
-                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute top-1.5 right-1.5 flex gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => openEdit(cat)}
-                                        className="p-1.5 rounded-lg text-gray-400 hover:text-fynz-500 hover:bg-fynz-50 transition-all cursor-pointer"
+                                        className="p-1.5 rounded-lg text-gray-400 hover:text-fynz-500 active:text-fynz-600 hover:bg-fynz-50 active:bg-fynz-100 transition-all cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -251,7 +251,7 @@ export default function Categories() {
                                     </button>
                                     <button
                                         onClick={() => handleDelete(cat.id)}
-                                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 active:text-red-600 hover:bg-red-50 active:bg-red-100 transition-all cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

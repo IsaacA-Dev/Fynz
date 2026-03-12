@@ -36,16 +36,16 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center gradient-primary p-4">
+        <div className="min-h-screen min-h-[100dvh] flex items-center justify-center gradient-primary p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div className="w-full max-w-md animate-scale-in">
                 {/* Logo */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2">💰 Fynz</h1>
+                <div className="text-center mb-6 sm:mb-8">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">💰 Fynz</h1>
                     <p className="text-white/70">Crea tu cuenta y toma el control</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-8">
+                <div className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-6 sm:p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">Crear Cuenta</h2>
 
                     {error && (

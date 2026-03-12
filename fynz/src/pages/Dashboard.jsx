@@ -66,30 +66,30 @@ export default function Dashboard() {
       </div>
 
       {/* ─── Balance Card ─── */}
-      <div className="gradient-primary rounded-2xl p-6 lg:p-8 text-white shadow-xl shadow-fynz-500/20 animate-slide-up">
+      <div className="gradient-primary rounded-2xl p-5 lg:p-8 text-white shadow-xl shadow-fynz-500/20 animate-slide-up">
         <p className="text-white/70 text-sm font-medium">Balance General</p>
-        <p className="text-3xl lg:text-4xl font-bold mt-1 tracking-tight">{fmt(summary?.balance)}</p>
-        <div className="grid grid-cols-3 gap-4 mt-6">
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-white/60 text-xs">Ingresos</p>
-            <p className="text-lg font-bold mt-0.5">{fmt(summary?.income)}</p>
+        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold mt-1 tracking-tight">{fmt(summary?.balance)}</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 sm:mt-6">
+          <div className="bg-white/10 rounded-xl p-2.5 sm:p-3 text-center">
+            <p className="text-white/60 text-[10px] sm:text-xs">Ingresos</p>
+            <p className="text-sm sm:text-lg font-bold mt-0.5 truncate">{fmt(summary?.income)}</p>
           </div>
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-white/60 text-xs">Gastos</p>
-            <p className="text-lg font-bold mt-0.5">{fmt(summary?.expense)}</p>
+          <div className="bg-white/10 rounded-xl p-2.5 sm:p-3 text-center">
+            <p className="text-white/60 text-[10px] sm:text-xs">Gastos</p>
+            <p className="text-sm sm:text-lg font-bold mt-0.5 truncate">{fmt(summary?.expense)}</p>
           </div>
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-white/60 text-xs">Transferido</p>
-            <p className="text-lg font-bold mt-0.5">{fmt(summary?.transfer)}</p>
+          <div className="bg-white/10 rounded-xl p-2.5 sm:p-3 text-center">
+            <p className="text-white/60 text-[10px] sm:text-xs">Transferido</p>
+            <p className="text-sm sm:text-lg font-bold mt-0.5 truncate">{fmt(summary?.transfer)}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ─── Gastos por Categoría ─── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-slide-up">
+        <div className="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-gray-100 animate-slide-up">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-gray-800">Gastos por Categoría</h2>
+            <h2 className="text-base lg:text-lg font-bold text-gray-800">Gastos por Categoría</h2>
             <span className="text-xs text-gray-400">Top categorías</span>
           </div>
           {summary?.expenses_by_category?.length > 0 ? (
@@ -129,9 +129,9 @@ export default function Dashboard() {
         </div>
 
         {/* ─── Transacciones Recientes ─── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-slide-up">
+        <div className="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-gray-100 animate-slide-up">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-gray-800">Movimientos Recientes</h2>
+            <h2 className="text-base lg:text-lg font-bold text-gray-800">Movimientos Recientes</h2>
             <Link
               to="/transactions"
               className="text-xs text-fynz-500 font-semibold hover:text-fynz-600 transition-colors"

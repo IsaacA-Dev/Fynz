@@ -244,10 +244,10 @@ export default function Pockets() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => openEdit(pocket)}
-                                            className="p-2 rounded-lg text-gray-400 hover:text-fynz-500 hover:bg-fynz-50 transition-all cursor-pointer"
+                                            className="p-2 rounded-lg text-gray-400 hover:text-fynz-500 active:text-fynz-600 hover:bg-fynz-50 active:bg-fynz-100 transition-all cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                                             title="Editar"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,7 +258,7 @@ export default function Pockets() {
                                         </button>
                                         <button
                                             onClick={() => handleDelete(pocket.id)}
-                                            className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                                            className="p-2 rounded-lg text-gray-400 hover:text-red-500 active:text-red-600 hover:bg-red-50 active:bg-red-100 transition-all cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                                             title="Eliminar"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
