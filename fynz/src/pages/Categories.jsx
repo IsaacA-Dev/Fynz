@@ -75,8 +75,8 @@ export default function Categories() {
         }
     };
 
-    const systemCats = categoriesList.filter((c) => c.is_default === 1);
-    const customCats = categoriesList.filter((c) => c.is_default === 0);
+    const systemCats = categoriesList.filter((c) => c.is_default === true || c.is_default === 1);
+    const customCats = categoriesList.filter((c) => c.is_default === false || c.is_default === 0);
 
     if (loading) {
         return (
