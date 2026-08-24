@@ -22,7 +22,7 @@ export function LogoutButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-200"
+        className="bg-[var(--color-border-soft)] text-[var(--color-text)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[var(--color-border)] transition-colors"
       >
         Cerrar Sesión
       </button>

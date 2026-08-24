@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/ui/mode-toggle'
 import { useToast } from '@/components/ui/toast'
-import { esEmailValido, normalizarEmail, traducirErrorAuth } from '@/lib/utils'
+import { FynzMark, FynzWordmark } from '@/components/ui/fynz-logo'
+import { esEmailValido, normalizarEmail } from '@/lib/utils/email'
+import { traducirErrorAuth } from '@/lib/utils/errores-auth'
 
 export function LoginForm() {
   const [isLogin, setIsLogin] = useState(true)
@@ -74,9 +76,10 @@ export function LoginForm() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="text-4xl font-bold tracking-tight text-[var(--color-text)]"
+          className="flex flex-col items-center gap-3"
         >
-          fynz
+          <FynzMark size={56} />
+          <FynzWordmark height={28} />
         </motion.h1>
         <p className="text-[var(--color-text-muted)] mt-2">
           {isLogin ? 'Inicia sesión para continuar' : 'Crea tu cuenta en segundos'}
