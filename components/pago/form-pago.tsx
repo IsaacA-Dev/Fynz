@@ -30,6 +30,7 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
   const [fecha, setFecha] = useState(
     pago && !pago.recurrente ? pago.fecha_vencimiento.slice(0, 10) : ''
   )
+  const [reprogramarFecha, setReprogramarFecha] = useState('')
   const [domiciliado, setDomiciliado] = useState(
     pago?.domiciliado ?? false
   )
@@ -40,6 +41,12 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
   const { addToast } = useToast()
 
   const esEdicion = pago != null
+
+  const cuentasDomiciliables = cuentas.filter(
+    (c) =>
+      c.metodo !== 'credito' ||
+      (pago?.cuenta_id != null && c.cuenta_id === pago.cuenta_id)
+  )
 
   const diaValido =
     !recurrente ||
@@ -76,6 +83,10 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
         cuentaId: domiciliado ? Number(cuentaId) : null,
         recurrente,
         diaCobro: recurrente ? Number(diaCobro) : null,
+        reprogramarFecha:
+          esEdicion && recurrente && reprogramarFecha !== ''
+            ? new Date(`${reprogramarFecha}T00:00:00`).toISOString()
+            : null,
       }
       if (esEdicion) {
         await actualizarProximoPago(userId, pago.proximo_pago_id, datos)
@@ -154,18 +165,34 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
       </div>
 
       {recurrente ? (
-        <Input
-          label="Día de cobro (1-31)"
-          type="number"
-          inputMode="numeric"
-          min="1"
-          max="31"
-          placeholder="Ej. 25"
-          value={diaCobro}
-          onChange={(e) => setDiaCobro(e.target.value)}
-          icon={<Repeat className="w-4 h-4" />}
-          required
-        />
+        <div className="space-y-3">
+          <Input
+            label="Día de cobro (1-31)"
+            type="number"
+            inputMode="numeric"
+            min="1"
+            max="31"
+            placeholder="Ej. 25"
+            value={diaCobro}
+            onChange={(e) => setDiaCobro(e.target.value)}
+            icon={<Repeat className="w-4 h-4" />}
+            required
+          />
+          {esEdicion && (
+            <div>
+              <Input
+                label="Reprogramar esta instancia (opcional)"
+                type="date"
+                value={reprogramarFecha}
+                onChange={(e) => setReprogramarFecha(e.target.value)}
+                icon={<CalendarDays className="w-4 h-4" />}
+              />
+              <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
+                El día de cobro seguirá aplicando a los siguientes periodos.
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <Input
           label="Fecha de vencimiento"
@@ -215,7 +242,7 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
           required
         >
           <option value="">Selecciona una cuenta</option>
-          {cuentas.map((c) => (
+          {cuentasDomiciliables.map((c) => (
             <option key={c.cuenta_id} value={c.cuenta_id}>
               {c.nombre}
             </option>

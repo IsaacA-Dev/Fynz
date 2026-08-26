@@ -1,36 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { Ghost } from 'lucide-react'
+import { Entrada } from '@/components/ui/motion'
 
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6 overflow-hidden relative">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="absolute inset-0 pointer-events-none"
-      >
+      <Entrada duracion="destacada" className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[var(--color-primary)]/10 blur-3xl" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[var(--color-primary)]/10 blur-3xl" />
-      </motion.div>
+      </Entrada>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+      <Entrada
+        duracion="destacada"
+        desdeY={30}
+        desdeEscala={0.96}
         className="relative text-center space-y-6"
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex justify-center"
-        >
+        <Entrada duracion="destacada" delay={200} desdeY={0} desdeEscala={0.6} className="flex justify-center">
           <Ghost size={72} className="text-[var(--color-primary)]" />
-        </motion.div>
+        </Entrada>
 
         <div className="space-y-2">
           <h1 className="text-5xl font-bold tracking-tight text-[var(--color-text)]">404</h1>
@@ -43,7 +33,7 @@ export default function NotFound() {
         >
           Volver al inicio
         </Link>
-      </motion.div>
+      </Entrada>
     </main>
   )
 }

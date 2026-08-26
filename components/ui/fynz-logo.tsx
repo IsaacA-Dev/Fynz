@@ -1,6 +1,7 @@
 'use client'
 
-import { useId } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
+import { useAnime } from '@/components/hooks/use-anime'
 
 function useGradientId() {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '')
@@ -66,6 +67,14 @@ export function FynzMark({ size = 32 }: { size?: number }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+
+      {/* Destello */}
+      <path
+        data-chispa="true"
+        d="M82 10 L83.9 15.1 L89 17 L83.9 18.9 L82 24 L80.1 18.9 L75 17 L80.1 15.1 Z"
+        fill="white"
+        style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+      />
     </svg>
   )
 }
@@ -101,6 +110,67 @@ export function FynzLogo({ height = 30 }: { height?: number }) {
       </span>
 
       <FynzWordmark height={height * 0.7} />
+    </span>
+  )
+}
+
+export function FynzLogoAnimado({ height = 30 }: { height?: number }) {
+  const { animar, reducirMovimiento } = useAnime()
+  const contenedorRef = useRef<HTMLSpanElement>(null)
+
+  useLayoutEffect(() => {
+    const contenedor = contenedorRef.current
+    if (!contenedor || reducirMovimiento) return
+
+    const marca = contenedor.querySelector<HTMLElement>('[data-marca]')
+    const palabra = contenedor.querySelector<HTMLElement>('[data-palabra]')
+    const chispa = contenedor.querySelector<SVGElement>('[data-chispa]')
+
+    if (marca) {
+      marca.style.opacity = '0'
+      animar(marca, {
+        duracion: 'normal',
+        opacity: [0, 1],
+        scale: [0.92, 1],
+      })
+    }
+
+    if (palabra) {
+      palabra.style.opacity = '0'
+      animar(palabra, {
+        delay: 180,
+        duracion: 'normal',
+        opacity: [0, 1],
+        translateY: [8, 0],
+      })
+    }
+
+    if (chispa) {
+      chispa.style.opacity = '0'
+      animar(chispa, {
+        delay: 450,
+        duracion: 'rapida',
+        opacity: [0, 1],
+        scale: [0.3, 1],
+      })
+    }
+  }, [animar, reducirMovimiento])
+
+  return (
+    <span
+      ref={contenedorRef}
+      className="inline-flex shrink-0 items-center"
+      style={{ gap: height * 0.25 }}
+      role="img"
+      aria-label="Fynz"
+    >
+      <span aria-hidden="true" data-marca>
+        <FynzMark size={height} />
+      </span>
+
+      <span aria-hidden="true" data-palabra>
+        <FynzWordmark height={height * 0.7} />
+      </span>
     </span>
   )
 }

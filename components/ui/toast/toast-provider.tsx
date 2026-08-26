@@ -8,12 +8,14 @@ export interface ToastItem {
   id: number
   message: string
   type: ToastType
+  saliendo?: boolean
 }
 
 interface ToastContextValue {
   toasts: ToastItem[]
   addToast: (message: string, type?: ToastType) => void
   removeToast: (id: number) => void
+  descartarToast: (id: number) => void
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null)
@@ -22,8 +24,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const idRef = useRef(0)
 
-  const removeToast = useCallback((id: number) => {
+  const descartarToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  const removeToast = useCallback((id: number) => {
+    setToasts((prev) => prev.map((t) => (t.id === id && !t.saliendo ? { ...t, saliendo: true } : t)))
   }, [])
 
   const addToast = useCallback(
@@ -36,8 +42,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ toasts, addToast, removeToast }),
-    [toasts, addToast, removeToast]
+    () => ({ toasts, addToast, removeToast, descartarToast }),
+    [toasts, addToast, removeToast, descartarToast]
   )
 
   return (

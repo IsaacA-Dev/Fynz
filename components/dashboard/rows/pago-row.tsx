@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Pencil, Repeat, Trash2 } from 'lucide-react'
+import { AlertTriangle, Check, CreditCard, Pencil, Repeat, Trash2 } from 'lucide-react'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import type { ProximoPago, Vista } from '@/lib/acciones'
 
@@ -30,6 +30,12 @@ function Badges({ pago, atrasado }: { pago: ProximoPago; atrasado: boolean }) {
         <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-warning-soft)] text-[var(--color-warning)] shrink-0">
           <Repeat className="w-3 h-3" />
           Domiciliado
+        </span>
+      )}
+      {pago.es_tarjeta && (
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)] shrink-0">
+          <CreditCard className="w-3 h-3" />
+          Tarjeta
         </span>
       )}
     </>

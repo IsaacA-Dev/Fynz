@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { createBrowserSupabase } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/ui/mode-toggle'
 import { useToast } from '@/components/ui/toast'
-import { FynzMark, FynzWordmark } from '@/components/ui/fynz-logo'
+import { useAnime } from '@/components/hooks/use-anime'
+import { Entrada } from '@/components/ui/motion'
+import { FynzLogoAnimado } from '@/components/ui/fynz-logo'
 import { esEmailValido, normalizarEmail } from '@/lib/utils/email'
 import { traducirErrorAuth } from '@/lib/utils/errores-auth'
 
@@ -20,6 +21,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [loading, setLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement | null>(null)
+  const { animar, reducirMovimiento } = useAnime()
 
   const supabase = createBrowserSupabase()
   const router = useRouter()
@@ -64,27 +67,27 @@ export function LoginForm() {
     setLoading(false)
   }
 
+  useLayoutEffect(() => {
+    const form = formRef.current
+    if (!form || reducirMovimiento) return
+    form.style.opacity = '0'
+    animar(form, {
+      duracion: 'normal',
+      opacity: [0, 1],
+      translateX: [isLogin ? -20 : 20, 0],
+    })
+  }, [animar, reducirMovimiento, isLogin])
+
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="text-center"
-      >
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="flex flex-col items-center gap-3"
-        >
-          <FynzMark size={56} />
-          <FynzWordmark height={28} />
-        </motion.h1>
+      <Entrada duracion="destacada" className="text-center">
+        <div className="flex flex-col items-center gap-3">
+          <FynzLogoAnimado height={56} />
+        </div>
         <p className="text-[var(--color-text-muted)] mt-2">
           {isLogin ? 'Inicia sesión para continuar' : 'Crea tu cuenta en segundos'}
         </p>
-      </motion.div>
+      </Entrada>
 
       <ModeToggle
         isLogin={isLogin}
@@ -94,72 +97,62 @@ export function LoginForm() {
         }}
       />
 
-      <AnimatePresence mode="wait">
-        <motion.form
-          key={isLogin ? 'login' : 'register'}
-          noValidate
-          initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
-          transition={{ duration: 0.3 }}
-          onSubmit={handleSubmit}
-          className="bg-[var(--color-surface)] p-6 rounded-2xl shadow-sm border border-[var(--color-border)] space-y-4"
-        >
-          <Input
-            label="Correo electrónico"
-            type="email"
-            icon={<Mail size={16} />}
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              if (emailError) setEmailError('')
-            }}
-            placeholder="tu@email.com"
-            required
-          />
+      <form
+        ref={formRef}
+        noValidate
+        onSubmit={handleSubmit}
+        className="bg-[var(--color-surface)] p-6 rounded-2xl shadow-sm border border-[var(--color-border)] space-y-4"
+      >
+        <Input
+          label="Correo electrónico"
+          type="email"
+          icon={<Mail size={16} />}
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (emailError) setEmailError('')
+          }}
+          placeholder="tu@email.com"
+          required
+        />
 
-          <AnimatePresence>
-            {emailError && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-1.5 text-[var(--color-error)] text-sm"
-                role="alert"
-              >
-                <AlertCircle size={14} className="shrink-0" />
-                {emailError}
-              </motion.p>
-            )}
-          </AnimatePresence>
+        {emailError && (
+          <Entrada duracion="rapida" desdeY={-6}>
+            <span
+              role="alert"
+              className="flex items-center gap-1.5 text-[var(--color-error)] text-sm"
+            >
+              <AlertCircle size={14} className="shrink-0" />
+              {emailError}
+            </span>
+          </Entrada>
+        )}
 
-          <Input
-            label="Contraseña"
-            type={showPassword ? 'text' : 'password'}
-            icon={<Lock size={16} />}
-            endIcon={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            }
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            minLength={6}
-            required
-          />
+        <Input
+          label="Contraseña"
+          type={showPassword ? 'text' : 'password'}
+          icon={<Lock size={16} />}
+          endIcon={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          }
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          minLength={6}
+          required
+        />
 
-          <Button type="submit" loading={loading}>
-            {loading ? 'Procesando...' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-          </Button>
-        </motion.form>
-      </AnimatePresence>
+        <Button type="submit" loading={loading}>
+          {loading ? 'Procesando...' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+        </Button>
+      </form>
 
       <div className="text-center">
         <button

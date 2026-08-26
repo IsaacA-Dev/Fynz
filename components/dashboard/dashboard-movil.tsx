@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import {
   AlertTriangle,
   ArrowDownLeft,
@@ -17,6 +16,7 @@ import { CuentaRow } from '@/components/dashboard/rows/cuenta-row'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { FynzLogo } from '@/components/ui/fynz-logo'
+import { Entrada, Stagger } from '@/components/ui/motion'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import type {
   Cuenta,
@@ -65,9 +65,16 @@ export function DashboardMovil({
   onPagarPago,
 }: DashboardMovilProps) {
   const [tab, setTab] = useState(0)
+  const [direccion, setDireccion] = useState(1)
   const [verMasCuentas, setVerMasCuentas] = useState(false)
   const [verMasPagos, setVerMasPagos] = useState(false)
   const [verMasMovimientos, setVerMasMovimientos] = useState(false)
+
+  const cambiarTab = (nuevo: number) => {
+    if (nuevo === tab) return
+    setDireccion(nuevo > tab ? 1 : -1)
+    setTab(nuevo)
+  }
 
   const cuentasMostradas = verMasCuentas ? datos.cuentas : datos.cuentas.slice(0, LIMITE)
   const pagosMostrados = verMasPagos ? datos.pagos : datos.pagos.slice(0, LIMITE)
@@ -83,14 +90,10 @@ export function DashboardMovil({
           <LogoutButton />
         </header>
 
-        <div className="overflow-hidden">
-          <motion.div
-            className="flex"
-            animate={{ x: `-${tab * 100}%` }}
-            transition={{ type: 'spring', damping: 32, stiffness: 300 }}
-          >
-            {/* ===== Tab 0: Datos ===== */}
-            <div className="w-full shrink-0 px-6 pb-8 pt-4 space-y-6">
+        <div>
+          {tab === 0 && (
+            <Stagger className="px-6 pb-8 pt-4 space-y-6">
+              {/* ===== Tab 0: Datos ===== */}
               <section className="bg-linear-to-br from-[var(--color-banner-start)] to-[var(--color-banner-end)] rounded-3xl p-6 text-white shadow-xl shadow-blue-600/20">
                 <p className="text-white/85 text-sm font-medium mb-1">Disponible Real</p>
                 <h2 className="text-4xl font-bold tracking-tight break-words">
@@ -208,10 +211,17 @@ export function DashboardMovil({
                   </button>
                 )}
               </section>
-            </div>
+            </Stagger>
+          )}
 
-            {/* ===== Tab 1: Próximos Pagos ===== */}
-            <div className="w-full shrink-0 px-6 pb-8 pt-4 space-y-3">
+          {tab === 1 && (
+            <Entrada
+              key="tab-pagos"
+              duracion="normal"
+              desdeX={30 * direccion}
+              className="px-6 pb-8 pt-4 space-y-3"
+            >
+              {/* ===== Tab 1: Próximos Pagos ===== */}
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-[var(--color-text)] px-1">Próximos Pagos</h3>
                 <button
@@ -259,10 +269,17 @@ export function DashboardMovil({
                   {verMasPagos ? 'Ver menos' : `Ver más (${datos.pagos.length - LIMITE})`}
                 </button>
               )}
-            </div>
+            </Entrada>
+          )}
 
-            {/* ===== Tab 2: Historial ===== */}
-            <div className="w-full shrink-0 px-6 pb-8 pt-4 space-y-3">
+          {tab === 2 && (
+            <Entrada
+              key="tab-historial"
+              duracion="normal"
+              desdeX={30 * direccion}
+              className="px-6 pb-8 pt-4 space-y-3"
+            >
+              {/* ===== Tab 2: Historial ===== */}
               <h3 className="text-sm font-semibold text-[var(--color-text)] px-1">Historial Reciente</h3>
 
               {datos.movimientos.length === 0 ? (
@@ -287,8 +304,8 @@ export function DashboardMovil({
                   {verMasMovimientos ? 'Ver menos' : `Ver más (${datos.movimientos.length - LIMITE})`}
                 </button>
               )}
-            </div>
-          </motion.div>
+            </Entrada>
+          )}
         </div>
 
         <nav className="sticky bottom-0 z-40 bg-[var(--color-background)]/90 backdrop-blur border-t border-[var(--color-border-soft)]">
@@ -296,7 +313,7 @@ export function DashboardMovil({
             {TABS.map(({ id, label, Icon }) => (
               <button
                 key={id}
-                onClick={() => setTab(id)}
+                onClick={() => cambiarTab(id)}
                 className={`flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors ${
                   tab === id
                     ? 'text-[var(--color-primary)]'

@@ -13,6 +13,7 @@ import { CuentaRow } from '@/components/dashboard/rows/cuenta-row'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { FynzLogo } from '@/components/ui/fynz-logo'
+import { Stagger } from '@/components/ui/motion'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import type {
   Cuenta,
@@ -66,11 +67,13 @@ export function DashboardEscritorio({
 
   return (
     <main className="min-h-screen bg-[var(--color-background)] p-6 lg:p-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto">
         <header className="flex justify-between items-center">
           <FynzLogo height={30} />
           <LogoutButton />
         </header>
+
+        <Stagger className="mt-6 space-y-6">
 
         {/* Hero */}
         <section className="grid lg:grid-cols-3 gap-6 items-stretch">
@@ -276,6 +279,7 @@ export function DashboardEscritorio({
             )}
           </div>
         </section>
+        </Stagger>
       </div>
     </main>
   )

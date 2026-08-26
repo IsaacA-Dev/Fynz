@@ -23,6 +23,8 @@ export function FormMovimiento({ userId, tipo, cuentas, onClose }: FormMovimient
   const { addToast } = useToast()
 
   const esEgreso = tipo === 'egreso'
+  const cuentaSeleccionada = cuentas.find((c) => c.cuenta_id === Number(cuentaId))
+  const esCredito = cuentaSeleccionada?.metodo === 'credito'
   const valido = Number(monto) > 0 && cuentaId !== ''
 
   const handleSubmit = async (e: FormEvent) => {
@@ -36,7 +38,16 @@ export function FormMovimiento({ userId, tipo, cuentas, onClose }: FormMovimient
         monto: Number(monto),
         descripcion: descripcion.trim() || undefined,
       })
-      addToast(esEgreso ? 'Gasto registrado' : 'Ingreso registrado', 'success')
+      addToast(
+        esEgreso
+          ? esCredito
+            ? 'Compra registrada'
+            : 'Gasto registrado'
+          : esCredito
+            ? 'Pago a la tarjeta registrado'
+            : 'Ingreso registrado',
+        'success'
+      )
       onClose()
     } catch (err) {
       addToast(
@@ -86,7 +97,13 @@ export function FormMovimiento({ userId, tipo, cuentas, onClose }: FormMovimient
       />
 
       <Button type="submit" loading={loading} disabled={!valido}>
-        {esEgreso ? 'Registrar Gasto' : 'Registrar Ingreso'}
+        {esEgreso
+          ? esCredito
+            ? 'Registrar Compra'
+            : 'Registrar Gasto'
+          : esCredito
+            ? 'Registrar Pago'
+            : 'Registrar Ingreso'}
       </Button>
     </form>
   )

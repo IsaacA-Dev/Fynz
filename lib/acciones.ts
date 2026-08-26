@@ -1,4 +1,16 @@
 import { supabase } from './supabase'
+import {
+  calcularSaldos,
+  decisionPagoTarjeta,
+  detectarAlertas,
+  fechaPagoTarjeta,
+  redondearDinero,
+  restanteTarjeta,
+  siguienteDiaCobro,
+  tipoAjusteSaldo,
+  type AlertaDomiciliado,
+  type DecisionPagoTarjeta,
+} from './logica-financiera'
 
 export type Metodo = 'debito' | 'credito' | 'efectivo'
 export type TipoMovimiento = 'ingreso' | 'egreso'
@@ -16,6 +28,9 @@ export interface Cuenta {
   metodo: Metodo
   balance_inicial: number
   saldo: number
+  dia_corte: number | null
+  dia_pago: number | null
+  limite: number | null
 }
 
 export interface ProximoPago {
@@ -29,6 +44,7 @@ export interface ProximoPago {
   cuenta_nombre: string | null
   recurrente: boolean
   dia_cobro: number | null
+  es_tarjeta: boolean
 }
 
 export interface Transaccion {
@@ -40,14 +56,7 @@ export interface Transaccion {
   descripcion: string | null
 }
 
-export interface AlertaDomiciliado {
-  pagoId: number
-  descripcion: string
-  monto: number
-  fechaVencimiento: string
-  cuentaNombre: string
-  faltante: number
-}
+export type { AlertaDomiciliado }
 
 export interface DatosDashboard {
   userId: string
@@ -67,31 +76,6 @@ function aNumero(valor: unknown): number {
   return Number(valor ?? 0)
 }
 
-function diaValido(dia: number): boolean {
-  return Number.isInteger(dia) && dia >= 1 && dia <= 31
-}
-
-function conClamp(anio: number, mes: number, dia: number): Date {
-  const maxDia = new Date(anio, mes + 1, 0).getDate()
-  return new Date(anio, mes, Math.min(dia, maxDia))
-}
-
-export function siguienteDiaCobro(dia: number, desde: Date): string {
-  if (!diaValido(dia)) return desde.toISOString()
-
-  const inicio = new Date(
-    desde.getFullYear(),
-    desde.getMonth(),
-    desde.getDate()
-  )
-
-  const mesActual = conClamp(inicio.getFullYear(), inicio.getMonth(), dia)
-  if (mesActual.getTime() >= inicio.getTime()) return mesActual.toISOString()
-
-  const mesSiguiente = conClamp(inicio.getFullYear(), inicio.getMonth() + 1, dia)
-  return mesSiguiente.toISOString()
-}
-
 export async function buscarCuentasConSaldo(userId: string): Promise<Cuenta[]> {
   const { data: cuentas, error } = await supabase
     .from('cuenta')
@@ -109,18 +93,17 @@ export async function buscarCuentasConSaldo(userId: string): Promise<Cuenta[]> {
 
   if (errorMovs) throw new Error('No se pudieron obtener los movimientos')
 
-  const saldos = new Map<number, number>()
-  for (const t of movimientos ?? []) {
-    const delta = t.tipo === 'ingreso' ? aNumero(t.monto) : -aNumero(t.monto)
-    saldos.set(t.cuenta_id, (saldos.get(t.cuenta_id) ?? 0) + delta)
-  }
+  const saldos = calcularSaldos(cuentas, movimientos ?? [])
 
   return cuentas.map((c) => ({
     cuenta_id: c.cuenta_id,
     nombre: c.nombre,
     metodo: c.metodo,
     balance_inicial: aNumero(c.balance_inicial),
-    saldo: aNumero(c.balance_inicial) + (saldos.get(c.cuenta_id) ?? 0),
+    saldo: redondearDinero(saldos.get(c.cuenta_id) ?? aNumero(c.balance_inicial)),
+    dia_corte: c.dia_corte != null ? aNumero(c.dia_corte) : null,
+    dia_pago: c.dia_pago != null ? aNumero(c.dia_pago) : null,
+    limite: c.limite != null ? aNumero(c.limite) : null,
   }))
 }
 
@@ -152,6 +135,7 @@ export async function buscarPagosProximos(
     cuenta_nombre: null,
     recurrente: p.recurrente === true,
     dia_cobro: p.dia_cobro != null ? aNumero(p.dia_cobro) : null,
+    es_tarjeta: p.es_tarjeta === true,
   }))
 }
 
@@ -176,54 +160,6 @@ export async function buscarMovimientosRecientes(
     fecha: t.fecha,
     descripcion: t.descripcion,
   }))
-}
-
-function detectarAlertas(cuentas: Cuenta[], pagos: ProximoPago[]): AlertaDomiciliado[] {
-  const pendientes = pagos.filter(
-    (p) => p.domiciliado && !p.pagado && p.cuenta_id != null
-  )
-
-  const porCuenta = new Map<number, ProximoPago[]>()
-  for (const p of pendientes) {
-    const lista = porCuenta.get(p.cuenta_id!) ?? []
-    lista.push(p)
-    porCuenta.set(p.cuenta_id!, lista)
-  }
-
-  const alertas: AlertaDomiciliado[] = []
-  for (const [cuentaId, lista] of porCuenta) {
-    const cuenta = cuentas.find((c) => c.cuenta_id === cuentaId)
-    if (!cuenta) continue
-
-    lista.sort(
-      (a, b) =>
-        new Date(a.fecha_vencimiento).getTime() -
-        new Date(b.fecha_vencimiento).getTime()
-    )
-
-    let acumulado = 0
-    for (const p of lista) {
-      acumulado += p.monto
-      if (acumulado > cuenta.saldo) {
-        alertas.push({
-          pagoId: p.proximo_pago_id,
-          descripcion: p.descripcion,
-          monto: p.monto,
-          fechaVencimiento: p.fecha_vencimiento,
-          cuentaNombre: cuenta.nombre,
-          faltante: Math.round((acumulado - cuenta.saldo) * 100) / 100,
-        })
-      }
-    }
-  }
-
-  alertas.sort(
-    (a, b) =>
-      new Date(a.fechaVencimiento).getTime() -
-      new Date(b.fechaVencimiento).getTime()
-  )
-
-  return alertas
 }
 
 export interface ConfiguracionUsuario {
@@ -261,9 +197,11 @@ export async function obtenerDatosDashboard(userId: string): Promise<DatosDashbo
     obtenerConfiguracion(userId),
   ])
 
+  const pagosVisibles = pagos.filter((p) => !(p.es_tarjeta && p.monto <= 0))
+
   const cuentaPorId = new Map(cuentas.map((c) => [c.cuenta_id, c]))
 
-  const pagosConNombre = pagos.map((p) => ({
+  const pagosConNombre = pagosVisibles.map((p) => ({
     ...p,
     cuenta_nombre: p.cuenta_id != null ? (cuentaPorId.get(p.cuenta_id)?.nombre ?? 'Cuenta') : null,
   }))
@@ -290,6 +228,104 @@ export async function obtenerDatosDashboard(userId: string): Promise<DatosDashbo
   }
 }
 
+interface TarjetaCuenta {
+  cuenta_id: number
+  nombre: string
+  balance_inicial: number
+  dia_corte: number | null
+  dia_pago: number | null
+}
+
+function tarjetaConCiclo(cuenta: TarjetaCuenta): boolean {
+  return cuenta.dia_corte != null && cuenta.dia_pago != null
+}
+
+async function deudaTarjeta(userId: string, tarjeta: TarjetaCuenta): Promise<number> {
+  const { data: movimientos, error } = await supabase
+    .from('transaccion')
+    .select('tipo, monto')
+    .eq('usuario_id', userId)
+    .eq('cuenta_id', tarjeta.cuenta_id)
+
+  if (error) throw new Error('No se pudieron obtener los movimientos de la tarjeta')
+
+  const saldos = calcularSaldos(
+    [
+      {
+        cuenta_id: tarjeta.cuenta_id,
+        metodo: 'credito',
+        balance_inicial: aNumero(tarjeta.balance_inicial),
+      },
+    ],
+    (movimientos ?? []).map((t) => ({
+      ...t,
+      cuenta_id: tarjeta.cuenta_id,
+    }))
+  )
+
+  return redondearDinero(saldos.get(tarjeta.cuenta_id) ?? aNumero(tarjeta.balance_inicial))
+}
+
+async function pagoTarjetaPendiente(
+  userId: string,
+  tarjetaId: number
+): Promise<{ proximo_pago_id: number } | null> {
+  const { data } = await supabase
+    .from('proximo_pago')
+    .select('proximo_pago_id')
+    .eq('usuario_id', userId)
+    .eq('cuenta_id', tarjetaId)
+    .eq('es_tarjeta', true)
+    .eq('pagado', false)
+    .maybeSingle()
+
+  return data
+}
+
+async function sincronizarPagoTarjeta(userId: string, tarjetaId: number): Promise<void> {
+  const { data: cuenta } = await supabase
+    .from('cuenta')
+    .select('cuenta_id, nombre, metodo, balance_inicial, dia_corte, dia_pago')
+    .eq('cuenta_id', tarjetaId)
+    .eq('usuario_id', userId)
+    .maybeSingle()
+
+  if (!cuenta || cuenta.metodo !== 'credito') return
+  const tarjeta = cuenta as TarjetaCuenta
+  if (!tarjetaConCiclo(tarjeta)) return
+
+  const deuda = await deudaTarjeta(userId, tarjeta)
+  const pendiente = await pagoTarjetaPendiente(userId, tarjeta.cuenta_id)
+  const decision: DecisionPagoTarjeta = decisionPagoTarjeta(pendiente)
+
+  const valores = {
+    usuario_id: userId,
+    descripcion: `Pago de la tarjeta ${tarjeta.nombre}`,
+    monto: deuda,
+    fecha_vencimiento: fechaPagoTarjeta(
+      tarjeta.dia_corte!,
+      tarjeta.dia_pago!,
+      new Date()
+    ),
+    pagado: false,
+    domiciliado: false,
+    cuenta_id: tarjeta.cuenta_id,
+    recurrente: true,
+    dia_cobro: tarjeta.dia_pago,
+    es_tarjeta: true,
+  }
+
+  const { error } =
+    decision.accion === 'actualizar'
+      ? await supabase
+          .from('proximo_pago')
+          .update(valores)
+          .eq('proximo_pago_id', decision.pagoId)
+      : await supabase.from('proximo_pago').insert(valores)
+
+  if (error) throw new Error('No se pudo sincronizar el pago de la tarjeta')
+}
+
 export async function registrarMovimiento(
   userId: string,
   datos: { cuentaId: number; tipo: TipoMovimiento; monto: number; descripcion?: string }
@@ -303,38 +339,87 @@ export async function registrarMovimiento(
   })
 
   if (error) throw new Error('No se pudo registrar el movimiento')
+
+  await sincronizarPagoTarjeta(userId, datos.cuentaId)
 }
 
 export async function crearCuenta(
   userId: string,
-  datos: { nombre: string; metodo: Metodo; balanceInicial: number }
+  datos: {
+    nombre: string
+    metodo: Metodo
+    balanceInicial: number
+    diaCorte?: number | null
+    diaPago?: number | null
+    limite?: number | null
+  }
 ): Promise<void> {
-  const { error } = await supabase.from('cuenta').insert({
-    usuario_id: userId,
-    nombre: datos.nombre,
-    metodo: datos.metodo,
-    balance_inicial: datos.balanceInicial,
-  })
+  const { data: insertada, error } = await supabase
+    .from('cuenta')
+    .insert({
+      usuario_id: userId,
+      nombre: datos.nombre,
+      metodo: datos.metodo,
+      balance_inicial: datos.balanceInicial,
+      dia_corte: datos.metodo === 'credito' ? (datos.diaCorte ?? null) : null,
+      dia_pago: datos.metodo === 'credito' ? (datos.diaPago ?? null) : null,
+      limite: datos.metodo === 'credito' ? (datos.limite ?? null) : null,
+    })
+    .select('cuenta_id')
+    .single()
 
   if (error) throw new Error('No se pudo crear la cuenta')
+
+  if (datos.metodo === 'credito') {
+    await sincronizarPagoTarjeta(userId, insertada.cuenta_id)
+  }
 }
 
 export async function actualizarCuenta(
   userId: string,
   cuentaId: number,
-  datos: { nombre: string; metodo: Metodo; balanceInicial: number }
+  datos: {
+    nombre: string
+    metodo: Metodo
+    saldoObjetivo: number
+    diaCorte?: number | null
+    diaPago?: number | null
+    limite?: number | null
+  },
+  saldoAnterior: number
 ): Promise<void> {
   const { error } = await supabase
     .from('cuenta')
     .update({
       nombre: datos.nombre,
       metodo: datos.metodo,
-      balance_inicial: datos.balanceInicial,
+      dia_corte: datos.metodo === 'credito' ? (datos.diaCorte ?? null) : null,
+      dia_pago: datos.metodo === 'credito' ? (datos.diaPago ?? null) : null,
+      limite: datos.metodo === 'credito' ? (datos.limite ?? null) : null,
     })
     .eq('cuenta_id', cuentaId)
     .eq('usuario_id', userId)
 
   if (error) throw new Error('No se pudo actualizar la cuenta')
+
+  const delta = redondearDinero(datos.saldoObjetivo - aNumero(saldoAnterior))
+  if (delta !== 0) {
+    const { error: errorAjuste } = await supabase.from('transaccion').insert({
+      usuario_id: userId,
+      cuenta_id: cuentaId,
+      tipo: tipoAjusteSaldo(delta, datos.metodo),
+      monto: Math.abs(delta),
+      descripcion: 'Ajuste de saldo',
+    })
+
+    if (errorAjuste) {
+      throw new Error('No se pudo registrar el ajuste de saldo en tu historial')
+    }
+  }
+
+  if (datos.metodo === 'credito') {
+    await sincronizarPagoTarjeta(userId, cuentaId)
+  }
 }
 
 export async function eliminarCuenta(userId: string, cuentaId: number): Promise<void> {
@@ -400,15 +485,45 @@ export async function liquidarPago(
     .from('proximo_pago')
     .update({ pagado: true })
     .eq('proximo_pago_id', pagoId)
-    .select('fecha_vencimiento, domiciliado, recurrente, dia_cobro')
-    .single()
+    .eq('pagado', false)
+    .select('fecha_vencimiento, domiciliado, recurrente, dia_cobro, es_tarjeta, cuenta_id, monto')
+    .maybeSingle()
 
-  if (errorPago || !pagoActual) {
+  if (errorPago) {
     await supabase
       .from('transaccion')
       .delete()
       .eq('transaccion_id', insertado?.[0]?.transaccion_id)
     throw new Error('No se pudo marcar el pago como liquidado')
+  }
+
+  if (!pagoActual) {
+    await supabase
+      .from('transaccion')
+      .delete()
+      .eq('transaccion_id', insertado?.[0]?.transaccion_id)
+    throw new Error('Este pago ya fue liquidado')
+  }
+
+  const esTarjeta = pagoActual.es_tarjeta === true
+  const tarjetaId = esTarjeta ? pagoActual.cuenta_id : null
+
+  if (esTarjeta && tarjetaId != null) {
+    const { error: errorTarjeta } = await supabase.from('transaccion').insert({
+      usuario_id: userId,
+      cuenta_id: tarjetaId,
+      tipo: 'ingreso',
+      monto: datos.monto,
+      descripcion: `Pago a la tarjeta: ${datos.descripcion}`,
+    })
+
+    if (errorTarjeta) {
+      await supabase
+        .from('transaccion')
+        .delete()
+        .eq('transaccion_id', insertado?.[0]?.transaccion_id)
+      throw new Error('No se pudo registrar el pago de la tarjeta')
+    }
   }
 
   const recurrente = pagoActual.recurrente === true
@@ -418,12 +533,44 @@ export async function liquidarPago(
 
   const base = new Date(pagoActual.fecha_vencimiento)
   base.setDate(base.getDate() + 1)
+  const fechaSiguiente = siguienteDiaCobro(diaCobro, base)
+
+  if (esTarjeta && tarjetaId != null) {
+    const restante = restanteTarjeta(aNumero(pagoActual.monto), aNumero(datos.monto))
+    const pendiente = await pagoTarjetaPendiente(userId, tarjetaId)
+    const decision = decisionPagoTarjeta(pendiente)
+    const valores = {
+      usuario_id: userId,
+      descripcion: datos.descripcion,
+      monto: restante,
+      fecha_vencimiento: fechaSiguiente,
+      pagado: false,
+      domiciliado: false,
+      cuenta_id: tarjetaId,
+      recurrente: true,
+      dia_cobro: diaCobro,
+      es_tarjeta: true,
+    }
+
+    const { error: errorTarjetaSiguiente } =
+      decision.accion === 'actualizar'
+        ? await supabase
+            .from('proximo_pago')
+            .update(valores)
+            .eq('proximo_pago_id', decision.pagoId)
+        : await supabase.from('proximo_pago').insert(valores)
+
+    if (errorTarjetaSiguiente) {
+      throw new Error('No se pudo generar el siguiente pago de la tarjeta')
+    }
+    return
+  }
 
   const { error: errorInstancia } = await supabase.from('proximo_pago').insert({
     usuario_id: userId,
     descripcion: datos.descripcion,
     monto: datos.monto,
-    fecha_vencimiento: siguienteDiaCobro(diaCobro, base),
+    fecha_vencimiento: fechaSiguiente,
     domiciliado: datos.domiciliado === true,
     cuenta_id: datos.domiciliado ? datos.cuentaId : null,
     recurrente: true,
@@ -441,6 +588,7 @@ interface DatosProximoPago {
   cuentaId?: number | null
   recurrente?: boolean
   diaCobro?: number | null
+  reprogramarFecha?: string | null
 }
 
 export async function crearProximoPago(
@@ -468,12 +616,18 @@ export async function actualizarProximoPago(
   datos: DatosProximoPago
 ): Promise<void> {
   const recurrente = datos.recurrente === true
+  const fechaVencimiento = recurrente
+    ? datos.reprogramarFecha
+      ? datos.reprogramarFecha
+      : siguienteDiaCobro(datos.diaCobro ?? 0, new Date())
+    : datos.fechaVencimiento
+
   const { error } = await supabase
     .from('proximo_pago')
     .update({
       descripcion: datos.descripcion,
       monto: datos.monto,
-      fecha_vencimiento: recurrente ? siguienteDiaCobro(datos.diaCobro ?? 0, new Date()) : datos.fechaVencimiento,
+      fecha_vencimiento: fechaVencimiento,
       domiciliado: datos.domiciliado,
       cuenta_id: datos.domiciliado ? datos.cuentaId ?? null : null,
       recurrente,

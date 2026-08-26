@@ -11,6 +11,10 @@ interface CuentaRowProps {
 
 export function CuentaRow({ cuenta, onEditar, onEliminar }: CuentaRowProps) {
   const { label, Icon } = METODOS_ICONOS[cuenta.metodo]
+  const subtitulo =
+    cuenta.metodo === 'credito'
+      ? `Crédito · Deuda${cuenta.dia_corte != null ? ` · Corte día ${cuenta.dia_corte}` : ''}`
+      : label
 
   return (
     <div className="p-4 flex items-center justify-between gap-2">
@@ -22,13 +26,28 @@ export function CuentaRow({ cuenta, onEditar, onEliminar }: CuentaRowProps) {
           <p className="text-sm font-medium text-[var(--color-text)] truncate">
             {cuenta.nombre}
           </p>
-          <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {subtitulo}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <p className="text-sm font-semibold text-[var(--color-text)] mr-1">
-          {formatearDinero(cuenta.saldo)}
-        </p>
+        <div className="text-right mr-1">
+          <p
+            className={`text-sm font-semibold ${
+              cuenta.metodo === 'credito'
+                ? 'text-[var(--color-danger)]'
+                : 'text-[var(--color-text)]'
+            }`}
+          >
+            {formatearDinero(cuenta.saldo)}
+          </p>
+          {cuenta.metodo === 'credito' && cuenta.limite != null && (
+            <p className="text-[10px] text-[var(--color-text-muted)] leading-tight">
+              Límite {formatearDinero(cuenta.limite)}
+            </p>
+          )}
+        </div>
         <button
           onClick={onEditar}
           aria-label={`Editar ${cuenta.nombre}`}
