@@ -1,26 +1,34 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Sheet } from '@/components/ui/sheet'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useToast } from '@/components/ui/toast'
 import { FormMovimiento } from '@/components/movimiento/form-movimiento'
 import { FormTransferencia } from '@/components/movimiento/form-transferencia'
 import { FormLiquidar } from '@/components/movimiento/form-liquidar'
+import { FormMontoTarjeta } from '@/components/movimiento/form-monto-tarjeta'
 import { FormCuenta } from '@/components/cuenta/form-cuenta'
 import { FormPago } from '@/components/pago/form-pago'
 import { useIsMobile } from '@/components/hooks/use-is-mobile'
 import { DashboardMovil } from '@/components/dashboard/dashboard-movil'
 import { DashboardEscritorio } from '@/components/dashboard/dashboard-escritorio'
+import { HorizonteControl } from '@/components/dashboard/horizonte-control'
 import {
+  adelantarPeriodo,
   eliminarCuenta,
   eliminarProximoPago,
-  type Cuenta,
-  type DatosDashboard,
-  type ProximoPago,
-  type TipoMovimiento,
-  type Vista,
+  guardarHorizonte,
+  guardarProximoIngreso,
+  obtenerDatosDashboard,
+} from '@/lib/acciones-servidor'
+import { hoyLocal } from '@/lib/fechas'
+import type {
+  Cuenta,
+  DatosDashboard,
+  ProximoPago,
+  TipoMovimiento,
+  Vista,
 } from '@/lib/acciones'
 
 interface DashboardContentProps {
@@ -31,60 +39,108 @@ type SheetState =
   | { tipo: 'movimiento'; tipoMov: TipoMovimiento }
   | { tipo: 'transferencia' }
   | { tipo: 'liquidar'; pago: ProximoPago }
+  | { tipo: 'montoTarjeta'; pago: ProximoPago }
   | { tipo: 'cuenta' }
   | { tipo: 'editarCuenta'; cuenta: Cuenta }
   | { tipo: 'pago' }
   | { tipo: 'editarPago'; pago: ProximoPago }
 
-export function DashboardContent({ datos }: DashboardContentProps) {
+export function DashboardContent({ datos: datosInicial }: DashboardContentProps) {
+  const [datos, setDatos] = useState(datosInicial)
   const [sheet, setSheet] = useState<SheetState | null>(null)
   const [eliminando, setEliminando] = useState<Cuenta | null>(null)
   const [eliminandoPago, setEliminandoPago] = useState<ProximoPago | null>(null)
-  const [ahora] = useState(() => new Date().getTime())
+  const [adelantandoPago, setAdelantandoPago] = useState<ProximoPago | null>(null)
+  const [hoy] = useState(() => hoyLocal())
+  const [guardandoHorizonte, setGuardandoHorizonte] = useState(false)
   const isMovil = useIsMobile()
-  const router = useRouter()
   const { addToast } = useToast()
+
+  // Fuente de verdad local: cada mutación re-consulta el dashboard.
+  const actualizarDatos = async () => {
+    const nuevos = await obtenerDatosDashboard()
+    if (nuevos) setDatos(nuevos)
+  }
+
+  const persistirHorizonte = async (preferido: number | null, fecha: string | null) => {
+    setGuardandoHorizonte(true)
+    const resultado = await guardarHorizonte({ preferido, fecha })
+    if (!resultado.ok) addToast(resultado.error, 'error')
+    setGuardandoHorizonte(false)
+    if (resultado.ok) await actualizarDatos()
+  }
+
+  const persistirIngreso = async (fecha: string | null) => {
+    setGuardandoHorizonte(true)
+    const resultado = await guardarProximoIngreso(fecha)
+    if (!resultado.ok) addToast(resultado.error, 'error')
+    setGuardandoHorizonte(false)
+    if (resultado.ok) await actualizarDatos()
+  }
 
   const cerrar = () => {
     setSheet(null)
-    router.refresh()
+    void actualizarDatos()
   }
 
   const confirmarEliminar = async () => {
     if (!eliminando) return
-    try {
-      await eliminarCuenta(datos.userId, eliminando.cuenta_id)
-      addToast('Cuenta eliminada', 'success')
-      router.refresh()
-    } catch (err) {
-      addToast(
-        err instanceof Error ? err.message : 'No se pudo eliminar la cuenta',
-        'error'
-      )
-    } finally {
-      setEliminando(null)
+    const resultado = await eliminarCuenta(eliminando.cuenta_id)
+    if (resultado.ok) {
+      addToast('Cuenta retirada del panel', 'success')
+      await actualizarDatos()
+    } else {
+      addToast(resultado.error, 'error')
     }
+    setEliminando(null)
   }
 
   const confirmarEliminarPago = async () => {
     if (!eliminandoPago) return
-    try {
-      await eliminarProximoPago(datos.userId, eliminandoPago.proximo_pago_id)
-      addToast('Pago eliminado', 'success')
-      router.refresh()
-    } catch (err) {
-      addToast(
-        err instanceof Error ? err.message : 'No se pudo eliminar el pago',
-        'error'
-      )
-    } finally {
-      setEliminandoPago(null)
+    const resultado = await eliminarProximoPago(eliminandoPago.proximo_pago_id)
+    if (resultado.ok) {
+      addToast('Pago retirado', 'success')
+      await actualizarDatos()
+    } else {
+      addToast(resultado.error, 'error')
+    }
+    setEliminandoPago(null)
+  }
+
+  const confirmarAdelantar = async () => {
+    if (!adelantandoPago) return
+    const resultado = await adelantarPeriodo(adelantandoPago.proximo_pago_id)
+    if (resultado.ok) {
+      addToast('Siguiente periodo adelantado', 'success')
+      await actualizarDatos()
+    } else {
+      addToast(resultado.error, 'error')
+    }
+    setAdelantandoPago(null)
+  }
+
+  const abrirEdicionPago = (pago: ProximoPago) => {
+    if (pago.es_tarjeta) {
+      setSheet({ tipo: 'montoTarjeta', pago })
+    } else {
+      setSheet({ tipo: 'editarPago', pago })
     }
   }
 
+  const horizonteControl = (
+    <HorizonteControl
+      horizonte={datos.horizonte}
+      proximoIngreso={datos.proximoIngreso}
+      guardando={guardandoHorizonte}
+      onPersistirPreferido={persistirHorizonte}
+      onPersistirIngreso={persistirIngreso}
+    />
+  )
+
   const propsCabecera = {
     datos,
-    ahora,
+    hoy,
+    horizonteControl,
     modo: (isMovil ? 'movil' : 'escritorio') as Vista,
     onNuevoGasto: () => setSheet({ tipo: 'movimiento', tipoMov: 'egreso' }),
     onNuevoIngreso: () => setSheet({ tipo: 'movimiento', tipoMov: 'ingreso' }),
@@ -93,9 +149,10 @@ export function DashboardContent({ datos }: DashboardContentProps) {
     onEditarCuenta: (cuenta: Cuenta) => setSheet({ tipo: 'editarCuenta', cuenta }),
     onEliminarCuenta: (cuenta: Cuenta) => setEliminando(cuenta),
     onNuevoPago: () => setSheet({ tipo: 'pago' }),
-    onEditarPago: (pago: ProximoPago) => setSheet({ tipo: 'editarPago', pago }),
+    onEditarPago: abrirEdicionPago,
     onEliminarPago: (pago: ProximoPago) => setEliminandoPago(pago),
     onPagarPago: (pago: ProximoPago) => setSheet({ tipo: 'liquidar', pago }),
+    onAdelantarPago: (pago: ProximoPago) => setAdelantandoPago(pago),
   }
 
   return (
@@ -119,9 +176,12 @@ export function DashboardContent({ datos }: DashboardContentProps) {
       >
         {sheet?.tipo === 'movimiento' && (
           <FormMovimiento
-            userId={datos.userId}
             tipo={sheet.tipoMov}
             cuentas={datos.cuentas}
+            pagos={datos.pagos}
+            horizonte={datos.horizonte}
+            disponibleReal={datos.disponibleReal}
+            hoy={hoy}
             onClose={cerrar}
           />
         )}
@@ -129,22 +189,19 @@ export function DashboardContent({ datos }: DashboardContentProps) {
 
       <Sheet open={sheet?.tipo === 'transferencia'} title="Transferir" onClose={cerrar}>
         {sheet?.tipo === 'transferencia' && (
-          <FormTransferencia
-            userId={datos.userId}
-            cuentas={datos.cuentas}
-            onClose={cerrar}
-          />
+          <FormTransferencia cuentas={datos.cuentas} onClose={cerrar} />
         )}
       </Sheet>
 
       <Sheet open={sheet?.tipo === 'liquidar'} title="Liquidar Pago" onClose={cerrar}>
         {sheet?.tipo === 'liquidar' && (
-          <FormLiquidar
-            userId={datos.userId}
-            pago={sheet.pago}
-            cuentas={datos.cuentas}
-            onClose={cerrar}
-          />
+          <FormLiquidar pago={sheet.pago} cuentas={datos.cuentas} onClose={cerrar} />
+        )}
+      </Sheet>
+
+      <Sheet open={sheet?.tipo === 'montoTarjeta'} title="Monto del ciclo" onClose={cerrar}>
+        {sheet?.tipo === 'montoTarjeta' && (
+          <FormMontoTarjeta pago={sheet.pago} onClose={cerrar} />
         )}
       </Sheet>
 
@@ -161,7 +218,6 @@ export function DashboardContent({ datos }: DashboardContentProps) {
       >
         {(sheet?.tipo === 'cuenta' || sheet?.tipo === 'editarCuenta') && (
           <FormCuenta
-            userId={datos.userId}
             cuenta={sheet.tipo === 'editarCuenta' ? sheet.cuenta : undefined}
             onClose={cerrar}
           />
@@ -181,7 +237,6 @@ export function DashboardContent({ datos }: DashboardContentProps) {
       >
         {(sheet?.tipo === 'pago' || sheet?.tipo === 'editarPago') && (
           <FormPago
-            userId={datos.userId}
             cuentas={datos.cuentas}
             pago={sheet.tipo === 'editarPago' ? sheet.pago : undefined}
             onClose={cerrar}
@@ -191,9 +246,9 @@ export function DashboardContent({ datos }: DashboardContentProps) {
 
       <ConfirmDialog
         open={eliminando !== null}
-        title="¿Eliminar cuenta?"
-        message={`Se eliminará ${eliminando?.nombre ?? ''} y también todos sus movimientos. Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
+        title="¿Retirar cuenta?"
+        message={`Se retirará ${eliminando?.nombre ?? ''} de tu panel. Su historial se conserva.`}
+        confirmLabel="Retirar"
         cancelLabel="Cancelar"
         danger
         onConfirm={confirmarEliminar}
@@ -209,6 +264,16 @@ export function DashboardContent({ datos }: DashboardContentProps) {
         danger
         onConfirm={confirmarEliminarPago}
         onCancel={() => setEliminandoPago(null)}
+      />
+
+      <ConfirmDialog
+        open={adelantandoPago !== null}
+        title="¿Adelantar siguiente periodo?"
+        message={`Se generará el siguiente periodo de "${adelantandoPago?.descripcion ?? ''}" sin pagar el actual. Este pago seguirá pendiente.`}
+        confirmLabel="Adelantar"
+        cancelLabel="Cancelar"
+        onConfirm={confirmarAdelantar}
+        onCancel={() => setAdelantandoPago(null)}
       />
     </>
   )

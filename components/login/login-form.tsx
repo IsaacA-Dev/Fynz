@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/toast'
 import { useAnime } from '@/components/hooks/use-anime'
 import { Entrada } from '@/components/ui/motion'
 import { FynzLogoAnimado } from '@/components/ui/fynz-logo'
+import { solicitarRecuperacion } from '@/lib/acciones-servidor'
 import { esEmailValido, normalizarEmail } from '@/lib/utils/email'
 import { traducirErrorAuth } from '@/lib/utils/errores-auth'
 
@@ -21,6 +22,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [recuperando, setRecuperando] = useState(false)
+  const [recuperacionEnviada, setRecuperacionEnviada] = useState(false)
   const formRef = useRef<HTMLFormElement | null>(null)
   const { animar, reducirMovimiento } = useAnime()
 
@@ -154,11 +157,12 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <button
           onClick={() => {
             setIsLogin(!isLogin)
             setEmailError('')
+            setRecuperacionEnviada(false)
           }}
           className="text-[var(--color-primary)] text-sm font-medium hover:opacity-80 transition-opacity"
         >
@@ -168,6 +172,40 @@ export function LoginForm() {
             <>¿Ya tienes cuenta? <span className="underline">Inicia sesión</span></>
           )}
         </button>
+
+        {isLogin && (
+          <div>
+            {recuperacionEnviada ? (
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Si ese correo existe, recibirás un enlace para restablecerlo.
+              </p>
+            ) : (
+              <button
+                disabled={recuperando}
+                onClick={async () => {
+                  setRecuperando(true)
+                  const normalizado = normalizarEmail(email)
+                  if (!esEmailValido(normalizado)) {
+                    setEmailError('Escribe tu correo para recuperar tu contraseña')
+                    setRecuperando(false)
+                    return
+                  }
+                  setEmailError('')
+                  const resultado = await solicitarRecuperacion(normalizado)
+                  setRecuperando(false)
+                  if (!resultado.ok) {
+                    addToast(resultado.error, 'error')
+                    return
+                  }
+                  setRecuperacionEnviada(true)
+                }}
+                className="text-[var(--color-text-muted)] text-xs font-medium hover:text-[var(--color-primary)] transition-colors disabled:opacity-50"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

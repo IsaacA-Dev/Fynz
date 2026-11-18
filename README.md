@@ -22,30 +22,30 @@ El corazón de la aplicación es un cálculo automático y estricto. El límite 
 - **Radar de Obligaciones:** gestión de próximos pagos, recibos y deudas con fecha de vencimiento y estado de liquidación.
 - **Sistema de Autenticación:** privacidad total mediante correo y contraseña con Supabase Auth.
 - **Guardian de Rutas:** un proxy central verifica la sesión en cada navegación; sin sesión no hay dashboard.
-- **Interfaz Fluida:** componentes modulares, notificaciones tipo toast, diálogos de confirmación y transiciones animadas con Framer Motion.
-- **Clic, Confirmar, Listo:** el cierre de sesión requiere confirmación antes de ejecutarse.
+- **Interfaz Fluida:** componentes modulares, notificaciones tipo toast, diálogos de confirmación y animaciones accesibles (respetan `prefers-reduced-motion`).
+- **Horizonte consciente:** el Disponible Real siempre indica el periodo (próximo ingreso, 7/15/30 días o fecha) y muestra la presión futura por separado.
+- **Clic, Confirmar, Listo:** el cierre de sesión y las operaciones destructivas requieren confirmación.
 
 ## Stack Tecnológico
 
 | Capa | Tecnología |
 |------|------------|
-| Framework | Next.js (App Router) |
+| Framework | Next.js 16 (App Router + Server Actions) |
 | Lenguaje | TypeScript |
 | Estilos | Tailwind CSS |
-| Animaciones | Framer Motion |
+| Animaciones | anime.js |
 | Iconos | Lucide |
-| Base de Datos y Auth | Supabase (PostgreSQL) |
+| Base de Datos y Auth | Supabase (PostgreSQL, RLS + RPC atómicas) |
 | Entorno de Ejecución | Bun |
 
-## Modelo de Datos
+## Base de datos y seguridad
 
-El proyecto se sostiene sobre un modelo relacional. Las tablas están en singular y los registros se vinculan al usuario mediante `usuario_id`:
+El esquema está versionado en `docs/sql/schema-v2.sql` (base nueva) y `docs/sql/migracion-v2.sql` (base existente; idempotente, converge al mismo estado). En ambas:
 
-1. **Cuenta:** almacena el nombre, el método (`debito`, `credito`, `efectivo`) y el balance inicial.
-2. **Transaccion:** bitácora histórica de ingresos y egresos por cuenta.
-3. **Proximo Pago:** tareas financieras con descripción, monto, fecha de vencimiento y estado `pagado`.
-
-> **Nota:** hoy el Row Level Security está desactivado para agilizar el MVP. La seguridad a nivel de datos (RLS + políticas por usuario) está contemplada antes de producción.
+- Montos en **centavos enteros (bigint)** y fechas de negocio como **calendar date**.
+- **Row Level Security habilitada** con políticas por usuario; toda escritura va por **RPC security definer** que valida la sesión y la propiedad de los recursos.
+- Operaciones financieras **atómicas e idempotentes** (clave de idempotencia por operación) y **auditoría mínima** sin montos ni notas.
+- En la app: Server Actions con `userId` desde la sesión (nunca del cliente) y errores traducidos a español.
 
 ## Requisitos
 
@@ -75,10 +75,16 @@ El panel de Supabase las encuentras en **Settings → API**. Si tienes algún va
 
 ### 3. Preparar la base de datos
 
-En el dashboard de Supabase (**Table Editor**):
+Hay dos scripts equivalentes en `docs/sql/` que producen el **mismo estado final**:
 
-1. Crea/importa las tablas `cuenta`, `transaccion` y `proximo_pago` con sus columnas (ver "Modelo de Datos").
-2. Agrega la columna `usuario_id` (tipo UUID) a `cuenta` y `proximo_pago`, referenciando a `auth.users`.
+| Proyecto | Usar | Qué hace |
+|---|---|---|
+| **Nuevo / vacío** | `docs/sql/schema-v2.sql` | Crea todo desde cero (tablas, CHECKs, FK, RLS, RPC) |
+| **Existente con datos** | `docs/sql/migracion-v2.sql` | Convierte lo existente (¢×100, fechas `date`) y **converge** al mismo estado del schema v2 (sección 10) |
+
+Ejecuta el que corresponda completo en **Supabase Dashboard → SQL Editor → Run**. La migración es idempotente y re-ejecutable: la guarda de tipos evita multiplicar los montos dos veces; su sección 10 incluye pre/post captura de conteos y diagnósticos de datos para confirmar que todo migró bien.
+
+> Respalda tu proyecto antes de ejecutar: la conversión de montos es ×100 (solo migración de proyectos existentes).
 
 ### 4. Habilitar autenticación
 
@@ -102,30 +108,36 @@ Abre [http://localhost:3000](http://localhost:3000), crea tu cuenta y entra a tu
 | `bun dev` | Servidor de desarrollo con hot reload |
 | `bun build` | Build de producción |
 | `bun start` | Ejecutar el build de producción |
-| `bun lint` | Revisar el código con ESLint |
+| `bun test` | Pruebas automatizadas (lógica financiera pura) |
+| `bun run lint` | Revisar el código con ESLint |
 
 ## Estructura del Proyecto
 
 ```
 fynz/
 ├── app/                     # Rutas (App Router)
-│   ├── login/               # Página de inicio de sesión / registro
+│   ├── login/               # Inicio de sesión / registro
+│   ├── recuperar/           # Restablecer contraseña (enlace de Supabase)
+│   ├── historial/           # Historial con filtros y relaciones
 │   ├── page.tsx             # Dashboard (protegido)
-│   ├── not-found.tsx        # Página 404 personalizada
-│   ├── layout.tsx           # Layout raíz + proveedor de toasts
-│   └── globals.css          # Tokens de diseño (variables CSS)
+│   └── layout.tsx           # Layout raíz + proveedor de toasts
 ├── components/
-│   ├── dev/                 # Herramientas de desarrollo (DevToastTester)
-│   ├── login/               # Componentes de la pantalla de acceso
-│   ├── ui/                  # Componentes base (input, button, toast, modal...)
-│   └── LogoutButton.tsx
+│   ├── dashboard/           # Vistas, filas, widgets, horizonte
+│   ├── historial/           # Explorador y detalle de movimientos
+│   ├── login/               # Pantalla de acceso y recuperación
+│   ├── movimiento/          # Formularios (gasto, transferencia, pago)
+│   ├── cuenta/ pago/        # Formularios de cuentas y pagos
+│   └── ui/                  # Componentes base (input, button, toast, diálogos)
 ├── lib/
 │   ├── supabase/            # Clientes de Supabase (server y client)
-│   ├── acciones.ts          # Lógica de datos (cálculo de Disponible Real)
-│   └── utils.ts             # Helpers (validación de email, traducciones)
+│   ├── acciones-servidor.ts # Server Actions (sesión + RPC atómicos)
+│   ├── fechas/ dinero/      # Fechas calendario y centavos (dominio)
+│   ├── horizonte/ ciclos/   # Motor del Disponible Real y ciclos de tarjeta
+│   ├── simulador/           # Impacto en vivo de un gasto
+│   └── errores.ts           # Traducción de errores SQL a español
+├── docs/sql/                # Schema y migración versionados
 ├── proxy.ts                 # Guardián de rutas (sesión y redirecciones)
-├── .env.local               # Credenciales públicas de Supabase
-└── package.json
+└── .env.local               # Credenciales públicas de Supabase
 ```
 
 ## Flujo de la Aplicación

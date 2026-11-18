@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Artefactos de exportaciones de Supabase SQL Editor / descargas
+    "* Supabase_files/**",
   ]),
 ]);
 

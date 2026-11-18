@@ -1,292 +1,456 @@
 # Fynz — Contexto del producto y estado actual
 
-## La idea
+Este documento es la fuente de verdad del producto. Describe la promesa de Fynz, las reglas financieras que no deben romperse, lo que ya está construido, las simplificaciones actuales y el trabajo pendiente antes de utilizar la aplicación con información financiera real.
 
-Las aplicaciones bancarias muestran cuánto dinero hay en una cuenta, pero no necesariamente cuánto se puede gastar con tranquilidad. Ver $10,000 disponibles no significa que los $10,000 estén realmente libres si en los próximos días deben pagarse la renta, la luz, una tarjeta y varios servicios.
+## 1. La idea
 
-Además, algunas interfaces mezclan el dinero líquido con las líneas de crédito disponibles, lo que puede producir una falsa sensación de capacidad económica. El crédito no es dinero propio: es una deuda potencial que deberá pagarse después.
+Las aplicaciones bancarias muestran cuánto dinero existe en una cuenta, pero no necesariamente cuánto puede gastarse con tranquilidad. Tener $10,000 disponibles no significa que los $10,000 estén realmente libres si durante los próximos días deben pagarse la renta, servicios o una tarjeta de crédito.
 
-Fynz nace para reducir esa fricción mental y la ansiedad de tener que calcularlo todo antes de cada compra. Su propósito no es solamente registrar movimientos, sino responder una pregunta concreta:
+Además, algunas interfaces presentan el crédito disponible cerca del dinero propio, lo que puede producir una percepción equivocada de capacidad económica. El crédito no es liquidez ni riqueza: es capacidad de endeudamiento que tendrá que pagarse posteriormente.
+
+Fynz nace para reducir la fricción mental y la ansiedad de calcular todo antes de cada compra. Su propósito no es solamente registrar movimientos, sino responder una pregunta concreta:
 
 > **¿Cómo quedo después de pagar lo que ya debo?**
 
 La propuesta de Fynz puede resumirse así:
 
-> **Fynz no solo te dice cuánto tienes; te dice cuánto puedes gastar sin descuidar tus próximos pagos.**
+> **Fynz no solo te dice cuánto tienes; te ayuda a saber cuánto puedes gastar hoy sin descuidar tus próximos pagos.**
 
-## La fórmula central
+## 2. Principios del producto
 
-> **Disponible Real = Dinero Líquido − Pagos Próximos**
+Todas las decisiones funcionales y visuales deben respetar estos principios:
 
-El cálculo se basa en reglas sencillas:
+- **El crédito nunca se presenta como dinero disponible.** Puede mostrarse como capacidad de compra, pero siempre separado de la liquidez.
+- **El Disponible Real siempre tiene un horizonte.** La cifra debe indicar hasta qué fecha se está calculando.
+- **Una operación económica se registra una sola vez.** Un pago no debe duplicar un gasto ya reconocido.
+- **Todo cambio importante debe ser trazable.** Los ajustes, pagos y correcciones deben conservar un registro comprensible.
+- **La aplicación debe ser conservadora, pero no engañosa.** No debe ocultar compromisos ni descontar obligaciones lejanas sin explicar el periodo considerado.
+- **Registrar información debe tomar pocos segundos.** La precisión no debe convertir el uso diario en una tarea pesada.
+- **La calma está por encima de la saturación.** Los colores, mensajes, gráficas y animaciones deben ayudar a comprender, no aumentar la ansiedad.
+- **Fynz orienta decisiones; no sustituye al banco.** Si la información se registra manualmente, el resultado es una estimación basada en los datos capturados por el usuario.
 
-* El dinero líquido es lo que realmente tienes disponible en cuentas de débito y efectivo.
+## 3. Modelo financiero central
 
-* El límite disponible de una tarjeta de crédito jamás se cuenta como dinero a favor.
+### 3.1 Conceptos
 
-* Una compra realizada con crédito aumenta la deuda, pero no disminuye el dinero líquido hasta que se paga la tarjeta.
+**Dinero líquido:** suma de los saldos actuales de las cuentas de efectivo y débito. Las líneas de crédito no forman parte de este valor.
 
-* Los pagos próximos representan compromisos que ya adquiriste y que todavía están pendientes.
+**Compromiso pendiente:** obligación registrada que todavía no ha sido pagada, cancelada o sustituida. Puede ser un pago único, una instancia de un plan recurrente o el pago de una tarjeta.
 
-* Las transferencias entre cuentas propias no aumentan ni disminuyen el Disponible Real, porque el dinero solamente cambia de lugar.
+**Gasto:** momento en el que se adquiere o consume algo. Una compra con tarjeta de crédito es un gasto aunque el dinero líquido todavía no haya salido.
 
-* Cuando un compromiso se paga, deja de restarse como pago pendiente y el dinero sale de la cuenta seleccionada.
+**Flujo de efectivo:** entrada o salida de dinero líquido. Pagar una tarjeta es una salida de efectivo, pero no un gasto nuevo si las compras ya fueron registradas como gastos.
 
-El objetivo es que el usuario pueda tomar decisiones con base en dinero verdaderamente utilizable y no únicamente en el saldo mostrado por su banco.
+**Horizonte:** fecha límite hasta la cual se consideran los compromisos para calcular el Disponible Real.
 
-## Qué hace actualmente la app
+### 3.2 Fórmula
 
-### Mis cuentas
+> **Disponible Real hasta una fecha = Dinero líquido actual − Compromisos pendientes que vencen hasta esa fecha**
 
-Puedes crear, editar y eliminar cuentas de débito, efectivo o crédito. Cada cuenta comienza con un valor inicial que puede ajustarse posteriormente cuando sea necesario.
+La interfaz nunca debe mostrar únicamente “Disponible Real”. Debe indicar el periodo, por ejemplo:
 
-En las cuentas de débito y efectivo, el saldo inicial representa dinero líquido disponible. En las cuentas de crédito, el monto registrado representa la deuda actual y se mantiene separado del dinero líquido. Estas cuentas se distinguen dentro de la lista con la etiqueta **Crédito** y la deuda se muestra en rojo, para que nunca parezca dinero disponible. El límite total y el crédito disponible formarán parte del modelo completo de tarjetas descrito en la **Frontera actual**.
+- Disponible hasta el próximo ingreso.
+- Disponible durante los próximos 15 días.
+- Disponible hasta el 30 de septiembre.
 
-Para una cuenta de crédito se pueden definir, al crearla o editarla, la **deuda actual** (lo que hoy correspondes, 0 para una tarjeta nueva), el **límite de crédito** (opcional) y el **día de corte** con el **día límite de pago** de la tarjeta (ambos editables). Fynz muestra el **crédito disponible** (límite − deuda) y genera automáticamente en **Próximos pagos** el pago de la tarjeta: al crearla por la deuda registrada, al comprar con ella se actualiza el monto pendiente y su fecha de vencimiento sigue el ciclo de corte y pago. Los cambios del límite no generan movimientos porque no representan dinero, solo capacidad.
+### 3.3 Horizonte predeterminado
 
-El saldo puede ajustarse al editar la cuenta: el campo muestra el saldo (o la deuda) actual y, si lo cambias, Fynz registra un movimiento de **Ajuste de saldo** en el historial, para que el cambio sea trazable y se aplique una sola vez.
+La evolución recomendada es utilizar el siguiente criterio:
 
-### Gastos e ingresos
+1. Si existe una próxima fecha de ingreso registrada, se utiliza como horizonte predeterminado.
+2. Si no existe, se utilizan los próximos 30 días y la interfaz lo comunica claramente.
+3. El usuario puede cambiar el horizonte a 7, 15 o 30 días, o seleccionar una fecha.
+4. Los pagos atrasados siempre se incluyen, independientemente del horizonte seleccionado.
+5. Los compromisos posteriores al horizonte no se descuentan de esa cifra, pero deben mostrarse en una sección de presión futura para que no desaparezcan de la decisión.
+6. Un ingreso estimado no aumenta el dinero líquido hasta que realmente se registra como recibido. Su fecha sirve para delimitar el periodo, no para gastar anticipadamente ese dinero.
 
-Registrar un movimiento toma pocos segundos. Solo se necesita indicar:
+### 3.4 Reglas que no deben romperse
 
-* El monto.
+- Una transferencia entre dos cuentas líquidas propias no altera el Disponible Real.
+- Un gasto de efectivo o débito disminuye el saldo líquido y, por lo tanto, el Disponible Real.
+- Una compra con crédito aumenta el gasto y la deuda, pero no disminuye inmediatamente el dinero líquido.
+- El impacto de una compra con crédito sobre el Disponible Real depende de la fecha de pago del ciclo en el que cae la compra.
+- Pagar una tarjeta disminuye el dinero líquido y la deuda. También reduce o liquida el compromiso correspondiente, por lo que la compra no vuelve a contabilizarse como gasto.
+- Cuando un compromiso se paga, deja de restarse como pendiente.
+- Marcar un pago como pagado debe afectar el saldo y el compromiso una sola vez, aunque la solicitud se repita.
+- Los importes deben almacenarse en unidades monetarias menores —por ejemplo, centavos— y no mediante números decimales de punto flotante.
+- Las fechas de corte y vencimiento son fechas de calendario y no deben cambiar de día por conversiones de zona horaria.
+- Una cuenta con historial no debe eliminarse físicamente; debe archivarse para conservar la trazabilidad.
 
-* La cuenta relacionada.
+## 4. Qué hace actualmente la aplicación
 
-* El tipo de movimiento.
+### 4.1 Cuentas
 
-* Una nota opcional.
+Fynz permite actualmente crear, editar y eliminar cuentas de:
 
-En las cuentas de débito y efectivo, los ingresos aumentan el saldo disponible y los gastos lo disminuyen. En las cuentas de crédito, una compra aumenta la deuda registrada, pero no reduce el dinero líquido. Todos los movimientos quedan registrados en el historial.
+- Efectivo.
+- Débito.
+- Crédito.
 
-### Transferencias entre cuentas
+Las cuentas de efectivo y débito representan dinero líquido. Las cuentas de crédito representan deuda y se muestran separadas, con la etiqueta **Crédito** y el monto adeudado en rojo para evitar que parezca dinero disponible.
 
-Puedes mover dinero entre tus propias cuentas, por ejemplo, al depositar efectivo en una cuenta de débito.
+Cada cuenta comienza con un saldo inicial. Si el saldo o la deuda se modifica posteriormente, Fynz registra un movimiento de **Ajuste de saldo** para que el cambio sea trazable y se aplique una sola vez.
 
-Una transferencia no modifica el Disponible Real, porque no representa un ingreso ni un gasto. El dinero sigue siendo tuyo; solamente cambió de cuenta.
+Antes de producción, la eliminación deberá sustituirse por archivado cuando la cuenta tenga movimientos o pagos relacionados. De esta manera podrá desaparecer de las operaciones diarias sin romper el historial.
 
-### Próximos pagos
+En las tarjetas de crédito se pueden registrar actualmente:
 
-Esta sección concentra los compromisos económicos que deben considerarse antes de gastar.
+- Deuda actual.
+- Límite de crédito opcional.
+- Día de corte.
+- Día límite de pago.
 
-Actualmente permite registrar:
+El crédito disponible se muestra como límite menos deuda. Modificar el límite no genera un movimiento porque cambia la capacidad de crédito, no el dinero ni la deuda.
 
-* **Pagos únicos**, con una fecha de vencimiento específica.
+### 4.2 Movimientos
 
-* **Pagos mensuales**, asociados a un día de cobro recurrente.
+Registrar un movimiento requiere:
 
-* **Pagos domiciliados**, vinculados con la cuenta desde la que se realizará el cobro.
+- Monto.
+- Cuenta relacionada.
+- Tipo de movimiento.
+- Nota opcional.
 
-Cuando se completa un pago mensual, Fynz genera automáticamente el compromiso del siguiente mes. El plan continúa activo hasta que el usuario decida eliminarlo.
+Los movimientos disponibles son ingresos, gastos, transferencias y ajustes de saldo.
 
-Si un pago está domiciliado y el saldo de la cuenta seleccionada no es suficiente para cubrirlo antes de su vencimiento, la aplicación muestra una alerta e indica cuánto dinero falta exactamente.
+En efectivo o débito, un ingreso aumenta el saldo y un gasto lo disminuye. En crédito, una compra aumenta la deuda sin reducir el dinero líquido. Todos los movimientos permanecen registrados en el historial.
 
-Cuando la fecha de vencimiento ya pasó y el compromiso continúa abierto, se muestra en rojo con el estado **Atrasado**.
+### 4.3 Transferencias
 
-### Pago de compromisos
+Fynz permite mover dinero entre cuentas líquidas propias, por ejemplo, al depositar efectivo en una cuenta de débito. Esta operación no modifica el Disponible Real porque el dinero solamente cambia de ubicación.
 
-Cuando llega el momento de cubrir una obligación, el usuario puede marcarla como pagada y seleccionar la cuenta de la que salió el dinero.
+Una salida desde una cuenta líquida hacia una tarjeta no debe modelarse como una transferencia ordinaria: es un **pago de tarjeta** que reduce simultáneamente la liquidez, la deuda y el compromiso asociado.
 
-La aplicación actualiza el saldo correspondiente y elimina ese compromiso del cálculo de pagos pendientes.
+Los adelantos de efectivo desde una tarjeta y otros movimientos que convierten crédito en efectivo quedan fuera del alcance actual.
 
-### Historial reciente
+### 4.4 Próximos pagos
 
-La pantalla principal muestra los movimientos más recientes para que el usuario pueda recordar rápidamente qué ocurrió, cuándo ocurrió y qué cuenta estuvo involucrada.
+La sección de próximos pagos concentra los compromisos económicos que deben considerarse antes de gastar. Actualmente permite registrar:
 
-Un historial completo y consultable, más allá de los últimos movimientos, está pendiente de construirse (ver **Frontera actual**).
+- **Pagos únicos**, con una fecha de vencimiento específica.
+- **Pagos mensuales**, asociados a un día de cobro recurrente.
+- **Pagos domiciliados**, vinculados con la cuenta líquida desde la que se realizará el cobro.
 
-### Diseño adaptable
+Cuando se completa un pago mensual, Fynz genera la instancia del siguiente periodo. El plan continúa activo hasta que el usuario lo elimine o desactive.
 
-En teléfonos, el contenido se organiza en tres pestañas principales:
+El plan recurrente y cada una de sus instancias deben tratarse como entidades diferentes. Eliminar un plan impide generar pagos futuros, pero no borra el historial de las instancias ya pagadas.
 
-* Datos.
+Cuando un pago domiciliado no puede cubrirse con el saldo de la cuenta seleccionada, la aplicación muestra una alerta e indica cuánto dinero falta. Si la fecha de vencimiento ya pasó y el compromiso continúa abierto, se muestra en rojo con el estado **Atrasado**.
 
-* Pagos.
+Los pagos recurrentes ya contemplan:
 
-* Historial.
+- Días 29, 30 o 31 en meses más cortos.
+- Modificación del monto.
+- Cambio de la cuenta domiciliada.
+- Eliminación del plan sin borrar pagos anteriores.
+- Reprogramación de una instancia pendiente sin alterar el día habitual de los siguientes periodos.
+- Prevención de pagos duplicados y de generación repetida del siguiente periodo.
 
-Una barra de navegación inferior permite cambiar rápidamente entre ellas.
+Los pagos anticipados o el adelanto de ciclos continúan pendientes.
 
-En pantallas grandes, Fynz se transforma en un panel con la información principal visible al mismo tiempo: el Disponible Real aparece en la parte superior y las cuentas, pagos e historial se distribuyen en columnas.
+### 4.5 Pago de compromisos
 
-Cada sección incluye una opción de **Ver más** para acceder al contenido completo cuando sea necesario.
+Cuando llega el momento de cubrir una obligación, el usuario puede marcarla como pagada y elegir la cuenta de la que salió el dinero.
 
-### Sesión y comunicación con el usuario
+Fynz actualiza el saldo, registra la salida correspondiente y elimina el compromiso del cálculo de pendientes. La operación debe ser idempotente: un mismo compromiso no puede pagarse dos veces por error, repetición de la solicitud o doble toque.
 
-El acceso se realiza mediante correo electrónico y contraseña. Para evitar cierres accidentales, la aplicación solicita confirmación antes de terminar la sesión.
+### 4.6 Historial
 
-Las operaciones importantes muestran mensajes de confirmación o advertencia con un lenguaje claro y amigable.
+La pantalla principal muestra los movimientos recientes para recordar qué ocurrió, cuándo ocurrió y qué cuenta estuvo involucrada.
 
-## Cómo se usa en un día cualquiera
+Todavía falta una pantalla de historial completo con búsqueda y filtros por:
 
-1. Abres Fynz y observas inmediatamente cuánto dinero tienes realmente disponible después de considerar tus compromisos abiertos.
+- Fecha.
+- Cuenta.
+- Tipo de operación.
+- Estado.
+- Categoría, cuando las categorías se incorporen a los movimientos.
 
-2. Registras los ingresos y gastos conforme ocurren para mantener actualizados los saldos de tus cuentas.
+El detalle de una operación deberá mostrar sus relaciones. Por ejemplo, un pago de tarjeta debe poder vincularse con la tarjeta, la cuenta líquida utilizada y el compromiso que liquidó.
 
-3. Cuando llega la fecha de una obligación, la marcas como pagada y eliges de qué cuenta salió el dinero.
+### 4.7 Diseño adaptable
 
-4. Antes de realizar una compra, revisas tu Disponible Real y las alertas de pagos domiciliados para saber si necesitas conservar parte del dinero.
+En teléfonos, el contenido se distribuye actualmente en tres pestañas principales:
 
-5. Si una cuenta no tiene fondos suficientes para cubrir un cobro próximo, Fynz te indica cuánto necesitas agregar antes de la fecha de vencimiento.
+- Datos.
+- Pagos.
+- Historial.
 
-## Identidad del producto
+Como mejora de lenguaje, **Datos** debería evaluarse frente a nombres más claros como **Inicio** o **Resumen**.
 
-* **Logo propio:** un monograma con forma de moneda y un destello, diseñado especialmente para Fynz.
+En pantallas grandes, Fynz se transforma en un panel: el Disponible Real aparece en la parte superior y las cuentas, pagos e historial se distribuyen en columnas. Cada sección incluye una opción de **Ver más** para acceder al contenido completo.
 
-* **Sensación buscada:** calma, claridad y control.
+El panel de escritorio se adapta al ancho de la ventana: cuatro columnas en pantallas amplias y dos cuando la ventana es más angosta. Desde **Editar panel** se puede elegir entre diseños predefinidos (Clásico, Columna, Compacto y Analítico) que reordenan y ajustan el tamaño de las secciones y widgets sin eliminar nada. Los bloques también pueden reordenarse arrastrándolos; el bloque arrastrado sigue al cursor, los demás se deslizan a su nuevo lugar y es posible moverlos con el teclado desde el asa de cada bloque.
 
-* **Lenguaje:** directo y amigable, sin términos financieros innecesariamente complicados.
+### 4.8 Tablero de widgets
 
-* **Prioridad visual:** mostrar primero la información necesaria para tomar una decisión.
+Los widgets son opcionales. La primera vez que una persona inicia sesión ve la experiencia principal con Disponible Real, acciones, cuentas, pagos e historial. Desde **Crear widget** puede añadir elementos a una zona secundaria y reordenarlos arrastrando. El encabezado financiero principal permanece fijo.
 
-* **Principio central:** el crédito no debe presentarse como riqueza ni como dinero disponible.
+El catálogo actual contiene:
 
-Fynz busca evitar interfaces saturadas y números que generen presión. La información importante debe poder entenderse en pocos segundos.
+- **Saldo por cuenta:** barras con saldos líquidos en azul y deuda de tarjeta en rojo; puede filtrarse por tipo de cuenta.
+- **Flujo del mes:** comparación de ingresos y gastos durante 1, 3 o 6 meses.
+- **Carga de pagos:** acumulación de compromisos pendientes en el tiempo, con horizontes completo, 7, 15 o 30 días y el pago individual más grande.
 
-## Frontera actual
+Cada widget posee configuración propia y puede añadirse más de una vez. El orden y la configuración se guardan por usuario y se conservan entre sesiones y dispositivos.
 
-Fynz ya cuenta con el flujo principal para administrar cuentas, movimientos y compromisos. Quedan tres frentes de trabajo antes de considerar el producto listo para producción: **producto**, **calidad y seguridad**, y **pulido y experiencia**.
+La expansión del catálogo queda pausada hasta estabilizar el cálculo financiero, el historial y el simulador. En especial, los widgets por categoría requieren primero incorporar categorías a los movimientos.
 
-### Pendientes de producto
+### 4.9 Sesión y comunicación
 
-**Historial completo consultable.** La pantalla principal muestra los últimos movimientos; falta una pantalla para consultar con más detalle los ingresos, gastos, transferencias y pagos registrados.
+El acceso se realiza mediante correo electrónico y contraseña. Para evitar cierres accidentales, Fynz solicita confirmación antes de terminar la sesión.
 
-**Horizonte del Disponible Real.** Actualmente, el cálculo considera los pagos próximos registrados sin definir formalmente hasta qué fecha deben incluirse. Falta establecer si el horizonte llegará hasta el siguiente ingreso, utilizará un periodo de 7, 15 o 30 días, o permitirá seleccionar una fecha. La evolución propuesta se desarrolla en **Dirección del producto**.
+Las operaciones importantes muestran mensajes de confirmación o advertencia con lenguaje claro y amigable. Los errores no deben exponer información sensible ni obligar al usuario a interpretar mensajes técnicos.
 
-**Modelo completo de tarjetas de crédito.** El ciclo mínimo ya está disponible: deuda actual y límite de crédito editables (el crédito disponible se muestra como límite − deuda), día de corte y día límite de pago editables, generación automática del próximo pago de la tarjeta (por la deuda registrada y mantenido al día con cada compra) y pago desde una cuenta líquida que baja la deuda sin contabilizar dos veces la compra original. Queda pendiente del modelo completo:
+## 5. Estado actual de las tarjetas de crédito
 
-* Pago total, pago parcial y pago mínimo.
+### 5.1 Implementación simplificada
 
-* Compras a meses o mensualidades, si se incorporan posteriormente.
+Fynz registra deuda, límite, día de corte y día límite de pago. Al crear una tarjeta con deuda, genera un próximo pago, y las compras posteriores actualizan la deuda y el compromiso.
 
-* Varias tarjetas con ciclos distintos.
+Este comportamiento es todavía una **estimación simplificada**: la deuda completa se aproxima mediante un único próximo pago y todavía no se separan las compras por ciclo. Por ello, una compra realizada después del corte podría asignarse a una fecha demasiado cercana.
 
-* Periodización detallada de compras por ciclo (qué compra cae en qué corte).
+Mientras el modelo completo no esté terminado, el compromiso generado automáticamente debe mostrarse como **Pago estimado de tarjeta** y no como una cantidad bancaria exacta. Para datos reales, el usuario debe poder sustituir la estimación por el pago indicado en su estado de cuenta.
 
-Una compra con crédito debe aumentar la deuda, pero no disminuir inmediatamente el dinero líquido. Al pagar la tarjeta, el dinero debe salir de una cuenta líquida y reducir la deuda correspondiente.
+### 5.2 Modelo objetivo
 
-Este flujo deberá evitar que una misma compra se contabilice dos veces: primero como gasto y después nuevamente como gasto al pagar la tarjeta.
+El modelo completo deberá distinguir, como mínimo:
 
-**Simulador de compras.** Está pendiente incorporar la función:
+- Deuda total actual.
+- Ciclo abierto y ciclos cerrados.
+- Saldo al corte.
+- Pago para no generar intereses o monto objetivo del ciclo.
+- Pago mínimo, si el usuario desea registrarlo como referencia.
+- Compras anteriores y posteriores al corte.
+- Fecha límite correspondiente a cada ciclo.
+- Pagos totales y parciales.
+
+Una compra debe asignarse al ciclo que corresponda según su fecha. Una compra posterior al corte pertenece al siguiente ciclo y no debe aumentar el pago del ciclo ya cerrado.
+
+El pago parcial reduce la deuda, registra una salida de dinero líquido y disminuye el compromiso del ciclo. El pago total lo liquida. Ninguno de los dos genera un segundo gasto.
+
+### 5.3 Funcionalidades posteriores
+
+Después de estabilizar los ciclos básicos podrán evaluarse:
+
+- Compras a meses o mensualidades.
+- Intereses y comisiones.
+- Reembolsos y contracargos.
+- Varias tarjetas con ciclos distintos —el modelo debe soportarlo desde el inicio, aunque las pruebas se agreguen progresivamente—.
+
+## 6. Simulador de compras
+
+El simulador es una pieza central de la propuesta y todavía está pendiente. Debe responder:
 
 > **Si compro algo de $1,500, ¿cómo quedo después de mis pagos?**
 
-El simulador deberá mostrar el Disponible Real resultante sin registrar inmediatamente la operación. También deberá considerar si la compra se realizará con efectivo, débito o crédito, ya que cada opción afecta de manera diferente la liquidez y las obligaciones futuras.
+El usuario indicará:
 
-**Casos especiales de pagos recurrentes.** El sistema mensual ya genera el siguiente compromiso. De los casos especiales, ya están cubiertos:
+- Monto.
+- Medio de pago: efectivo, débito o una tarjeta específica.
+- Fecha de la compra, utilizando hoy como valor predeterminado.
 
-* Pagos configurados para los días 29, 30 o 31: el sistema ajusta automáticamente cuando el mes tiene menos días.
+La simulación no registra la operación hasta que el usuario decida confirmarla.
 
-* Modificar el monto de una mensualidad (editar el pago).
+### Resultado con efectivo o débito
 
-* Cambiar la cuenta domiciliada (editar el pago).
+Debe mostrar:
 
-* Eliminar un plan sin borrar su historial: los pagos anteriores permanecen en el historial.
+- Disponible Real actual.
+- Disponible Real después de la compra.
+- Pagos que continuarían cubiertos.
+- Alertas de cuentas domiciliadas que quedarían sin fondos suficientes.
 
-* Reprogramación de compromisos atrasados: al editar un pago mensual se puede ajustar la fecha de la instancia pendiente, sin alterar el día de cobro de los siguientes periodos.
+### Resultado con crédito
 
-* Prevención de pagos duplicados del mismo periodo: una vez liquidado, un compromiso no puede volver a pagarse ni generar otra vez el siguiente periodo.
+Debe mostrar dos momentos para que el crédito nunca parezca dinero gratuito:
 
-Y quedan pendientes:
+- **Impacto hoy:** nueva deuda y gasto registrado, sin reducción inmediata de liquidez.
+- **Impacto al pagar:** ciclo estimado, fecha límite, próximo pago y Disponible Real en el horizonte afectado.
 
-* Pagos anticipados (adelantar el ciclo).
+Si el pago de la tarjeta queda fuera del horizonte actual, la aplicación debe decirlo expresamente y mostrar el compromiso futuro en lugar de presentar una mejora artificial del Disponible Real.
 
-### Pendientes de calidad y seguridad
+## 7. Uso en un día cualquiera
 
-**Reglas financieras y pruebas automatizadas.** Las reglas principales del cálculo ya están protegidas por pruebas automatizadas (`bun test`, lógica pura en `lib/logica-financiera.test.ts`):
+1. La persona abre Fynz y ve su Disponible Real junto con el horizonte utilizado.
+2. Revisa los compromisos incluidos y la presión de pagos posteriores.
+3. Registra ingresos y gastos conforme ocurren para mantener actualizados los saldos.
+4. Cuando cubre una obligación, la marca como pagada y elige la cuenta de origen.
+5. Antes de una compra importante, utiliza el simulador para comparar efectivo, débito o crédito.
+6. Si una cuenta no tiene fondos suficientes para un cobro domiciliado, Fynz indica cuánto falta y cuándo se necesita.
+7. La interfaz muestra cuándo se actualizaron por última vez los datos y recuerda discretamente verificarlos cuando llevan tiempo sin revisarse.
 
-* Una transferencia no altera el Disponible Real.
+## 8. Identidad y experiencia
 
-* Un pago no se descuenta dos veces.
+- **Logo:** monograma con forma de moneda y un destello, creado para Fynz.
+- **Sensación:** calma, claridad y control.
+- **Lenguaje:** directo, amigable y sin tecnicismos financieros innecesarios.
+- **Prioridad visual:** primero la información necesaria para decidir; después el detalle y las gráficas.
+- **Principio visual:** la deuda y el crédito nunca deben confundirse con riqueza.
 
-* Un pago mensual genera correctamente el siguiente periodo.
+La información principal debe comprenderse en pocos segundos. El color rojo se reserva para deuda, atraso, insuficiencia o una acción destructiva; no debe utilizarse para decorar ni castigar al usuario.
 
-* Un compromiso pagado deja de aparecer como pendiente.
+### Animaciones
 
-* Un pago atrasado conserva correctamente su estado.
+Las animaciones deben explicar cambios de estado y reforzar la sensación de control:
 
-* El crédito nunca se suma al dinero líquido.
+- Entrada suave del símbolo.
+- Transición progresiva de montos cuando cambia el Disponible Real.
+- Confirmación visual al registrar un movimiento o pagar un compromiso.
+- Movimiento discreto entre estados y pestañas.
+- Aparición clara, no agresiva, de alertas.
+- Dibujo progresivo de gráficas.
 
-* Una compra con crédito aumenta la deuda sin disminuir el dinero líquido.
+Ninguna animación debe retrasar el registro de una operación. Todas deben respetar `prefers-reduced-motion`, evitar reproducirse innecesariamente y conservar una alternativa instantánea.
 
-* Las alertas de fondos insuficientes calculan correctamente el monto faltante.
+## 9. Calidad, seguridad e integridad
 
-* Un ajuste manual de saldo genera su movimiento correspondiente en el historial.
+### 9.1 Pruebas existentes
 
-Y quedan pendientes de pruebas, a medida que se agreguen tarjetas, fechas de corte y simulaciones:
+Las reglas principales ya cuentan con pruebas automatizadas mediante `bun test` y lógica pura en `lib/logica-financiera.test.ts`:
 
-* El pago de una tarjeta reduce la deuda y el dinero líquido sin contabilizar dos veces el gasto original.
+- Una transferencia entre cuentas líquidas no altera el Disponible Real.
+- Un pago no se descuenta dos veces.
+- Un pago mensual genera el siguiente periodo.
+- Un compromiso pagado deja de aparecer como pendiente.
+- Un pago atrasado conserva su estado.
+- El crédito no se suma al dinero líquido.
+- Una compra con crédito aumenta la deuda sin disminuir la liquidez.
+- Las alertas de fondos insuficientes calculan cuánto falta.
+- Un ajuste manual genera su movimiento en el historial.
 
-* Los movimientos concurrentes no producen saldos inconsistentes.
+### 9.2 Pruebas pendientes
 
-**Seguridad para producción.** La aplicación funciona actualmente con reglas de seguridad simplificadas adecuadas para su etapa de desarrollo. Antes de utilizarla con información financiera real deberán formalizarse:
+Antes de producción deben cubrirse:
 
-* Autorización por usuario para cuentas, movimientos y pagos.
+- Cálculo por horizonte y cambio de fecha seleccionada.
+- Inclusión permanente de pagos atrasados.
+- Compras antes, durante y después del día de corte.
+- Meses con distinta duración y cambios de año.
+- Pago total, parcial y repetido de tarjetas.
+- Separación entre gasto y salida de efectivo.
+- Edición, reversión y archivado de operaciones relacionadas.
+- Operaciones concurrentes sobre una misma cuenta.
+- Reintentos de red sin duplicar movimientos.
+- Manejo consistente de centavos y redondeos.
+- Fechas de calendario sin desplazamientos por zona horaria.
 
-* Validaciones completas en el servidor.
+### 9.3 Seguridad para producción
 
-* Protección contra la modificación de recursos pertenecientes a otros usuarios.
+La aplicación utiliza actualmente reglas simplificadas adecuadas para desarrollo. Antes de utilizar información financiera real deben formalizarse:
 
-* Manejo seguro de sesiones y credenciales.
+- Autorización por usuario para cuentas, movimientos, tarjetas, widgets y pagos.
+- Validaciones completas en el servidor.
+- Protección contra lectura o modificación de recursos de otras personas.
+- Políticas de acceso a la base de datos.
+- Manejo seguro de sesiones y credenciales.
+- Recuperación de contraseña.
+- Operaciones atómicas para saldos, deudas y pagos.
+- Registro controlado de acciones críticas sin guardar montos, notas o datos sensibles innecesarios.
+- Manejo de errores sin exponer detalles internos.
+- Respaldo y recuperación de información.
+- Estrategia para exportar o eliminar los datos de una cuenta.
 
-* Recuperación de contraseña.
+Hasta completar esta etapa, Fynz debe considerarse un producto en desarrollo y no una aplicación preparada para manejar información financiera real en producción.
 
-* Políticas de acceso a la base de datos.
+## 10. Analítica de producto y privacidad
 
-* Registro controlado de operaciones críticas.
+Fynz puede incorporar analítica para mejorar la experiencia, pero no debe enviar montos, saldos, descripciones, nombres de cuentas ni notas personales a servicios externos.
 
-* Manejo de errores sin exponer información sensible.
+Eventos útiles y no sensibles:
 
-* Respaldo y recuperación de información.
+- Tiempo necesario para registrar un movimiento.
+- Uso del simulador y medio de pago comparado.
+- Porcentaje de usuarios que configura su siguiente ingreso.
+- Widgets añadidos o eliminados.
+- Errores y operaciones fallidas.
+- Frecuencia con la que se actualizan saldos.
+- Uso de alertas de fondos insuficientes.
 
-Hasta completar esta etapa, Fynz debe considerarse un producto en desarrollo y no una aplicación preparada para manejar datos financieros reales en producción.
+Las métricas principales del producto deberían responder si Fynz está reduciendo fricción:
 
-### Pulido y experiencia
+- Comprensión del Disponible Real en pocos segundos.
+- Registro de un movimiento en menos de diez segundos.
+- Uso recurrente antes de compras importantes.
+- Disminución de compromisos vencidos sin fondos suficientes.
+- Reducción de ajustes manuales causados por información desactualizada.
 
-**Animaciones y refinamiento visual.** También están en camino nuevas animaciones para el logo, los montos y las transiciones principales:
+## 11. Frontera actual
 
-* Entrada suave del símbolo.
+### Pendientes prioritarios de producto
 
-* Números que cambian progresivamente.
+- Definir e implementar el horizonte del Disponible Real.
+- Mostrar la fecha y calidad de actualización de los datos.
+- Completar el historial consultable y la trazabilidad entre operaciones.
+- Construir el simulador de compras.
+- Completar el modelo de ciclos de tarjeta o conservar explícitamente el modo estimado.
+- Incorporar categorías antes de crear analíticas por tipo de gasto.
+- Resolver pagos anticipados en planes recurrentes.
 
-* Confirmaciones visuales al registrar movimientos.
+### Pendientes prioritarios de ingeniería
 
-* Transiciones discretas entre estados.
+- Usar centavos y fechas de calendario como reglas de dominio.
+- Hacer atómicas e idempotentes las operaciones financieras.
+- Archivar cuentas y planes sin romper el historial.
+- Cubrir concurrencia, reintentos, reversión y ciclos de tarjetas con pruebas.
+- Completar autorización, validación, recuperación y respaldos.
 
-* Alertas claras sin resultar agresivas.
+### Alcance fuera del MVP
 
-Estas animaciones deben reforzar la sensación de calma y comprensión, sin retrasar las operaciones ni distraer de la información financiera.
+Para proteger el enfoque inicial, no forman parte del MVP:
 
-## Dirección del producto
+- Sincronización automática con bancos.
+- Inversiones o portafolios.
+- Contabilidad fiscal.
+- Presupuestos familiares compartidos.
+- Múltiples monedas y conversiones.
+- Adelantos de efectivo desde tarjetas.
+- Recompensas, puntos o cashback.
+- Cálculo detallado de intereses y compras a meses, hasta estabilizar los ciclos básicos.
 
-El valor principal de Fynz no está solamente en registrar gastos ni en mostrar un historial. Su elemento diferenciador es convertir cuentas, movimientos y obligaciones en una respuesta útil antes de tomar una decisión de compra.
+## 12. Orden recomendado de desarrollo
 
-### Evolución propuesta: el horizonte del Disponible Real
+### Etapa 1 — Cerrar el núcleo financiero
 
-Actualmente, el cálculo utiliza el dinero líquido y los pagos próximos registrados, sin definir formalmente hasta qué fecha deben considerarse esos compromisos.
+1. Implementar el horizonte y mostrarlo junto al Disponible Real.
+2. Formalizar las reglas de gasto, flujo de efectivo, deuda y compromisos.
+3. Asegurar importes en centavos, fechas de calendario, operaciones atómicas e idempotencia.
+4. Etiquetar el pago automático actual de tarjeta como estimación o implementar ciclos correctos.
 
-La evolución más útil sería calcular:
+### Etapa 2 — Completar la promesa del producto
 
-> **Disponible Real hasta el próximo ingreso = Dinero Líquido − Pagos que vencen antes del próximo ingreso**
+1. Crear el historial completo con relaciones y filtros.
+2. Construir el simulador para efectivo, débito y crédito.
+3. Incorporar actualización y verificación rápida de saldos.
+4. Agregar categorías y separar analítica de gastos de flujo de efectivo.
 
-Para conseguirlo, Fynz deberá permitir registrar la fecha y el monto estimado del siguiente ingreso. Como alternativa, el usuario podría seleccionar un horizonte de 7, 15 o 30 días, o elegir una fecha determinada.
+### Etapa 3 — Preparar producción
 
-Esta definición es necesaria para evitar que el cálculo sea demasiado conservador o que compromisos muy lejanos reduzcan innecesariamente el dinero disponible de hoy.
+1. Completar autorización, validaciones y políticas de datos.
+2. Añadir recuperación de cuenta, respaldos y manejo seguro de errores.
+3. Completar las pruebas de concurrencia, reintentos, tarjetas y fechas.
+4. Realizar pruebas con datos sintéticos y escenarios financieros límite.
 
-Por eso, las siguientes etapas deben priorizar:
+### Etapa 4 — Refinar la experiencia
 
-1. La exactitud del cálculo del Disponible Real.
+1. Evaluar la navegación y el nombre de la pestaña Datos.
+2. Medir el uso de widgets antes de ampliar el catálogo.
+3. Incorporar animaciones funcionales y accesibles.
+4. Mejorar analíticas sin recopilar información financiera sensible.
 
-2. La definición completa del comportamiento de las tarjetas de crédito.
+## 13. Criterio para considerar Fynz listo
 
-3. La prevención de duplicidades e inconsistencias.
+Fynz estará listo para manejar información real cuando:
 
-4. La seguridad y las pruebas necesarias para producción.
-
-5. El simulador de compras.
-
-6. Las animaciones y el refinamiento de la experiencia.
+- El Disponible Real siempre explique su horizonte.
+- Las tarjetas asignen correctamente compras y pagos a sus ciclos, o se identifiquen claramente como estimaciones manuales.
+- Ninguna compra, transferencia o pago pueda contabilizarse dos veces.
+- Los saldos se mantengan consistentes ante reintentos y operaciones simultáneas.
+- El historial permita entender y rastrear cada cambio.
+- Todos los recursos estén protegidos por usuario y validados en el servidor.
+- Existan recuperación, respaldo y eliminación segura de información.
+- Las reglas críticas estén cubiertas por pruebas automatizadas.
+- La interfaz comunique cuándo los datos pueden estar desactualizados.
 
 Fynz debe seguir creciendo alrededor de una sola promesa:
 

@@ -6,23 +6,21 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
-import {
-  actualizarProximoPago,
-  crearProximoPago,
-  type Cuenta,
-  type ProximoPago,
-} from '@/lib/acciones'
+import { actualizarProximoPago, crearProximoPago } from '@/lib/acciones-servidor'
+import { centavosACadena, parseCentavos } from '@/lib/dinero'
+import type { Cuenta, ProximoPago } from '@/lib/acciones'
 
 interface FormPagoProps {
-  userId: string
   cuentas: Cuenta[]
   pago?: ProximoPago
   onClose: () => void
 }
 
-export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
+export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
   const [descripcion, setDescripcion] = useState(pago?.descripcion ?? '')
-  const [monto, setMonto] = useState(pago != null ? String(pago.monto) : '')
+  const [monto, setMonto] = useState(
+    pago != null ? centavosACadena(pago.monto) : ''
+  )
   const [recurrente, setRecurrente] = useState(pago?.recurrente ?? false)
   const [diaCobro, setDiaCobro] = useState(
     pago?.dia_cobro != null ? String(pago.dia_cobro) : ''
@@ -52,9 +50,17 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
     !recurrente ||
     (diaCobro !== '' && Number(diaCobro) >= 1 && Number(diaCobro) <= 31)
 
+  const montoValido = (() => {
+    try {
+      return parseCentavos(monto) > 0
+    } catch {
+      return false
+    }
+  })()
+
   const valido =
     descripcion.trim().length > 0 &&
-    Number(monto) > 0 &&
+    montoValido &&
     diaValido &&
     (recurrente || fecha !== '') &&
     (!domiciliado || cuentaId !== '')
@@ -75,26 +81,22 @@ export function FormPago({ userId, cuentas, pago, onClose }: FormPagoProps) {
     try {
       const datos = {
         descripcion: descripcion.trim(),
-        monto: Number(monto),
-        fechaVencimiento: recurrente
-          ? new Date().toISOString()
-          : new Date(`${fecha}T00:00:00`).toISOString(),
+        monto: parseCentavos(monto),
+        fechaVencimiento: recurrente ? null : fecha,
         domiciliado,
         cuentaId: domiciliado ? Number(cuentaId) : null,
         recurrente,
         diaCobro: recurrente ? Number(diaCobro) : null,
-        reprogramarFecha:
-          esEdicion && recurrente && reprogramarFecha !== ''
-            ? new Date(`${reprogramarFecha}T00:00:00`).toISOString()
-            : null,
+        reprogramarFecha: esEdicion && recurrente && reprogramarFecha !== '' ? reprogramarFecha : null,
       }
-      if (esEdicion) {
-        await actualizarProximoPago(userId, pago.proximo_pago_id, datos)
-        addToast('Pago actualizado', 'success')
-      } else {
-        await crearProximoPago(userId, datos)
-        addToast('Pago creado', 'success')
+      const resultado = esEdicion
+        ? await actualizarProximoPago(pago.proximo_pago_id, datos)
+        : await crearProximoPago(datos)
+      if (!resultado.ok) {
+        addToast(resultado.error, 'error')
+        return
       }
+      addToast(esEdicion ? 'Pago actualizado' : 'Pago creado', 'success')
       onClose()
     } catch (err) {
       addToast(

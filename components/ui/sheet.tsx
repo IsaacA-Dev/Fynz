@@ -57,7 +57,7 @@ export function Sheet({ open, title, onClose, children }: SheetProps) {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-md bg-[var(--color-surface)] rounded-t-3xl p-6 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-2xl border-t border-[var(--color-border)]"
+        className="relative w-full max-w-md bg-[var(--color-surface)] rounded-t-3xl p-6 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-2xl border-t border-[var(--color-border)] max-h-[85vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[var(--color-text)]">

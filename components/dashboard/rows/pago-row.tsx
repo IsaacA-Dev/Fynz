@@ -1,14 +1,16 @@
-import { AlertTriangle, Check, CreditCard, Pencil, Repeat, Trash2 } from 'lucide-react'
+import { AlertTriangle, CalendarPlus, Check, CreditCard, Pencil, Repeat, Trash2 } from 'lucide-react'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
+import { esAtrasado } from '@/lib/fechas'
 import type { ProximoPago, Vista } from '@/lib/acciones'
 
 interface PagoRowProps {
   pago: ProximoPago
-  ahora: number
+  hoy: string
   modo: Vista
   onEditar: () => void
   onEliminar: () => void
   onPagar: () => void
+  onAdelantar?: () => void
 }
 
 function Badges({ pago, atrasado }: { pago: ProximoPago; atrasado: boolean }) {
@@ -42,8 +44,8 @@ function Badges({ pago, atrasado }: { pago: ProximoPago; atrasado: boolean }) {
   )
 }
 
-export function PagoRow({ pago, ahora, modo, onEditar, onEliminar, onPagar }: PagoRowProps) {
-  const atrasado = !pago.pagado && new Date(pago.fecha_vencimiento).getTime() < ahora
+export function PagoRow({ pago, hoy, modo, onEditar, onEliminar, onPagar, onAdelantar }: PagoRowProps) {
+  const atrasado = !pago.pagado && esAtrasado(pago.fecha_vencimiento, hoy)
   const escritorio = modo === 'escritorio'
 
   return (
@@ -51,14 +53,14 @@ export function PagoRow({ pago, ahora, modo, onEditar, onEliminar, onPagar }: Pa
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <p
-            className={`text-sm font-medium truncate ${
+            className={`text-sm font-medium truncate @lg:text-base ${
               atrasado ? 'text-[var(--color-danger)]' : 'text-[var(--color-text)]'
             }`}
           >
             {pago.descripcion}
           </p>
           <span
-            className={`text-xs shrink-0 ${
+            className={`text-xs @lg:text-sm shrink-0 ${
               atrasado
                 ? 'text-[var(--color-danger)] font-medium'
                 : 'text-[var(--color-text-muted)]'
@@ -68,7 +70,7 @@ export function PagoRow({ pago, ahora, modo, onEditar, onEliminar, onPagar }: Pa
           </span>
         </div>
         <p
-          className={`text-sm font-semibold shrink-0 ${
+          className={`text-sm font-semibold shrink-0 @lg:text-base ${
             atrasado ? 'text-[var(--color-danger)]' : 'text-[var(--color-text)]'
           }`}
         >
@@ -82,6 +84,18 @@ export function PagoRow({ pago, ahora, modo, onEditar, onEliminar, onPagar }: Pa
         </div>
 
         <div className={`flex items-center shrink-0 ${escritorio ? 'gap-0.5' : 'gap-1'}`}>
+          {onAdelantar && (
+            <button
+              onClick={onAdelantar}
+              aria-label="Adelantar siguiente periodo"
+              title="Adelantar siguiente periodo"
+              className={`rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors ${
+                escritorio ? 'p-1.5' : 'p-2'
+              }`}
+            >
+              <CalendarPlus className="w-4 h-4 @lg:w-5 @lg:h-5" />
+            </button>
+          )}
           <button
             onClick={onEditar}
             aria-label="Editar pago"
@@ -89,7 +103,7 @@ export function PagoRow({ pago, ahora, modo, onEditar, onEliminar, onPagar }: Pa
               escritorio ? 'p-1.5' : 'p-2'
             }`}
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-4 h-4 @lg:w-5 @lg:h-5" />
           </button>
           <button
             onClick={onEliminar}
@@ -98,7 +112,7 @@ export function PagoRow({ pago, ahora, modo, onEditar, onEliminar, onPagar }: Pa
               escritorio ? 'p-1.5' : 'p-2'
             }`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4 @lg:w-5 @lg:h-5" />
           </button>
           <button
             onClick={onPagar}

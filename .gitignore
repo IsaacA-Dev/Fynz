@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# artefactos de exportaciones de Supabase SQL Editor
+* Supabase_files/
+
+#docs/sql
+*docs/sql/schema-v2.sql
+*docs/sql/migracion-v2.sql
+
+# configuración local de agentes/opencode
+.opencode/

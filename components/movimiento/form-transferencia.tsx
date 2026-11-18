@@ -5,42 +5,59 @@ import { ArrowLeftRight, DollarSign } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useToast } from '@/components/ui/toast'
-import { transferir, type Cuenta } from '@/lib/acciones'
+import { transferir } from '@/lib/acciones-servidor'
+import { formatearDinero } from '@/lib/utils/format'
+import { parseCentavos } from '@/lib/dinero'
+import type { Cuenta } from '@/lib/acciones'
 
 interface FormTransferenciaProps {
-  userId: string
   cuentas: Cuenta[]
   onClose: () => void
 }
 
-export function FormTransferencia({ userId, cuentas, onClose }: FormTransferenciaProps) {
+export function FormTransferencia({ cuentas, onClose }: FormTransferenciaProps) {
   const [origen, setOrigen] = useState('')
   const [destino, setDestino] = useState('')
   const [monto, setMonto] = useState('')
+  const [confirmando, setConfirmando] = useState(false)
   const [loading, setLoading] = useState(false)
   const { addToast } = useToast()
 
-  const cuentasOrigen = cuentas
-  const cuentasDestino = cuentas.filter((c) => c.cuenta_id !== Number(origen))
+  // Solo dinero líquido (efectivo y débito): las tarjetas no participan.
+  const cuentasLiquidas = cuentas.filter((c) => c.metodo !== 'credito')
+  const cuentasOrigen = cuentasLiquidas
+  const cuentasDestino = cuentasLiquidas.filter((c) => c.cuenta_id !== Number(origen))
+
+  let montoCentavos = 0
+  try {
+    montoCentavos = parseCentavos(monto)
+  } catch {
+    montoCentavos = 0
+  }
 
   const valido =
-    origen !== '' && destino !== '' && Number(origen) !== Number(destino) && Number(monto) > 0
+    origen !== '' && destino !== '' && Number(origen) !== Number(destino) && montoCentavos > 0
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!valido || loading) return
+  const ejecutarTransferencia = async () => {
+    if (loading) return
     setLoading(true)
+    setConfirmando(false)
     try {
-      const cuentaOrigen = cuentas.find((c) => c.cuenta_id === Number(origen))!
-      const cuentaDestino = cuentas.find((c) => c.cuenta_id === Number(destino))!
-      await transferir(userId, {
+      const cuentaOrigen = cuentasLiquidas.find((c) => c.cuenta_id === Number(origen))!
+      const cuentaDestino = cuentasLiquidas.find((c) => c.cuenta_id === Number(destino))!
+      const resultado = await transferir({
         cuentaOrigen: cuentaOrigen.cuenta_id,
         cuentaDestino: cuentaDestino.cuenta_id,
-        monto: Number(monto),
+        monto: parseCentavos(monto),
         origenNombre: cuentaOrigen.nombre,
         destinoNombre: cuentaDestino.nombre,
       })
+      if (!resultado.ok) {
+        addToast(resultado.error, 'error')
+        return
+      }
       addToast('Transferencia completada', 'success')
       onClose()
     } catch (err) {
@@ -53,10 +70,16 @@ export function FormTransferencia({ userId, cuentas, onClose }: FormTransferenci
     }
   }
 
-  if (cuentas.length < 2) {
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!valido || loading) return
+    setConfirmando(true)
+  }
+
+  if (cuentasLiquidas.length < 2) {
     return (
       <p className="text-sm text-[var(--color-text-muted)] text-center py-4">
-        Necesitas al menos 2 cuentas para transferir.
+        Necesitas al menos 2 cuentas de efectivo o débito para transferir.
       </p>
     )
   }
@@ -98,6 +121,16 @@ export function FormTransferencia({ userId, cuentas, onClose }: FormTransferenci
         <ArrowLeftRight className="w-4 h-4" />
         Transferir
       </Button>
+
+      <ConfirmDialog
+        open={confirmando}
+        title="¿Confirmar transferencia?"
+        message={`Se moverá ${formatearDinero(montoCentavos)} de ${cuentasLiquidas.find((c) => c.cuenta_id === Number(origen))?.nombre ?? ''} a ${cuentasLiquidas.find((c) => c.cuenta_id === Number(destino))?.nombre ?? ''}. Tu Disponible Real no cambia.`}
+        confirmLabel="Transferir"
+        cancelLabel="Cancelar"
+        onConfirm={ejecutarTransferencia}
+        onCancel={() => setConfirmando(false)}
+      />
     </form>
   )
 }

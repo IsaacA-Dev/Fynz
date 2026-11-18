@@ -1,43 +1,59 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Check } from 'lucide-react'
+import { Check, DollarSign } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
-import { liquidarPago, type Cuenta, type ProximoPago } from '@/lib/acciones'
-import { formatearDinero } from '@/lib/utils/format'
+import { liquidarPago } from '@/lib/acciones-servidor'
+import { centavosACadena, parseCentavos } from '@/lib/dinero'
+import { formatearDinero, formatearFecha } from '@/lib/utils/format'
+import type { Cuenta, ProximoPago } from '@/lib/acciones'
 
 interface FormLiquidarProps {
-  userId: string
   pago: ProximoPago
   cuentas: Cuenta[]
   onClose: () => void
 }
 
-export function FormLiquidar({ userId, pago, cuentas, onClose }: FormLiquidarProps) {
+export function FormLiquidar({ pago, cuentas, onClose }: FormLiquidarProps) {
   const [cuentaId, setCuentaId] = useState(
     pago.cuenta_id != null ? String(pago.cuenta_id) : ''
   )
+  const [montoTexto, setMontoTexto] = useState(centavosACadena(pago.monto))
   const [loading, setLoading] = useState(false)
   const { addToast } = useToast()
 
-  const valido = cuentaId !== ''
+  const cuentasLiquidas = cuentas.filter((c) => c.metodo !== 'credito')
+
+  let montoCentavos = 0
+  try {
+    montoCentavos = parseCentavos(montoTexto)
+  } catch {
+    montoCentavos = 0
+  }
+  const valido = cuentaId !== '' && montoCentavos > 0
+
+  const esPagoParcial = pago.es_tarjeta && montoCentavos > 0 && montoCentavos < pago.monto
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!valido || loading) return
     setLoading(true)
     try {
-      await liquidarPago(userId, pago.proximo_pago_id, {
+      const resultado = await liquidarPago(pago.proximo_pago_id, {
         cuentaId: Number(cuentaId),
-        monto: pago.monto,
-        descripcion: pago.descripcion,
-        recurrente: pago.recurrente,
-        diaCobro: pago.dia_cobro,
-        domiciliado: pago.domiciliado,
+        monto: montoCentavos,
       })
-      addToast(pago.recurrente ? 'Pago liquidado, se generó el siguiente' : 'Pago liquidado', 'success')
+      if (!resultado.ok) {
+        addToast(resultado.error, 'error')
+        return
+      }
+      addToast(
+        pago.recurrente ? 'Pago liquidado, se generó el siguiente' : 'Pago liquidado',
+        'success'
+      )
       onClose()
     } catch (err) {
       addToast(
@@ -54,16 +70,47 @@ export function FormLiquidar({ userId, pago, cuentas, onClose }: FormLiquidarPro
       <div className="bg-[var(--color-border)]/40 rounded-xl p-4 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-[var(--color-text)]">{pago.descripcion}</p>
-          <p className="text-xs text-[var(--color-text-muted)]">Venció el {new Date(pago.fecha_vencimiento).toLocaleDateString('es-MX')}</p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Vence el {formatearFecha(pago.fecha_vencimiento)}
+          </p>
+          {pago.es_tarjeta && (
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              Monto estimado del ciclo: {formatearDinero(pago.monto)}
+            </p>
+          )}
+          {pago.es_tarjeta && pago.minimo != null && pago.minimo > 0 && (
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Mín. del banco: {formatearDinero(pago.minimo)}
+            </p>
+          )}
         </div>
         <p className="text-xl font-bold text-[var(--color-text)]">
           {formatearDinero(pago.monto)}
         </p>
       </div>
 
+      <Input
+        label={pago.es_tarjeta ? 'Monto a pagar' : 'Monto'}
+        type="number"
+        inputMode="decimal"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        value={montoTexto}
+        onChange={(e) => setMontoTexto(e.target.value)}
+        icon={<DollarSign className="w-4 h-4" />}
+        required
+      />
+
+      {esPagoParcial && (
+        <p className="text-xs text-[var(--color-text-muted)] -mt-1">
+          Pago parcial: el compromiso del ciclo se reducirá al resto pendiente.
+        </p>
+      )}
+
       <Select label="¿Desde qué cuenta se pagó?" value={cuentaId} onChange={(e) => setCuentaId(e.target.value)} required>
         <option value="">Selecciona una cuenta</option>
-        {cuentas.map((c) => (
+        {cuentasLiquidas.map((c) => (
           <option key={c.cuenta_id} value={c.cuenta_id}>
             {c.nombre}
           </option>

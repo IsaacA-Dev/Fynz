@@ -6,25 +6,28 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
-import {
-  actualizarCuenta,
-  crearCuenta,
-  METODO_LABELS,
-  type Cuenta,
-  type Metodo,
-} from '@/lib/acciones'
+import { actualizarCuenta, crearCuenta } from '@/lib/acciones-servidor'
+import { centavosACadena, parseCentavos } from '@/lib/dinero'
+import { METODO_LABELS, type Cuenta, type Metodo } from '@/lib/acciones'
 
 interface FormCuentaProps {
-  userId: string
   cuenta?: Cuenta
   onClose: () => void
 }
 
-export function FormCuenta({ userId, cuenta, onClose }: FormCuentaProps) {
+function centavosDeTexto(texto: string): number {
+  try {
+    return parseCentavos(texto)
+  } catch {
+    return Number.NaN
+  }
+}
+
+export function FormCuenta({ cuenta, onClose }: FormCuentaProps) {
   const [nombre, setNombre] = useState(cuenta?.nombre ?? '')
   const [metodo, setMetodo] = useState<Metodo | ''>((cuenta?.metodo as Metodo) ?? '')
   const [balanceInicial, setBalanceInicial] = useState(
-    cuenta != null ? String(cuenta.saldo) : ''
+    cuenta != null ? centavosACadena(cuenta.saldo) : ''
   )
   const [diaCorte, setDiaCorte] = useState(
     cuenta?.dia_corte != null ? String(cuenta.dia_corte) : ''
@@ -33,7 +36,7 @@ export function FormCuenta({ userId, cuenta, onClose }: FormCuentaProps) {
     cuenta?.dia_pago != null ? String(cuenta.dia_pago) : ''
   )
   const [limite, setLimite] = useState(
-    cuenta?.limite != null ? String(cuenta.limite) : ''
+    cuenta?.limite != null ? centavosACadena(cuenta.limite) : ''
   )
   const [loading, setLoading] = useState(false)
   const { addToast } = useToast()
@@ -43,24 +46,25 @@ export function FormCuenta({ userId, cuenta, onClose }: FormCuentaProps) {
   const diaValido = (valor: string) =>
     valor === '' || (Number.isInteger(Number(valor)) && Number(valor) >= 1 && Number(valor) <= 31)
 
-  const limiteValido = limite.trim() === '' || Number(limite) >= 0
+  const limiteValido = limite.trim() === '' || centavosDeTexto(limite) >= 0
 
   const cicloIncompleto =
     esCredito && (diaCorte.trim() === '') !== (diaPago.trim() === '')
 
   const esEdicion = cuenta != null
   const saldoActual = esEdicion ? cuenta.saldo : 0
+  const saldoObjetivo = centavosDeTexto(balanceInicial)
   const hayAjuste =
     esEdicion &&
     balanceInicial.trim() !== '' &&
-    !Number.isNaN(Number(balanceInicial)) &&
-    Number(balanceInicial) !== saldoActual
+    !Number.isNaN(saldoObjetivo) &&
+    saldoObjetivo !== saldoActual
 
   const valido =
     nombre.trim().length > 0 &&
     metodo !== '' &&
     balanceInicial.trim() !== '' &&
-    !Number.isNaN(Number(balanceInicial)) &&
+    !Number.isNaN(saldoObjetivo) &&
     !cicloIncompleto &&
     diaValido(diaCorte) &&
     diaValido(diaPago) &&
@@ -74,21 +78,19 @@ export function FormCuenta({ userId, cuenta, onClose }: FormCuentaProps) {
       const datos = {
         nombre: nombre.trim(),
         metodo: metodo as Metodo,
-        saldoObjetivo: Number(balanceInicial),
+        saldoObjetivo: saldoObjetivo,
         diaCorte: esCredito && diaCorte.trim() !== '' ? Number(diaCorte) : null,
         diaPago: esCredito && diaPago.trim() !== '' ? Number(diaPago) : null,
-        limite: esCredito && limite.trim() !== '' ? Number(limite) : null,
+        limite: esCredito && limite.trim() !== '' ? centavosDeTexto(limite) : null,
       }
-      if (esEdicion) {
-        await actualizarCuenta(userId, cuenta.cuenta_id, datos, saldoActual)
-        addToast('Cuenta actualizada', 'success')
-      } else {
-        await crearCuenta(userId, {
-          ...datos,
-          balanceInicial: datos.saldoObjetivo,
-        })
-        addToast('Cuenta creada', 'success')
+      const resultado = esEdicion
+        ? await actualizarCuenta(cuenta.cuenta_id, datos)
+        : await crearCuenta({ ...datos, balanceInicial: datos.saldoObjetivo })
+      if (!resultado.ok) {
+        addToast(resultado.error, 'error')
+        return
       }
+      addToast(esEdicion ? 'Cuenta actualizada' : 'Cuenta creada', 'success')
       onClose()
     } catch (err) {
       addToast(

@@ -1,4 +1,7 @@
 import type { Cuenta, Metodo, ProximoPago, TipoMovimiento } from './acciones'
+import { aCentavos } from './dinero'
+import { ordenarPorFecha } from './fechas'
+
 export interface MovimientoSaldo {
   cuenta_id: number
   tipo: TipoMovimiento
@@ -14,23 +17,13 @@ export interface AlertaDomiciliado {
   faltante: number
 }
 
-const REDONDEO = 100
-
-function aNumero(valor: unknown): number {
-  return Number(valor ?? 0)
-}
-
-export function redondearDinero(valor: number): number {
-  return Math.round(valor * REDONDEO) / REDONDEO
-}
-
 export function aplicarMovimiento(
   saldo: number,
   tipo: TipoMovimiento,
   monto: number,
   metodo: Metodo
 ): number {
-  const m = aNumero(monto)
+  const m = aCentavos(monto)
   if (metodo === 'credito') {
     // En crédito el saldo representa la deuda: una compra la aumenta y un pago la reduce.
     return saldo + (tipo === 'egreso' ? m : -m)
@@ -46,52 +39,10 @@ export function calcularSaldos(
   for (const t of movimientos) {
     const cuenta = cuentas.find((c) => c.cuenta_id === t.cuenta_id)
     if (!cuenta) continue
-    const previo = saldos.get(t.cuenta_id) ?? aNumero(cuenta.balance_inicial)
+    const previo = saldos.get(t.cuenta_id) ?? aCentavos(cuenta.balance_inicial)
     saldos.set(t.cuenta_id, aplicarMovimiento(previo, t.tipo, t.monto, cuenta.metodo))
   }
   return saldos
-}
-
-function diaValido(dia: number): boolean {
-  return Number.isInteger(dia) && dia >= 1 && dia <= 31
-}
-
-function conClamp(anio: number, mes: number, dia: number): Date {
-  const maxDia = new Date(anio, mes + 1, 0).getDate()
-  return new Date(anio, mes, Math.min(dia, maxDia))
-}
-
-export function siguienteDiaCobro(dia: number, desde: Date): string {
-  if (!diaValido(dia)) return desde.toISOString()
-
-  const inicio = new Date(
-    desde.getFullYear(),
-    desde.getMonth(),
-    desde.getDate()
-  )
-
-  const mesActual = conClamp(inicio.getFullYear(), inicio.getMonth(), dia)
-  if (mesActual.getTime() >= inicio.getTime()) return mesActual.toISOString()
-
-  const mesSiguiente = conClamp(inicio.getFullYear(), inicio.getMonth() + 1, dia)
-  return mesSiguiente.toISOString()
-}
-
-export function fechaPagoTarjeta(
-  diaCorte: number,
-  diaPago: number,
-  hoy: Date
-): string {
-  const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
-
-  let corte = conClamp(inicio.getFullYear(), inicio.getMonth(), diaCorte)
-  if (corte.getTime() < inicio.getTime()) {
-    corte = conClamp(inicio.getFullYear(), inicio.getMonth() + 1, diaCorte)
-  }
-
-  const mesPago = diaPago > diaCorte ? 0 : 1
-  const pago = conClamp(corte.getFullYear(), corte.getMonth() + mesPago, diaPago)
-  return pago.toISOString()
 }
 
 export type DecisionPagoTarjeta =
@@ -110,7 +61,7 @@ export function restanteTarjeta(
   montoCompromiso: number,
   montoPagado: number
 ): number {
-  return Math.max(0, redondearDinero(montoCompromiso - montoPagado))
+  return Math.max(0, aCentavos(montoCompromiso) - aCentavos(montoPagado))
 }
 
 export function creditoDisponible(
@@ -118,13 +69,10 @@ export function creditoDisponible(
   deuda: number
 ): number | null {
   if (limite == null) return null
-  return Math.max(0, redondearDinero(limite - deuda))
+  return Math.max(0, aCentavos(limite) - aCentavos(deuda))
 }
 
-export function tipoAjusteSaldo(
-  delta: number,
-  metodo: Metodo
-): TipoMovimiento {
+export function tipoAjusteSaldo(delta: number, metodo: Metodo): TipoMovimiento {
   if (metodo === 'credito') return delta > 0 ? 'egreso' : 'ingreso'
   return delta > 0 ? 'ingreso' : 'egreso'
 }
@@ -149,33 +97,23 @@ export function detectarAlertas(
     const cuenta = cuentas.find((c) => c.cuenta_id === cuentaId)
     if (!cuenta) continue
 
-    lista.sort(
-      (a, b) =>
-        new Date(a.fecha_vencimiento).getTime() -
-        new Date(b.fecha_vencimiento).getTime()
-    )
+    const ordenada = ordenarPorFecha(lista, (p) => p.fecha_vencimiento)
 
     let acumulado = 0
-    for (const p of lista) {
-      acumulado += p.monto
-      if (acumulado > cuenta.saldo) {
+    for (const p of ordenada) {
+      acumulado += aCentavos(p.monto)
+      if (acumulado > aCentavos(cuenta.saldo)) {
         alertas.push({
           pagoId: p.proximo_pago_id,
           descripcion: p.descripcion,
-          monto: p.monto,
+          monto: aCentavos(p.monto),
           fechaVencimiento: p.fecha_vencimiento,
           cuentaNombre: cuenta.nombre,
-          faltante: redondearDinero(acumulado - cuenta.saldo),
+          faltante: acumulado - aCentavos(cuenta.saldo),
         })
       }
     }
   }
 
-  alertas.sort(
-    (a, b) =>
-      new Date(a.fechaVencimiento).getTime() -
-      new Date(b.fechaVencimiento).getTime()
-  )
-
-  return alertas
+  return ordenarPorFecha(alertas, (a) => a.fechaVencimiento)
 }

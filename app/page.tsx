@@ -1,20 +1,13 @@
 import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase/server'
-import { obtenerDatosDashboard } from '@/lib/acciones'
+import { obtenerDatosDashboard } from '@/lib/acciones-servidor'
 import { DashboardContent } from '@/components/dashboard/dashboard-content'
 
 export default async function Dashboard() {
-  const supabase = await createServerSupabase()
+  const datos = await obtenerDatosDashboard()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
+  if (!datos) {
     redirect('/login')
   }
-
-  const datos = await obtenerDatosDashboard(user.id)
 
   return <DashboardContent datos={datos} />
 }
