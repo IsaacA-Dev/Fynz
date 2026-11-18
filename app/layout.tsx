@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ToastProvider, ToastViewport } from "@/components/ui/toast";
 
 const geistSans = Geist({
@@ -22,14 +23,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
+      data-theme="fynz"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("fynz:theme");if(t!=="fynz"&&t!=="noche")t="fynz";document.documentElement.setAttribute("data-theme",t)}catch(e){document.documentElement.setAttribute("data-theme","fynz")}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
-        <ToastProvider>
-          {children}
-          <ToastViewport />
-        </ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            {children}
+            <ToastViewport />
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,61 +1,384 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-soft: #dbeafe;
-  --color-success: #16a34a;
-  --color-success-soft: #dcfce7;
-  --color-warning: #d97706;
-  --color-warning-soft: #fef3c7;
-  --color-danger: #dc2626;
-  --color-danger-soft: #fee2e2;
-  --color-banner-start: #2563eb;
-  --color-banner-end: #1e3a8a;
-  --color-background: #f9fafb;
-  --color-surface: #ffffff;
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
-  --color-error: #ef4444;
-  --color-border: #e5e7eb;
-  --color-border-soft: #f3f4f6;
-}
+/* ============================================================
+   Devsign · contrato de tokens para Fynz
+   Las utilidades resuelven --ds-* para que la paleta pueda
+   cambiar en runtime con [data-theme] sin tocar componentes.
+   ============================================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--color-primary);
-  --color-primary-hover: var(--color-primary-hover);
-  --color-primary-soft: var(--color-primary-soft);
-  --color-success: var(--color-success);
-  --color-success-soft: var(--color-success-soft);
-  --color-warning: var(--color-warning);
-  --color-warning-soft: var(--color-warning-soft);
-  --color-danger: var(--color-danger);
-  --color-danger-soft: var(--color-danger-soft);
-  --color-banner-start: var(--color-banner-start);
-  --color-banner-end: var(--color-banner-end);
-  --color-surface: var(--color-surface);
-  --color-text: var(--color-text);
-  --color-text-muted: var(--color-text-muted);
-  --color-error: var(--color-error);
-  --color-border: var(--color-border);
-  --color-border-soft: var(--color-border-soft);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Superficies */
+  --color-surface: var(--ds-surface);
+  --color-surface-raised: var(--ds-surface-raised);
+  --color-surface-muted: var(--ds-surface-muted);
+
+  /* Texto */
+  --color-fg: var(--ds-fg);
+  --color-fg-muted: var(--ds-fg-muted);
+  --color-fg-subtle: var(--ds-fg-subtle);
+
+  /* Líneas decorativas */
+  --color-line: var(--ds-line);
+  --color-line-strong: var(--ds-line-strong);
+
+  /* Borde funcional de controles */
+  --color-input: var(--ds-input);
+
+  /* Marca */
+  --color-brand: var(--ds-brand);
+  --color-brand-hover: var(--ds-brand-hover);
+  --color-brand-soft: var(--ds-brand-soft);
+  --color-brand-softer: var(--ds-brand-softer);
+  --color-on-brand: var(--ds-on-brand);
+
+  /* Estados */
+  --color-info: var(--ds-info);
+  --color-info-soft: var(--ds-info-soft);
+  --color-on-info: var(--ds-on-info);
+  --color-success: var(--ds-success);
+  --color-success-soft: var(--ds-success-soft);
+  --color-on-success: var(--ds-on-success);
+  --color-warning: var(--ds-warning);
+  --color-warning-soft: var(--ds-warning-soft);
+  --color-on-warning: var(--ds-on-warning);
+  --color-danger: var(--ds-danger);
+  --color-danger-hover: var(--ds-danger-hover);
+  --color-danger-soft: var(--ds-danger-soft);
+  --color-on-danger: var(--ds-on-danger);
+
+  /* Overlay */
+  --color-scrim: var(--ds-scrim);
+
+  /* Datos (barras y donas; nunca texto) */
+  --color-chart-1: var(--ds-chart-1);
+  --color-chart-2: var(--ds-chart-2);
+  --color-chart-3: var(--ds-chart-3);
+  --color-chart-4: var(--ds-chart-4);
+  --color-chart-5: var(--ds-chart-5);
+
+  /* Radios */
+  --radius-card: 1.25rem;
+  --radius-panel: 0.875rem;
+
+  /* Elevación */
+  --shadow-soft: var(--ds-shadow-soft);
+  --shadow-lift: var(--ds-shadow-lift);
+  --shadow-brand: 0 18px 42px -24px
+    color-mix(in oklab, var(--ds-brand) 55%, transparent);
+  --shadow-danger: 0 18px 42px -24px
+    color-mix(in oklab, var(--ds-danger) 45%, transparent);
+
+  /* Tipografía (Geist la carga Next; devsign no la redefine) */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 650;
+
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.08em;
+  --text-eyebrow--font-weight: 600;
+
+  /* Movimiento */
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-fade-up: fade-up 0.7s ease-out;
+  --animate-fade-out: fade-out 0.22s ease-out;
+  --animate-scale-in: scale-in 0.35s ease-out;
+  --animate-scale-out: scale-out 0.2s ease-out;
+  --animate-slide-in-right: slide-in-right 0.45s ease-out;
+  --animate-slide-out-right: slide-out-right 0.3s ease-in;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   Paleta Fynz · claro sereno
+   ============================================================ */
+
+:root,
+[data-theme="fynz"] {
+  color-scheme: light;
+
+  --ds-surface: #ffffff;
+  --ds-surface-raised: #ffffff;
+  --ds-surface-muted: #f9fafb;
+
+  --ds-fg: #111827;
+  --ds-fg-muted: #4b5563;
+  --ds-fg-subtle: #6b7280;
+
+  --ds-line: #e5e7eb;
+  --ds-line-strong: #d1d5db;
+
+  --ds-input: color-mix(in oklab, var(--ds-fg) 45%, var(--ds-surface));
+
+  --ds-brand: #2563eb;
+  --ds-brand-hover: #1d4ed8;
+  --ds-brand-soft: #eff6ff;
+  --ds-brand-softer: #f8fbff;
+  --ds-on-brand: #ffffff;
+
+  --ds-info: #0369a1;
+  --ds-info-soft: #e0f2fe;
+  --ds-on-info: #ffffff;
+
+  --ds-success: #15803d;
+  --ds-success-soft: #dcfce7;
+  --ds-on-success: #ffffff;
+
+  --ds-warning: #b45309;
+  --ds-warning-soft: #fef3c7;
+  --ds-on-warning: #ffffff;
+
+  --ds-danger: #b91c1c;
+  --ds-danger-hover: color-mix(
+    in oklab,
+    var(--ds-danger) 88%,
+    var(--ds-fg)
+  );
+  --ds-danger-soft: #fee2e2;
+  --ds-on-danger: #ffffff;
+
+  --ds-scrim: color-mix(in oklab, var(--ds-fg) 28%, transparent);
+
+  --ds-chart-1: #2563eb;
+  --ds-chart-2: #0d9488;
+  --ds-chart-3: #7c3aed;
+  --ds-chart-4: #b45309;
+  --ds-chart-5: #64748b;
+
+  --ds-shadow-soft: 0 1px 2px
+      color-mix(in oklab, var(--ds-fg) 5%, transparent),
+    0 10px 28px -20px color-mix(in oklab, var(--ds-fg) 22%, transparent);
+  --ds-shadow-lift: 0 2px 8px
+      color-mix(in oklab, var(--ds-fg) 6%, transparent),
+    0 28px 56px -28px color-mix(in oklab, var(--ds-fg) 28%, transparent);
+
+  /* Aliases heredados: se retiran al cerrar la migración */
+  --ds-brand-deep: #172554;
+  --ds-line-soft: #f3f4f6;
+  --ds-logo-text: #111827;
+
+  --background: var(--ds-surface-muted);
+  --foreground: var(--ds-fg);
+  --color-background: var(--ds-surface-muted);
+  --color-surface: var(--ds-surface);
+  --color-text: var(--ds-fg);
+  --color-text-muted: var(--ds-fg-muted);
+  --color-primary: var(--ds-brand);
+  --color-primary-hover: var(--ds-brand-hover);
+  --color-primary-soft: var(--ds-brand-soft);
+  --color-success: var(--ds-success);
+  --color-success-soft: var(--ds-success-soft);
+  --color-warning: var(--ds-warning);
+  --color-warning-soft: var(--ds-warning-soft);
+  --color-danger: var(--ds-danger);
+  --color-danger-soft: var(--ds-danger-soft);
+  --color-error: var(--ds-danger);
+  --color-border: var(--ds-line);
+  --color-border-soft: var(--ds-line-soft);
+  --color-banner-start: var(--ds-brand);
+  --color-banner-end: var(--ds-brand-deep);
+  --color-logo-text: var(--ds-logo-text);
+}
+
+/* ============================================================
+   Paleta Noche · oscuro profundo, mismo contrato
+   ============================================================ */
+
+[data-theme="noche"] {
+  color-scheme: dark;
+
+  --ds-surface: #0b1220;
+  --ds-surface-raised: #111a2e;
+  --ds-surface-muted: #070d18;
+
+  --ds-fg: #e5e7eb;
+  --ds-fg-muted: #cbd5e1;
+  --ds-fg-subtle: #94a3b8;
+
+  --ds-line: #1f2937;
+  --ds-line-strong: #374151;
+
+  --ds-input: color-mix(in oklab, var(--ds-fg) 42%, var(--ds-surface));
+
+  --ds-brand: #60a5fa;
+  --ds-brand-hover: #93c5fd;
+  --ds-brand-soft: #172554;
+  --ds-brand-softer: #0f1c3a;
+  --ds-on-brand: #0b1220;
+
+  --ds-info: #38bdf8;
+  --ds-info-soft: #082f49;
+  --ds-on-info: #0b1220;
+
+  --ds-success: #4ade80;
+  --ds-success-soft: #052e16;
+  --ds-on-success: #0b1220;
+
+  --ds-warning: #fbbf24;
+  --ds-warning-soft: #451a03;
+  --ds-on-warning: #0b1220;
+
+  --ds-danger: #f87171;
+  --ds-danger-hover: color-mix(
+    in oklab,
+    var(--ds-danger) 88%,
+    var(--ds-fg)
+  );
+  --ds-danger-soft: #450a0a;
+  --ds-on-danger: #0b1220;
+
+  --ds-scrim: color-mix(
+    in oklab,
+    var(--ds-surface) 78%,
+    transparent
+  );
+
+  --ds-chart-1: #60a5fa;
+  --ds-chart-2: #2dd4bf;
+  --ds-chart-3: #a78bfa;
+  --ds-chart-4: #fbbf24;
+  --ds-chart-5: #94a3b8;
+
+  --ds-shadow-soft: 0 1px 2px color-mix(in oklab, #000 35%, transparent),
+    0 10px 28px -20px color-mix(in oklab, #000 65%, transparent);
+  --ds-shadow-lift: 0 2px 8px color-mix(in oklab, #000 40%, transparent),
+    0 28px 56px -28px color-mix(in oklab, #000 75%, transparent);
+
+  --ds-brand-deep: #1e3a8a;
+  --ds-line-soft: #172033;
+  --ds-logo-text: #e5e7eb;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--ds-surface-muted);
+    color: var(--ds-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--ds-brand-soft);
+    color: var(--ds-fg);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--ds-brand);
+    outline-offset: 3px;
+    border-radius: 4px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   Keyframes del sistema
+   ============================================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ============================================================
+   Accesibilidad · movimiento reducido
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
