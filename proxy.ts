@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+// /recuperar debe ser público: el enlace de Supabase llega sin sesión
+// y la página canjea el código para crear la sesión de recuperación.
+const RUTAS_PUBLICAS = new Set(['/login', '/recuperar'])
+
 export async function proxy(request: NextRequest) {
   const supabaseResponse = NextResponse.next({ request })
 
@@ -26,7 +30,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user && request.nextUrl.pathname !== '/login') {
+  if (!user && !RUTAS_PUBLICAS.has(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

@@ -1,215 +1,240 @@
-'use client'
+"use client";
 
-import { useLayoutEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
-import { createBrowserSupabase } from '@/lib/supabase/client'
-import { FormField } from '@/components/ui/form-field'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { ModeToggle } from '@/components/ui/mode-toggle'
-import { useToast } from '@/components/ui/toast'
-import { useAnime } from '@/components/hooks/use-anime'
-import { Entrada } from '@/components/ui/motion'
-import { FynzLogoAnimado } from '@/components/ui/fynz-logo'
-import { solicitarRecuperacion } from '@/lib/acciones-servidor'
-import { esEmailValido, normalizarEmail } from '@/lib/utils/email'
-import { traducirErrorAuth } from '@/lib/utils/errores-auth'
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserSupabase } from "@/lib/supabase/client";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { FormField } from "@/components/ui/form-field";
+import { Input } from "@/components/ui/input";
+import { FynzLogo } from "@/components/ui/fynz-logo";
+import { useToast } from "@/components/ui/toast";
+import { solicitarRecuperacion } from "@/lib/acciones-servidor";
+import { esEmailValido, normalizarEmail } from "@/lib/utils/email";
+import { traducirErrorAuth } from "@/lib/utils/errores-auth";
 
 export function LoginForm() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [emailError, setEmailError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [recuperando, setRecuperando] = useState(false)
-  const [recuperacionEnviada, setRecuperacionEnviada] = useState(false)
-  const formRef = useRef<HTMLFormElement | null>(null)
-  const { animar, reducirMovimiento } = useAnime()
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [errorFormulario, setErrorFormulario] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [recuperando, setRecuperando] = useState(false);
+  const [recuperacionEnviada, setRecuperacionEnviada] = useState(false);
 
-  const supabase = createBrowserSupabase()
-  const router = useRouter()
-  const { addToast } = useToast()
+  const supabase = createBrowserSupabase();
+  const router = useRouter();
+  const { addToast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  const cambiarModo = () => {
+    setIsLogin((valor) => !valor);
+    setEmailError("");
+    setPasswordError("");
+    setErrorFormulario("");
+    setRecuperacionEnviada(false);
+  };
 
-    const emailNormalizado = normalizarEmail(email)
+  const handleSubmit = async (evento: FormEvent) => {
+    evento.preventDefault();
+    if (loading) return;
+
+    setErrorFormulario("");
+    setEmailError("");
+    setPasswordError("");
+
+    const emailNormalizado = normalizarEmail(email);
 
     if (!esEmailValido(emailNormalizado)) {
-      setEmailError('Escribe un correo válido, ej. nombre@dominio.com')
-      setLoading(false)
-      return
-    }
-    setEmailError('')
-
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailNormalizado,
-        password,
-      })
-      if (error) {
-        addToast(traducirErrorAuth(error), 'error')
-      } else {
-        addToast('Bienvenido de nuevo', 'success')
-        router.push('/')
-      }
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email: emailNormalizado,
-        password,
-      })
-      if (error) {
-        addToast(traducirErrorAuth(error), 'error')
-      } else {
-        addToast('Revisa tu correo para confirmar tu cuenta', 'success')
-      }
+      setEmailError("Escribe un correo válido, ej. nombre@dominio.com");
+      return;
     }
 
-    setLoading(false)
-  }
+    if (password.length < 6) {
+      setPasswordError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
 
-  useLayoutEffect(() => {
-    const form = formRef.current
-    if (!form || reducirMovimiento) return
-    form.style.opacity = '0'
-    animar(form, {
-      duracion: 'normal',
-      opacity: [0, 1],
-      translateX: [isLogin ? -20 : 20, 0],
-    })
-  }, [animar, reducirMovimiento, isLogin])
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emailNormalizado,
+          password,
+        });
+
+        if (error) {
+          setErrorFormulario(traducirErrorAuth(error));
+          return;
+        }
+
+        addToast("Bienvenido de nuevo", "success");
+        router.push("/");
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: emailNormalizado,
+          password,
+        });
+
+        if (error) {
+          setErrorFormulario(traducirErrorAuth(error));
+          return;
+        }
+
+        addToast("Revisa tu correo para confirmar tu cuenta", "success");
+      }
+    } catch {
+      setErrorFormulario(
+        "No pudimos conectar. Revisa tu conexión e inténtalo de nuevo."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const solicitarEnlace = async () => {
+    if (recuperando) return;
+
+    setErrorFormulario("");
+    setEmailError("");
+
+    const emailNormalizado = normalizarEmail(email);
+    if (!esEmailValido(emailNormalizado)) {
+      setEmailError("Escribe tu correo para recuperar tu contraseña");
+      return;
+    }
+
+    setRecuperando(true);
+    try {
+      const resultado = await solicitarRecuperacion(emailNormalizado);
+      if (!resultado.ok) {
+        setErrorFormulario(resultado.error);
+        return;
+      }
+      setRecuperacionEnviada(true);
+    } catch {
+      setErrorFormulario(
+        "No pudimos enviar el enlace. Inténtalo de nuevo en un momento."
+      );
+    } finally {
+      setRecuperando(false);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <Entrada duracion="destacada" className="text-center">
-        <div className="flex flex-col items-center gap-3">
-          <FynzLogoAnimado height={56} />
-        </div>
-        <p className="text-[var(--color-text-muted)] mt-2">
-          {isLogin ? 'Inicia sesión para continuar' : 'Crea tu cuenta en segundos'}
-        </p>
-      </Entrada>
+    <Card className="w-full max-w-[400px] shadow-lift">
+      <CardHeader className="items-center gap-2 text-center">
+        <FynzLogo height={40} />
+        <h1 className="text-2xl font-semibold tracking-tight text-fg">
+          {isLogin ? "Inicia sesión" : "Crea tu cuenta"}
+        </h1>
+        <CardDescription>
+          {isLogin
+            ? "Tu Disponible Real te está esperando."
+            : "Empieza a saber cuánto puedes gastar hoy."}
+        </CardDescription>
+      </CardHeader>
 
-      <ModeToggle
-        isLogin={isLogin}
-        onToggle={(mode) => {
-          setIsLogin(mode === 'login')
-          setEmailError('')
-        }}
-      />
-
-      <form
-        ref={formRef}
-        noValidate
-        onSubmit={handleSubmit}
-        className="bg-[var(--color-surface)] p-6 rounded-2xl shadow-sm border border-[var(--color-border)] space-y-4"
-      >
-        <FormField
-          label="Correo electrónico"
-          error={emailError || undefined}
-          required
-        >
-          <Input
-            type="email"
-            leadingIcon={<Mail className="size-4" />}
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              if (emailError) setEmailError('')
-            }}
-            placeholder="tu@email.com"
-            invalid={Boolean(emailError)}
-            required
-          />
-        </FormField>
-
-        <FormField label="Contraseña" required>
-          <div className="relative">
-            <Input
-              type={showPassword ? 'text' : 'password'}
-              leadingIcon={<Lock className="size-4" />}
-              className="pr-11"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              minLength={6}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
-              aria-label={
-                showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+      <CardContent>
+        <form noValidate onSubmit={handleSubmit} className="space-y-4">
+          {errorFormulario && (
+            <Alert
+              variant="danger"
+              title={
+                isLogin
+                  ? "No pudimos iniciar sesión"
+                  : "No pudimos crear tu cuenta"
               }
             >
-              {showPassword ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
-            </button>
-          </div>
-        </FormField>
-
-        <Button type="submit" loading={loading} className="w-full">
-          {loading ? 'Procesando...' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-        </Button>
-      </form>
-
-      <div className="text-center space-y-2">
-        <button
-          onClick={() => {
-            setIsLogin(!isLogin)
-            setEmailError('')
-            setRecuperacionEnviada(false)
-          }}
-          className="text-[var(--color-primary)] text-sm font-medium hover:opacity-80 transition-opacity"
-        >
-          {isLogin ? (
-            <>¿No tienes cuenta? <span className="underline">Regístrate aquí</span></>
-          ) : (
-            <>¿Ya tienes cuenta? <span className="underline">Inicia sesión</span></>
+              {errorFormulario}
+            </Alert>
           )}
+
+          <FormField label="Correo electrónico" error={emailError} required>
+            <Input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="tu@email.com"
+              value={email}
+              onChange={(evento) => {
+                setEmail(evento.target.value);
+                if (emailError) setEmailError("");
+                if (errorFormulario) setErrorFormulario("");
+              }}
+              invalid={Boolean(emailError)}
+              required
+            />
+          </FormField>
+
+          <FormField label="Contraseña" error={passwordError} required>
+            <Input
+              type="password"
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(evento) => {
+                setPassword(evento.target.value);
+                if (passwordError) setPasswordError("");
+                if (errorFormulario) setErrorFormulario("");
+              }}
+              minLength={6}
+              invalid={Boolean(passwordError)}
+              required
+            />
+          </FormField>
+
+          <Button type="submit" loading={loading} className="w-full">
+            {loading
+              ? "Procesando…"
+              : isLogin
+                ? "Iniciar sesión"
+                : "Crear cuenta"}
+          </Button>
+        </form>
+      </CardContent>
+
+      <CardFooter className="flex-col items-center gap-2 border-t border-line pt-4">
+        <button
+          type="button"
+          onClick={cambiarModo}
+          className="text-sm font-medium text-brand transition-colors hover:text-brand-hover"
+        >
+          {isLogin
+            ? "¿No tienes cuenta? Regístrate"
+            : "¿Ya tienes cuenta? Inicia sesión"}
         </button>
 
-        {isLogin && (
-          <div>
-            {recuperacionEnviada ? (
-              <p className="text-sm text-[var(--color-text-muted)]">
-                Si ese correo existe, recibirás un enlace para restablecerlo.
-              </p>
-            ) : (
-              <button
-                disabled={recuperando}
-                onClick={async () => {
-                  setRecuperando(true)
-                  const normalizado = normalizarEmail(email)
-                  if (!esEmailValido(normalizado)) {
-                    setEmailError('Escribe tu correo para recuperar tu contraseña')
-                    setRecuperando(false)
-                    return
-                  }
-                  setEmailError('')
-                  const resultado = await solicitarRecuperacion(normalizado)
-                  setRecuperando(false)
-                  if (!resultado.ok) {
-                    addToast(resultado.error, 'error')
-                    return
-                  }
-                  setRecuperacionEnviada(true)
-                }}
-                className="text-[var(--color-text-muted)] text-xs font-medium hover:text-[var(--color-primary)] transition-colors disabled:opacity-50"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  )
+        {isLogin &&
+          (recuperacionEnviada ? (
+            <p
+              aria-live="polite"
+              className="text-center text-xs leading-relaxed text-fg-muted"
+            >
+              Si ese correo existe, recibirás un enlace para restablecerlo.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={solicitarEnlace}
+              disabled={recuperando}
+              className="text-xs font-medium text-fg-muted transition-colors hover:text-fg disabled:opacity-60"
+            >
+              {recuperando ? "Enviando…" : "¿Olvidaste tu contraseña?"}
+            </button>
+          ))}
+      </CardFooter>
+    </Card>
+  );
 }
