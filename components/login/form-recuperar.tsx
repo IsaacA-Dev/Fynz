@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { AlertCircle, Eye, EyeOff, Lock } from 'lucide-react'
+import { Eye, EyeOff, Lock } from 'lucide-react'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -18,6 +20,12 @@ export function FormRecuperar({ errorInicial }: { errorInicial: string | null })
   const router = useRouter()
 
   const valido = contrasena.length >= 8 && contrasena === confirmacion
+  const errorConfirmacion =
+    contrasena !== '' && confirmacion !== '' && !valido
+      ? contrasena.length < 8
+        ? 'La contraseña debe tener al menos 8 caracteres.'
+        : 'Las contraseñas no coinciden.'
+      : undefined
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -47,56 +55,58 @@ export function FormRecuperar({ errorInicial }: { errorInicial: string | null })
       </div>
 
       {errorInicial && (
-        <span
-          role="alert"
-          className="flex items-center gap-1.5 text-[var(--color-error)] text-sm"
-        >
-          <AlertCircle size={14} className="shrink-0" />
+        <Alert variant="danger" title="No pudimos restablecer la contraseña">
           {errorInicial}
-        </span>
+        </Alert>
       )}
 
-      <Input
-        label="Nueva contraseña"
-        type={showPassword ? 'text' : 'password'}
-        icon={<Lock size={16} />}
-        endIcon={
+      <FormField label="Nueva contraseña" required>
+        <div className="relative">
+          <Input
+            type={showPassword ? 'text' : 'password'}
+            leadingIcon={<Lock className="size-4" />}
+            className="pr-11"
+            value={contrasena}
+            onChange={(e) => setContrasena(e.target.value)}
+            placeholder="••••••••"
+            minLength={8}
+            required
+          />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
+            aria-label={
+              showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+            }
           >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showPassword ? (
+              <EyeOff className="size-4" />
+            ) : (
+              <Eye className="size-4" />
+            )}
           </button>
-        }
-        value={contrasena}
-        onChange={(e) => setContrasena(e.target.value)}
-        placeholder="••••••••"
-        minLength={8}
-        required
-      />
+        </div>
+      </FormField>
 
-      <Input
+      <FormField
         label="Confirmar contraseña"
-        type={showPassword ? 'text' : 'password'}
-        icon={<Lock size={16} />}
-        value={confirmacion}
-        onChange={(e) => setConfirmacion(e.target.value)}
-        placeholder="••••••••"
-        minLength={8}
+        error={errorConfirmacion}
         required
-      />
+      >
+        <Input
+          type={showPassword ? 'text' : 'password'}
+          leadingIcon={<Lock className="size-4" />}
+          value={confirmacion}
+          onChange={(e) => setConfirmacion(e.target.value)}
+          placeholder="••••••••"
+          minLength={8}
+          invalid={Boolean(errorConfirmacion)}
+          required
+        />
+      </FormField>
 
-      {contrasena !== '' && confirmacion !== '' && !valido && (
-        <p className="text-xs text-[var(--color-error)]">
-          {contrasena.length > 0 && contrasena.length < 8
-            ? 'La contraseña debe tener al menos 8 caracteres.'
-            : 'Las contraseñas no coinciden.'}
-        </p>
-      )}
-
-      <Button type="submit" loading={loading} disabled={!valido}>
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
         Guardar contraseña
       </Button>
 

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { Check, DollarSign } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -89,36 +90,45 @@ export function FormLiquidar({ pago, cuentas, onClose }: FormLiquidarProps) {
         </p>
       </div>
 
-      <Input
+      <FormField
         label={pago.es_tarjeta ? 'Monto a pagar' : 'Monto'}
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={montoTexto}
-        onChange={(e) => setMontoTexto(e.target.value)}
-        icon={<DollarSign className="w-4 h-4" />}
+        hint={
+          esPagoParcial
+            ? 'Pago parcial: el compromiso del ciclo se reducirá al resto pendiente.'
+            : undefined
+        }
         required
-      />
+      >
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={montoTexto}
+          onChange={(e) => setMontoTexto(e.target.value)}
+          leadingIcon={<DollarSign className="size-4" />}
+          required
+        />
+      </FormField>
 
-      {esPagoParcial && (
-        <p className="text-xs text-[var(--color-text-muted)] -mt-1">
-          Pago parcial: el compromiso del ciclo se reducirá al resto pendiente.
-        </p>
-      )}
+      <FormField label="¿Desde qué cuenta se pagó?" required>
+        <Select
+          value={cuentaId}
+          onChange={(e) => setCuentaId(e.target.value)}
+          required
+        >
+          <option value="">Selecciona una cuenta</option>
+          {cuentasLiquidas.map((c) => (
+            <option key={c.cuenta_id} value={c.cuenta_id}>
+              {c.nombre}
+            </option>
+          ))}
+        </Select>
+      </FormField>
 
-      <Select label="¿Desde qué cuenta se pagó?" value={cuentaId} onChange={(e) => setCuentaId(e.target.value)} required>
-        <option value="">Selecciona una cuenta</option>
-        {cuentasLiquidas.map((c) => (
-          <option key={c.cuenta_id} value={c.cuenta_id}>
-            {c.nombre}
-          </option>
-        ))}
-      </Select>
-
-      <Button type="submit" loading={loading} disabled={!valido}>
-        <Check className="w-4 h-4" />
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
+        <Check className="size-4" />
         Confirmar pago
       </Button>
     </form>

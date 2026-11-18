@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { CalendarDays, Sparkles } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { formatearFecha } from '@/lib/utils/format'
 import type { Horizonte } from '@/lib/acciones'
@@ -82,7 +83,7 @@ export function HorizonteControl({
             <CalendarDays className="w-3 h-3" />
             Fecha
           </span>
-          <input
+          <Input
             type="date"
             value={esFecha ? (horizonte.preferidoFecha ?? '') : ''}
             onChange={(e) => onPersistirPreferido(null, e.target.value || null)}
@@ -109,14 +110,14 @@ export function HorizonteControl({
         </button>
 
         {mostrarIngreso && (
-          <div className="flex items-center gap-2 w-full">
-            <Input
-              label=""
-              type="date"
-              value={fechaIngreso}
-              onChange={(e) => guardarIngreso(e.target.value)}
-              className="flex-1"
-            />
+          <div className="flex w-full items-end gap-2">
+            <FormField label="Fecha del próximo ingreso" className="flex-1">
+              <Input
+                type="date"
+                value={fechaIngreso}
+                onChange={(e) => guardarIngreso(e.target.value)}
+              />
+            </FormField>
             {proximoIngreso && (
               <button
                 type="button"
@@ -125,7 +126,7 @@ export function HorizonteControl({
                   setFechaIngreso('')
                   onPersistirIngreso(null)
                 }}
-                className="text-xs text-[var(--color-danger)] font-medium hover:opacity-80 disabled:opacity-50"
+                className="mb-0.5 text-xs font-medium text-danger hover:opacity-80 disabled:opacity-50"
               >
                 Quitar
               </button>

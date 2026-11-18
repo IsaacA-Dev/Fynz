@@ -1,26 +1,91 @@
-'use client'
+"use client";
 
-import { useRef } from 'react'
-import { usePrensa } from '@/components/hooks/use-prensa'
-import { Loader2 } from 'lucide-react'
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+} from "react";
+import { cn } from "@/lib/utils/cn";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  loading?: boolean
+export const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:pointer-events-none disabled:opacity-60",
+  {
+    variants: {
+      variant: {
+        solid: "bg-brand text-on-brand shadow-soft hover:bg-brand-hover",
+        secondary:
+          "border border-input bg-surface-muted text-fg hover:bg-brand-softer",
+        outline:
+          "border border-input bg-transparent text-fg hover:bg-surface-muted",
+        ghost: "text-fg-muted hover:bg-surface-muted hover:text-fg",
+        danger:
+          "bg-danger text-on-danger shadow-danger hover:bg-danger-hover focus-visible:ring-danger/80",
+      },
+      size: {
+        sm: "h-8 rounded-panel px-3 text-xs",
+        md: "h-10 rounded-panel px-4 text-sm",
+        lg: "h-11 rounded-card px-5 text-sm",
+        icon: "size-10 rounded-panel p-0",
+      },
+    },
+    defaultVariants: {
+      variant: "solid",
+      size: "md",
+    },
+  }
+);
+
+export interface ButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+  loading?: boolean;
 }
 
-export function Button({ children, loading, className, disabled, ...props }: ButtonProps) {
-  const ref = useRef<HTMLButtonElement | null>(null)
-  usePrensa(ref)
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      disabled,
+      children,
+      type = "button",
+      ...props
+    },
+    ref
+  ) {
+    const clases = cn(buttonVariants({ variant, size }), className);
 
-  return (
-    <button
-      ref={ref}
-      disabled={loading || disabled}
-      className={`w-full bg-[var(--color-primary)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-primary-hover)] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 ${className ?? ''}`}
-      {...props}
-    >
-      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-      {children}
-    </button>
-  )
-}
+    if (asChild) {
+      return (
+        <Slot
+          ref={ref}
+          className={clases}
+          aria-busy={loading || undefined}
+          {...props}
+        >
+          {children}
+        </Slot>
+      );
+    }
+
+    return (
+      <button
+        ref={ref}
+        type={type}
+        className={clases}
+        disabled={loading || disabled}
+        aria-busy={loading || undefined}
+        {...props}
+      >
+        {loading && <Loader2 className="size-4 animate-spin" aria-hidden />}
+        {children}
+      </button>
+    );
+  }
+);

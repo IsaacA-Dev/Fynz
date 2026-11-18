@@ -29,14 +29,8 @@ export function FynzMark({ size = 32 }: { size?: number }) {
           y2="88"
           gradientUnits="userSpaceOnUse"
         >
-          <stop
-            offset="0%"
-            stopColor="var(--color-banner-start, #2563eb)"
-          />
-          <stop
-            offset="100%"
-            stopColor="var(--color-banner-end, #172554)"
-          />
+          <stop offset="0%" stopColor="var(--ds-brand)" />
+          <stop offset="100%" stopColor="var(--ds-brand-deep)" />
         </linearGradient>
       </defs>
 
@@ -53,7 +47,7 @@ export function FynzMark({ size = 32 }: { size?: number }) {
       {/* F principal */}
       <path
         d="M32 73V31C32 25.5 36.5 21 42 21H69"
-        stroke="white"
+        stroke="var(--ds-on-brand)"
         strokeWidth="10"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -62,7 +56,7 @@ export function FynzMark({ size = 32 }: { size?: number }) {
       {/* Brazo central convertido en crecimiento */}
       <path
         d="M32 52H48C53 52 57 50.5 60.5 47L69 38.5"
-        stroke="white"
+        stroke="var(--ds-on-brand)"
         strokeWidth="10"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -72,7 +66,7 @@ export function FynzMark({ size = 32 }: { size?: number }) {
       <path
         data-chispa="true"
         d="M82 10 L83.9 15.1 L89 17 L83.9 18.9 L82 24 L80.1 18.9 L75 17 L80.1 15.1 Z"
-        fill="white"
+        fill="var(--ds-on-brand)"
         style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
       />
     </svg>
@@ -84,7 +78,7 @@ export function FynzWordmark({ height = 20 }: { height?: number }) {
     <span
       aria-hidden="true"
       style={{
-        color: 'var(--color-logo-text, #172554)',
+        color: 'var(--ds-logo-text)',
         fontFamily: 'Manrope, Inter, system-ui, sans-serif',
         fontSize: height,
         fontWeight: 750,

@@ -1,31 +1,39 @@
-'use client'
+"use client";
 
-import { type SelectHTMLAttributes, forwardRef } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown } from "lucide-react";
+import { forwardRef, type SelectHTMLAttributes } from "react";
+import { cn } from "@/lib/utils/cn";
+import { controlVariants, type ControlVariantProps } from "./control-variants";
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label: string
-}
+export interface SelectProps
+  extends SelectHTMLAttributes<HTMLSelectElement>,
+    ControlVariantProps {}
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { label, className, children, ...props },
-  ref
-) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1.5">
-        {label}
-      </label>
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  function Select(
+    { className, variant = "boxed", invalid = false, children, ...props },
+    ref
+  ) {
+    return (
       <div className="relative">
         <select
           ref={ref}
-          className={`w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl pl-4 pr-10 py-3 text-[var(--color-text)] appearance-none focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all ${className ?? ''}`}
+          aria-invalid={invalid || undefined}
+          className={cn(
+            controlVariants({ variant, invalid }),
+            "appearance-none pr-10",
+            variant === "boxed" ? "h-10" : "",
+            className
+          )}
           {...props}
         >
           {children}
         </select>
-        <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
+        <ChevronDown
+          aria-hidden
+          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-fg-subtle"
+        />
       </div>
-    </div>
-  )
-})
+    );
+  }
+);

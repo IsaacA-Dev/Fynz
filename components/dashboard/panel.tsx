@@ -18,6 +18,7 @@ import { CuentaRow } from '@/components/dashboard/rows/cuenta-row'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { NumeroAnimado } from '@/components/ui/motion/numero-animado'
+import { Select } from '@/components/ui/select'
 import { REGISTRO_WIDGETS } from '@/components/dashboard/widgets/registry'
 import { DialogoCrear } from '@/components/dashboard/widgets/dialogo-crear'
 import { DialogoDiseno } from '@/components/dashboard/dialogo-diseno'
@@ -353,26 +354,30 @@ function BloqueShell({
           </span>
           {escritorio && (
             <div className="flex items-center gap-1">
-              <select
+              <Select
                 value={bloque.ancho}
-                onChange={(e) => onCambiarAncho(Number(e.target.value) as 1 | 2 | 3 | 4)}
+                onChange={(e) =>
+                  onCambiarAncho(Number(e.target.value) as 1 | 2 | 3 | 4)
+                }
                 aria-label="Columnas del bloque"
-                className="text-xs bg-[var(--color-surface)] border border-[var(--color-border-soft)] rounded-full px-2 py-1 text-[var(--color-text-muted)]"
+                className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
               >
                 <option value={1}>1 col</option>
                 <option value={2}>2 cols</option>
                 <option value={3}>3 cols</option>
                 <option value={4}>4 cols</option>
-              </select>
-              <select
+              </Select>
+              <Select
                 value={bloque.filas}
-                onChange={(e) => onCambiarFilas(Number(e.target.value) as 1 | 2)}
+                onChange={(e) =>
+                  onCambiarFilas(Number(e.target.value) as 1 | 2)
+                }
                 aria-label="Filas del bloque"
-                className="text-xs bg-[var(--color-surface)] border border-[var(--color-border-soft)] rounded-full px-2 py-1 text-[var(--color-text-muted)]"
+                className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
               >
                 <option value={1}>1 fila</option>
                 <option value={2}>2 filas</option>
-              </select>
+              </Select>
             </div>
           )}
           {onFiltros && (

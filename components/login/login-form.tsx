@@ -2,8 +2,9 @@
 
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { createBrowserSupabase } from '@/lib/supabase/client'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/ui/mode-toggle'
@@ -106,53 +107,55 @@ export function LoginForm() {
         onSubmit={handleSubmit}
         className="bg-[var(--color-surface)] p-6 rounded-2xl shadow-sm border border-[var(--color-border)] space-y-4"
       >
-        <Input
+        <FormField
           label="Correo electrónico"
-          type="email"
-          icon={<Mail size={16} />}
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value)
-            if (emailError) setEmailError('')
-          }}
-          placeholder="tu@email.com"
+          error={emailError || undefined}
           required
-        />
+        >
+          <Input
+            type="email"
+            leadingIcon={<Mail className="size-4" />}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (emailError) setEmailError('')
+            }}
+            placeholder="tu@email.com"
+            invalid={Boolean(emailError)}
+            required
+          />
+        </FormField>
 
-        {emailError && (
-          <Entrada duracion="rapida" desdeY={-6}>
-            <span
-              role="alert"
-              className="flex items-center gap-1.5 text-[var(--color-error)] text-sm"
-            >
-              <AlertCircle size={14} className="shrink-0" />
-              {emailError}
-            </span>
-          </Entrada>
-        )}
-
-        <Input
-          label="Contraseña"
-          type={showPassword ? 'text' : 'password'}
-          icon={<Lock size={16} />}
-          endIcon={
+        <FormField label="Contraseña" required>
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              leadingIcon={<Lock className="size-4" />}
+              className="pr-11"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              minLength={6}
+              required
+            />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
+              aria-label={
+                showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+              }
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
             </button>
-          }
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          minLength={6}
-          required
-        />
+          </div>
+        </FormField>
 
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={loading} className="w-full">
           {loading ? 'Procesando...' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
         </Button>
       </form>

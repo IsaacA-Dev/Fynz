@@ -279,6 +279,19 @@
     outline-offset: 3px;
     border-radius: 4px;
   }
+
+  dialog::backdrop {
+    background-color: var(--ds-scrim);
+    backdrop-filter: blur(4px);
+  }
+
+  dialog[open]::backdrop {
+    animation: fade-in 0.35s ease-out;
+  }
+
+  dialog[data-saliendo="true"]::backdrop {
+    animation: fade-out 0.22s ease-out forwards;
+  }
 }
 
 /* ============================================================

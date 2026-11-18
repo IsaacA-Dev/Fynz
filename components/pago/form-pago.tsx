@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { CalendarDays, DollarSign, Repeat } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -114,27 +115,29 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Descripción"
-        placeholder="Ej. Renta, Luz, Netflix..."
-        value={descripcion}
-        onChange={(e) => setDescripcion(e.target.value)}
-        maxLength={60}
-        required
-      />
+      <FormField label="Descripción" required>
+        <Input
+          placeholder="Ej. Renta, Luz, Netflix..."
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          maxLength={60}
+          required
+        />
+      </FormField>
 
-      <Input
-        label="Monto"
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={monto}
-        onChange={(e) => setMonto(e.target.value)}
-        icon={<DollarSign className="w-4 h-4" />}
-        required
-      />
+      <FormField label="Monto" required>
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={monto}
+          onChange={(e) => setMonto(e.target.value)}
+          leadingIcon={<DollarSign className="size-4" />}
+          required
+        />
+      </FormField>
 
       <div>
         <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1.5">
@@ -168,42 +171,43 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
 
       {recurrente ? (
         <div className="space-y-3">
-          <Input
-            label="Día de cobro (1-31)"
-            type="number"
-            inputMode="numeric"
-            min="1"
-            max="31"
-            placeholder="Ej. 25"
-            value={diaCobro}
-            onChange={(e) => setDiaCobro(e.target.value)}
-            icon={<Repeat className="w-4 h-4" />}
-            required
-          />
+          <FormField label="Día de cobro (1-31)" required>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max="31"
+              placeholder="Ej. 25"
+              value={diaCobro}
+              onChange={(e) => setDiaCobro(e.target.value)}
+              leadingIcon={<Repeat className="size-4" />}
+              required
+            />
+          </FormField>
           {esEdicion && (
-            <div>
+            <FormField
+              label="Reprogramar esta instancia (opcional)"
+              hint="El día de cobro seguirá aplicando a los siguientes periodos."
+            >
               <Input
-                label="Reprogramar esta instancia (opcional)"
                 type="date"
                 value={reprogramarFecha}
                 onChange={(e) => setReprogramarFecha(e.target.value)}
-                icon={<CalendarDays className="w-4 h-4" />}
+                leadingIcon={<CalendarDays className="size-4" />}
               />
-              <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
-                El día de cobro seguirá aplicando a los siguientes periodos.
-              </p>
-            </div>
+            </FormField>
           )}
         </div>
       ) : (
-        <Input
-          label="Fecha de vencimiento"
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          icon={<CalendarDays className="w-4 h-4" />}
-          required
-        />
+        <FormField label="Fecha de vencimiento" required>
+          <Input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            leadingIcon={<CalendarDays className="size-4" />}
+            required
+          />
+        </FormField>
       )}
 
       <div>
@@ -237,22 +241,23 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
       </div>
 
       {domiciliado && (
-        <Select
-          label="Cuenta que se cobrará"
-          value={cuentaId}
-          onChange={(e) => setCuentaId(e.target.value)}
-          required
-        >
-          <option value="">Selecciona una cuenta</option>
-          {cuentasDomiciliables.map((c) => (
-            <option key={c.cuenta_id} value={c.cuenta_id}>
-              {c.nombre}
-            </option>
-          ))}
-        </Select>
+        <FormField label="Cuenta que se cobrará" required>
+          <Select
+            value={cuentaId}
+            onChange={(e) => setCuentaId(e.target.value)}
+            required
+          >
+            <option value="">Selecciona una cuenta</option>
+            {cuentasDomiciliables.map((c) => (
+              <option key={c.cuenta_id} value={c.cuenta_id}>
+                {c.nombre}
+              </option>
+            ))}
+          </Select>
+        </FormField>
       )}
 
-      <Button type="submit" loading={loading} disabled={!valido}>
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
         {esEdicion ? 'Guardar Cambios' : 'Crear Pago'}
       </Button>
     </form>

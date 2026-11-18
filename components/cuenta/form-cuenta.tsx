@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { CalendarDays, CreditCard, DollarSign } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -108,106 +109,114 @@ export function FormCuenta({ cuenta, onClose }: FormCuentaProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Nombre"
-        placeholder="Ej. Mis finanzas, BBVA..."
-        value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        maxLength={40}
-        required
-      />
+      <FormField label="Nombre" required>
+        <Input
+          placeholder="Ej. Mis finanzas, BBVA..."
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          maxLength={40}
+          required
+        />
+      </FormField>
 
-      <Select
-        label="Método"
-        value={metodo}
-        onChange={(e) => {
-          const nuevo = e.target.value as Metodo | ''
-          setMetodo(nuevo)
-          if (nuevo === 'credito' && balanceInicial.trim() === '') {
-            setBalanceInicial('0')
-          }
-        }}
-        required
-      >
-        <option value="">Selecciona el método</option>
-        {(Object.keys(METODO_LABELS) as Metodo[]).map((m) => (
-          <option key={m} value={m}>
-            {METODO_LABELS[m]}
-          </option>
-        ))}
-      </Select>
+      <FormField label="Método" required>
+        <Select
+          value={metodo}
+          onChange={(e) => {
+            const nuevo = e.target.value as Metodo | ''
+            setMetodo(nuevo)
+            if (nuevo === 'credito' && balanceInicial.trim() === '') {
+              setBalanceInicial('0')
+            }
+          }}
+          required
+        >
+          <option value="">Selecciona el método</option>
+          {(Object.keys(METODO_LABELS) as Metodo[]).map((m) => (
+            <option key={m} value={m}>
+              {METODO_LABELS[m]}
+            </option>
+          ))}
+        </Select>
+      </FormField>
 
-      <Input
-        label={esCredito ? 'Deuda actual' : 'Balance inicial'}
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={balanceInicial}
-        onChange={(e) => setBalanceInicial(e.target.value)}
-        icon={<DollarSign className="w-4 h-4" />}
-        required
-      />
+      <FormField label={esCredito ? 'Deuda actual' : 'Balance inicial'} required>
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={balanceInicial}
+          onChange={(e) => setBalanceInicial(e.target.value)}
+          leadingIcon={<DollarSign className="size-4" />}
+          required
+        />
+      </FormField>
 
       {esCredito && (
-        <div className="space-y-3">
-          <Input
+        <div className="space-y-4">
+          <FormField
             label="Límite de crédito (opcional)"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            value={limite}
-            onChange={(e) => setLimite(e.target.value)}
-            icon={<CreditCard className="w-4 h-4" />}
-          />
-          <p className="text-xs text-[var(--color-text-muted)] -mt-1">
-            Si tu banco cambia tu línea de crédito, edítalo aquí. No genera movimientos.
-          </p>
+            hint="Si tu banco cambia tu línea de crédito, edítalo aquí. No genera movimientos."
+          >
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={limite}
+              onChange={(e) => setLimite(e.target.value)}
+              leadingIcon={<CreditCard className="size-4" />}
+            />
+          </FormField>
 
-          <Input
+          <FormField
             label="Día de corte"
-            type="number"
-            inputMode="numeric"
-            min="1"
-            max="31"
-            placeholder="Ej. 20"
-            value={diaCorte}
-            onChange={(e) => setDiaCorte(e.target.value)}
-            icon={<CalendarDays className="w-4 h-4" />}
-          />
-          <Input
+            error={
+              cicloIncompleto
+                ? 'Si defines ciclo, necesitas ambos días (corte y pago).'
+                : undefined
+            }
+          >
+            <Input
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max="31"
+              placeholder="Ej. 20"
+              value={diaCorte}
+              onChange={(e) => setDiaCorte(e.target.value)}
+              leadingIcon={<CalendarDays className="size-4" />}
+            />
+          </FormField>
+
+          <FormField
             label="Día de pago (límite)"
-            type="number"
-            inputMode="numeric"
-            min="1"
-            max="31"
-            placeholder="Ej. 28"
-            value={diaPago}
-            onChange={(e) => setDiaPago(e.target.value)}
-            icon={<CalendarDays className="w-4 h-4" />}
-          />
-          {cicloIncompleto ? (
-            <p className="text-xs text-[var(--color-error)] -mt-1">
-              Si defines ciclo, necesitas ambos días (corte y pago).
-            </p>
-          ) : (
-            <p className="text-xs text-[var(--color-text-muted)] -mt-1">
-              Tu banco define estos días. Fynz generará el pago de la tarjeta con esa fecha.
-            </p>
-          )}
+            hint="Tu banco define estos días. Fynz generará el pago de la tarjeta con esa fecha."
+          >
+            <Input
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max="31"
+              placeholder="Ej. 28"
+              value={diaPago}
+              onChange={(e) => setDiaPago(e.target.value)}
+              leadingIcon={<CalendarDays className="size-4" />}
+            />
+          </FormField>
         </div>
       )}
 
       {hayAjuste && (
-        <p className="text-xs text-[var(--color-text-muted)] -mt-1">
+        <p className="text-xs text-fg-muted">
           Al guardar, se registrará un movimiento de ajuste en tu historial.
         </p>
       )}
 
-      <Button type="submit" loading={loading} disabled={!valido}>
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
         {esEdicion ? 'Guardar Cambios' : 'Crear Cuenta'}
       </Button>
     </form>

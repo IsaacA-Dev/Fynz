@@ -101,13 +101,15 @@ function ContenidoFiltros({
       ))}
 
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="secondary"
           onClick={onCerrar}
-          className="flex-1 py-2.5 rounded-xl font-medium bg-[var(--color-border)]/50 text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors"
+          className="flex-1"
         >
           Cancelar
-        </button>
+        </Button>
         <Button
+          className="flex-1"
           onClick={() => {
             onGuardar(borrador)
             onCerrar()

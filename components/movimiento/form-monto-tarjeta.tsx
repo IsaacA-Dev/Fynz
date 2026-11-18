@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { RotateCcw, Save } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -87,31 +88,32 @@ export function FormMontoTarjeta({ pago, onClose }: FormMontoTarjetaProps) {
         pago de este ciclo; la deuda real sigue calculándose sola.
       </p>
 
-      <Input
-        label="Monto que sí pagarás (opcional)"
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={montoTexto}
-        onChange={(e) => setMontoTexto(e.target.value)}
-        required
-      />
+      <FormField label="Monto que sí pagarás (opcional)">
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={montoTexto}
+          onChange={(e) => setMontoTexto(e.target.value)}
+        />
+      </FormField>
 
-      <Input
-        label="Mínimo del banco (opcional)"
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={minimoTexto}
-        onChange={(e) => setMinimoTexto(e.target.value)}
-      />
+      <FormField label="Mínimo del banco (opcional)">
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={minimoTexto}
+          onChange={(e) => setMinimoTexto(e.target.value)}
+        />
+      </FormField>
 
-      <Button type="submit" loading={loading} disabled={!valido}>
-        <Save className="w-4 h-4" />
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
+        <Save className="size-4" />
         Usar mi monto del estado de cuenta
       </Button>
 

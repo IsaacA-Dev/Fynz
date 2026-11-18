@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { AlertTriangle, Check, DollarSign, Pencil, Trash2, X } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -176,32 +177,34 @@ export function FormMovimiento({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Monto"
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={monto}
-        onChange={(e) => setMonto(e.target.value)}
-        icon={<DollarSign className="w-4 h-4" />}
-        required
-      />
+      <FormField label="Monto" required>
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={monto}
+          onChange={(e) => setMonto(e.target.value)}
+          leadingIcon={<DollarSign className="size-4" />}
+          required
+        />
+      </FormField>
 
-      <Select
-        label="Cuenta"
-        value={cuentaId}
-        onChange={(e) => setCuentaId(e.target.value)}
-        required
-      >
-        <option value="">Selecciona una cuenta</option>
-        {cuentas.map((c) => (
-          <option key={c.cuenta_id} value={c.cuenta_id}>
-            {c.nombre}
-          </option>
-        ))}
-      </Select>
+      <FormField label="Cuenta" required>
+        <Select
+          value={cuentaId}
+          onChange={(e) => setCuentaId(e.target.value)}
+          required
+        >
+          <option value="">Selecciona una cuenta</option>
+          {cuentas.map((c) => (
+            <option key={c.cuenta_id} value={c.cuenta_id}>
+              {c.nombre}
+            </option>
+          ))}
+        </Select>
+      </FormField>
 
       {impacto && (
         <div className="bg-[var(--color-border)]/30 rounded-xl p-3 space-y-1.5">
@@ -280,35 +283,37 @@ export function FormMovimiento({
         </div>
       )}
 
-      <Input
-        label="Descripción (opcional)"
-        placeholder="Ej. Quincena, Super..."
-        value={descripcion}
-        onChange={(e) => setDescripcion(e.target.value)}
-        maxLength={60}
-      />
+      <FormField label="Descripción (opcional)">
+        <Input
+          placeholder="Ej. Quincena, Super..."
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          maxLength={60}
+        />
+      </FormField>
 
       <div className="space-y-2">
-        <Select
-          label="Categoría (opcional)"
-          value={categoriaId}
-          onChange={(e) => {
-            if (e.target.value === '__nueva') {
-              setNuevaCategoria('')
-              setCategoriaId('__nueva')
-            } else {
-              setCategoriaId(e.target.value)
-            }
-          }}
-        >
-          <option value="">Sin categoría</option>
-          {categorias.map((c) => (
-            <option key={c.categoria_id} value={c.categoria_id}>
-              {c.nombre}
-            </option>
-          ))}
-          <option value="__nueva">+ Nueva categoría…</option>
-        </Select>
+        <FormField label="Categoría (opcional)">
+          <Select
+            value={categoriaId}
+            onChange={(e) => {
+              if (e.target.value === '__nueva') {
+                setNuevaCategoria('')
+                setCategoriaId('__nueva')
+              } else {
+                setCategoriaId(e.target.value)
+              }
+            }}
+          >
+            <option value="">Sin categoría</option>
+            {categorias.map((c) => (
+              <option key={c.categoria_id} value={c.categoria_id}>
+                {c.nombre}
+              </option>
+            ))}
+            <option value="__nueva">+ Nueva categoría…</option>
+          </Select>
+        </FormField>
 
         {categorias.length === 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -329,22 +334,23 @@ export function FormMovimiento({
         )}
 
         {categoriaId === '__nueva' && (
-          <div className="flex items-center gap-2">
-            <Input
-              label=""
-              placeholder="Nombre de la categoría"
-              value={nuevaCategoria}
-              onChange={(e) => setNuevaCategoria(e.target.value)}
-              maxLength={40}
-              autoFocus
-            />
+          <div className="flex items-end gap-2">
+            <FormField label="Nombre de la categoría" className="flex-1">
+              <Input
+                placeholder="Ej. Hogar"
+                value={nuevaCategoria}
+                onChange={(e) => setNuevaCategoria(e.target.value)}
+                maxLength={40}
+                autoFocus
+              />
+            </FormField>
             <button
               type="button"
               onClick={crearNueva}
               aria-label="Crear categoría"
-              className="p-3 rounded-xl bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-colors shrink-0"
+              className="mb-0.5 p-3 rounded-panel bg-brand text-on-brand hover:bg-brand-hover transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
             >
-              <Check className="w-4 h-4" />
+              <Check className="size-4" />
             </button>
           </div>
         )}
@@ -370,23 +376,24 @@ export function FormMovimiento({
             {editandoCategorias && (
               <div className="mt-2 space-y-1.5">
                 {categorias.map((c) => (
-                  <div key={c.categoria_id} className="flex items-center gap-2">
+                  <div key={c.categoria_id} className="flex items-end gap-2">
                     {renombrandoId === c.categoria_id ? (
                       <>
-                        <Input
-                          label=""
-                          value={renombrandoNombre}
-                          onChange={(e) => setRenombrandoNombre(e.target.value)}
-                          maxLength={40}
-                          autoFocus
-                        />
+                        <FormField label="Nuevo nombre" className="flex-1">
+                          <Input
+                            value={renombrandoNombre}
+                            onChange={(e) => setRenombrandoNombre(e.target.value)}
+                            maxLength={40}
+                            autoFocus
+                          />
+                        </FormField>
                         <button
                           type="button"
                           onClick={() => guardarRenombrado(c)}
                           aria-label="Guardar nombre"
-                          className="p-2 rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-colors shrink-0"
+                          className="mb-0.5 p-2 rounded-panel bg-brand text-on-brand hover:bg-brand-hover transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
                         >
-                          <Check className="w-3.5 h-3.5" />
+                          <Check className="size-3.5" />
                         </button>
                         <button
                           type="button"
@@ -434,7 +441,7 @@ export function FormMovimiento({
         )}
       </div>
 
-      <Button type="submit" loading={loading} disabled={!valido}>
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
         {esEgreso
           ? esCredito
             ? 'Registrar Compra'

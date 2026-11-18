@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Link2, Loader2, Search } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -73,106 +74,143 @@ export function HistorialExplorador() {
 
         <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Desde"
-              type="date"
-              value={filtros.desde ?? ''}
-              onChange={(e) => setFiltros((f) => ({ ...f, desde: e.target.value || null }))}
-            />
-            <Input
-              label="Hasta"
-              type="date"
-              value={filtros.hasta ?? ''}
-              onChange={(e) => setFiltros((f) => ({ ...f, hasta: e.target.value || null }))}
-            />
+            <FormField label="Desde">
+              <Input
+                type="date"
+                value={filtros.desde ?? ''}
+                onChange={(e) =>
+                  setFiltros((f) => ({ ...f, desde: e.target.value || null }))
+                }
+              />
+            </FormField>
+            <FormField label="Hasta">
+              <Input
+                type="date"
+                value={filtros.hasta ?? ''}
+                onChange={(e) =>
+                  setFiltros((f) => ({ ...f, hasta: e.target.value || null }))
+                }
+              />
+            </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Select
-              label="Cuenta"
-              value={filtros.cuentaId != null ? String(filtros.cuentaId) : ''}
-              onChange={(e) =>
-                setFiltros((f) => ({
-                  ...f,
-                  cuentaId: e.target.value === '' ? null : Number(e.target.value),
-                }))
-              }
-            >
-              <option value="">Todas</option>
-              {cuentas.map((c) => (
-                <option key={c.cuenta_id} value={c.cuenta_id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </Select>
-            <Select
-              label="Tipo"
-              value={filtros.tipo ?? ''}
-              onChange={(e) =>
-                setFiltros((f) => ({ ...f, tipo: e.target.value === '' ? null : e.target.value as 'ingreso' | 'egreso' }))
-              }
-            >
-              <option value="">Todos</option>
-              <option value="ingreso">Ingreso</option>
-              <option value="egreso">Egreso</option>
-            </Select>
+            <FormField label="Cuenta">
+              <Select
+                value={
+                  filtros.cuentaId != null ? String(filtros.cuentaId) : ''
+                }
+                onChange={(e) =>
+                  setFiltros((f) => ({
+                    ...f,
+                    cuentaId:
+                      e.target.value === '' ? null : Number(e.target.value),
+                  }))
+                }
+              >
+                <option value="">Todas</option>
+                {cuentas.map((c) => (
+                  <option key={c.cuenta_id} value={c.cuenta_id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+            <FormField label="Tipo">
+              <Select
+                value={filtros.tipo ?? ''}
+                onChange={(e) =>
+                  setFiltros((f) => ({
+                    ...f,
+                    tipo:
+                      e.target.value === ''
+                        ? null
+                        : (e.target.value as 'ingreso' | 'egreso'),
+                  }))
+                }
+              >
+                <option value="">Todos</option>
+                <option value="ingreso">Ingreso</option>
+                <option value="egreso">Egreso</option>
+              </Select>
+            </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Select
-              label="Operación"
-              value={filtros.operacion ?? ''}
-              onChange={(e) => setFiltros((f) => ({ ...f, operacion: e.target.value || null }))}
-            >
-              {OPERACIONES.map((op) => (
-                <option key={op.valor} value={op.valor}>
-                  {op.etiqueta}
-                </option>
-              ))}
-            </Select>
-            <Select
-              label="Estado"
-              value={filtros.estado ?? ''}
-              onChange={(e) =>
-                setFiltros((f) => ({ ...f, estado: e.target.value === '' ? null : e.target.value as 'atrasado' }))
-              }
-            >
-              <option value="">Todos</option>
-              <option value="atrasado">Atrasados</option>
-            </Select>
+            <FormField label="Operación">
+              <Select
+                value={filtros.operacion ?? ''}
+                onChange={(e) =>
+                  setFiltros((f) => ({
+                    ...f,
+                    operacion: e.target.value || null,
+                  }))
+                }
+              >
+                {OPERACIONES.map((op) => (
+                  <option key={op.valor} value={op.valor}>
+                    {op.etiqueta}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+            <FormField label="Estado">
+              <Select
+                value={filtros.estado ?? ''}
+                onChange={(e) =>
+                  setFiltros((f) => ({
+                    ...f,
+                    estado:
+                      e.target.value === ''
+                        ? null
+                        : (e.target.value as 'atrasado'),
+                  }))
+                }
+              >
+                <option value="">Todos</option>
+                <option value="atrasado">Atrasados</option>
+              </Select>
+            </FormField>
           </div>
 
           {categorias.length > 0 && (
-            <Select
-              label="Categoría"
-              value={filtros.categoriaId != null ? String(filtros.categoriaId) : ''}
-              onChange={(e) =>
-                setFiltros((f) => ({
-                  ...f,
-                  categoriaId: e.target.value === '' ? null : Number(e.target.value),
-                }))
-              }
-            >
-              <option value="">Todas</option>
-              {categorias.map((c) => (
-                <option key={c.categoria_id} value={c.categoria_id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </Select>
+            <FormField label="Categoría">
+              <Select
+                value={
+                  filtros.categoriaId != null
+                    ? String(filtros.categoriaId)
+                    : ''
+                }
+                onChange={(e) =>
+                  setFiltros((f) => ({
+                    ...f,
+                    categoriaId:
+                      e.target.value === '' ? null : Number(e.target.value),
+                  }))
+                }
+              >
+                <option value="">Todas</option>
+                {categorias.map((c) => (
+                  <option key={c.categoria_id} value={c.categoria_id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
           )}
 
-          <div className="flex gap-2">
-            <div className="flex-1">
+          <div className="flex items-end gap-2">
+            <FormField label="Buscar" className="flex-1">
               <Input
-                label="Buscar"
                 placeholder="Descripción..."
                 value={filtros.texto}
-                onChange={(e) => setFiltros((f) => ({ ...f, texto: e.target.value }))}
-                icon={<Search className="w-4 h-4" />}
+                onChange={(e) =>
+                  setFiltros((f) => ({ ...f, texto: e.target.value }))
+                }
+                leadingIcon={<Search className="size-4" />}
               />
-            </div>
-            <Button type="button" onClick={aplicar} className="self-end">
+            </FormField>
+            <Button type="button" onClick={aplicar}>
               Aplicar
             </Button>
           </div>
