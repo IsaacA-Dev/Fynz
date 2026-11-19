@@ -50,7 +50,7 @@ export function DashboardMovil(props: DashboardMovilProps) {
   const movimientosMostrados = datos.movimientos.slice(0, LIMITE)
 
   return (
-    <main className="min-h-dvh bg-surface-muted">
+    <main className="min-h-dvh bg-surface-muted pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-md">
         <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-6">
           <FynzLogo height={26} />
@@ -187,32 +187,32 @@ export function DashboardMovil(props: DashboardMovilProps) {
             </div>
           )}
         </div>
-
-        <nav
-          aria-label="Navegación principal"
-          className="sticky bottom-0 z-40 border-t border-line bg-surface/90 backdrop-blur"
-        >
-          <div className="grid grid-cols-3">
-            {TABS.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setTab(id)}
-                aria-current={tab === id ? 'page' : undefined}
-                className={cn(
-                  'flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80',
-                  tab === id
-                    ? 'text-brand'
-                    : 'text-fg-muted hover:text-fg'
-                )}
-              >
-                <Icon className="size-5" aria-hidden />
-                {label}
-              </button>
-            ))}
-          </div>
-        </nav>
       </div>
+
+      <nav
+        aria-label="Navegación principal"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-3">
+          {TABS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              aria-current={tab === id ? 'page' : undefined}
+              className={cn(
+                'flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80',
+                tab === id
+                  ? 'text-brand'
+                  : 'text-fg-muted hover:text-fg'
+              )}
+            >
+              <Icon className="size-5" aria-hidden />
+              {label}
+            </button>
+          ))}
+        </div>
+      </nav>
     </main>
   )
 }

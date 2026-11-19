@@ -24,76 +24,90 @@ export function CuentaRow({ cuenta, onEditar, onEliminar }: CuentaRowProps) {
     ? creditoDisponible(cuenta.limite, cuenta.saldo)
     : null
 
-  return (
-    <div className="flex items-center justify-between gap-3 py-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          className={cn(
-            'flex size-9 shrink-0 items-center justify-center rounded-full @lg:size-11',
-            esCredito
-              ? 'bg-danger-soft text-danger'
-              : 'bg-brand-soft text-brand'
-          )}
-        >
-          <Icon className="size-4 @lg:size-5" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <p className="truncate text-sm font-medium text-fg @lg:text-base">
-              {cuenta.nombre}
-            </p>
-            {esCredito && (
-              <Badge variant="danger" size="sm">
-                Crédito
-              </Badge>
-            )}
-          </div>
-          <p className="truncate text-xs text-fg-muted @lg:text-sm">
-            {subtitulo}
-          </p>
-        </div>
-      </div>
+  const acciones = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onEditar}
+        aria-label={`Editar ${cuenta.nombre}`}
+        className="size-9 text-fg-muted hover:bg-brand-soft hover:text-brand"
+      >
+        <Pencil className="size-4" aria-hidden />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onEliminar}
+        aria-label={`Eliminar ${cuenta.nombre}`}
+        className="size-9 text-fg-muted hover:bg-danger-soft hover:text-danger"
+      >
+        <Trash2 className="size-4" aria-hidden />
+      </Button>
+    </>
+  )
 
-      <div className="flex min-w-0 items-center gap-1">
-        <div className="mr-1 min-w-0 text-right">
+  return (
+    <div className="py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span
+            className={cn(
+              'flex size-9 shrink-0 items-center justify-center rounded-full @lg:size-11',
+              esCredito
+                ? 'bg-danger-soft text-danger'
+                : 'bg-brand-soft text-brand'
+            )}
+          >
+            <Icon className="size-4 @lg:size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="truncate text-sm font-medium text-fg @lg:text-base">
+                {cuenta.nombre}
+              </p>
+              {esCredito && (
+                <Badge variant="danger" size="sm">
+                  Crédito
+                </Badge>
+              )}
+            </div>
+            <p className="truncate text-xs text-fg-muted @lg:text-sm">
+              {subtitulo}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
           <p
             className={cn(
-              'text-sm font-semibold @lg:text-base',
+              'mr-1 text-sm font-semibold @lg:text-base',
               esCredito ? 'text-danger' : 'text-fg'
             )}
           >
             {formatearDinero(cuenta.saldo)}
           </p>
-          {esCredito && cuenta.limite != null && (
-            <p className="max-w-[9.5rem] break-words text-[11px] leading-tight text-fg-muted @lg:max-w-[12rem] @lg:text-xs">
-              Límite {formatearDinero(cuenta.limite)}
-              {disponible != null
-                ? ` · Crédito disponible ${formatearDinero(disponible)}`
-                : ''}
-            </p>
-          )}
+          {!esCredito && acciones}
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onEditar}
-          aria-label={`Editar ${cuenta.nombre}`}
-          className="size-9 text-fg-muted hover:bg-brand-soft hover:text-brand"
-        >
-          <Pencil className="size-4" aria-hidden />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onEliminar}
-          aria-label={`Eliminar ${cuenta.nombre}`}
-          className="size-9 text-fg-muted hover:bg-danger-soft hover:text-danger"
-        >
-          <Trash2 className="size-4" aria-hidden />
-        </Button>
       </div>
+
+      {esCredito && (
+        <div className="mt-1.5 flex items-center justify-between gap-2 pl-12 @lg:pl-14">
+          <p className="min-w-0 text-[11px] leading-snug text-fg-muted @lg:text-xs">
+            {cuenta.limite != null && (
+              <>
+                Límite {formatearDinero(cuenta.limite)}
+                {disponible != null
+                  ? ` · Crédito disponible ${formatearDinero(disponible)}`
+                  : ''}
+              </>
+            )}
+          </p>
+          <div className="flex shrink-0 items-center gap-1">{acciones}</div>
+        </div>
+      )}
     </div>
   )
 }

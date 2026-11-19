@@ -80,13 +80,20 @@ export function LoginForm() {
         addToast("Bienvenido de nuevo", "success");
         router.push("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: emailNormalizado,
           password,
         });
 
         if (error) {
           setErrorFormulario(traducirErrorAuth(error));
+          return;
+        }
+
+        if (data.session) {
+          addToast("Cuenta creada. Bienvenido a Fynz", "success");
+          router.push("/");
+          router.refresh();
           return;
         }
 

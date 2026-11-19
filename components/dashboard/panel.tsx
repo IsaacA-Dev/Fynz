@@ -49,21 +49,11 @@ import type { Cuenta, DatosDashboard, ProximoPago, Vista } from '@/lib/acciones'
 
 const LIMITE = 4
 
-// El hero en 1 fila no alcanza cuando el horizonte/información extra crece.
-// En esos casos ocupa 2 filas efectivas sin modificar el valor guardado.
+// El hero tiene altura automática: una fila salvo que existan alertas o
+// presión futura, que son los únicos bloques que realmente necesitan espacio.
 function filasEfectivas(bloque: BloqueLayout, datos: DatosDashboard): CantFilas {
-  if (bloque.tipo !== 'hero' || bloque.filas !== 1) return bloque.filas
-  const horizonteFiltrado =
-    datos.horizonte.preferido != null || datos.horizonte.preferidoFecha != null
-  if (
-    horizonteFiltrado ||
-    datos.proximoIngreso ||
-    datos.alertas.length > 0 ||
-    datos.presionFutura.length > 0
-  ) {
-    return 2
-  }
-  return 1
+  if (bloque.tipo !== 'hero') return bloque.filas
+  return datos.alertas.length > 0 || datos.presionFutura.length > 0 ? 2 : 1
 }
 
 interface PanelLayoutProps {
@@ -387,17 +377,19 @@ function BloqueShell({
                   <option value={3}>3 cols</option>
                   <option value={4}>4 cols</option>
                 </Select>
-                <Select
-                  value={bloque.filas}
-                  onChange={(e) =>
-                    onCambiarFilas(Number(e.target.value) as 1 | 2)
-                  }
-                  aria-label="Filas del bloque"
-                  className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
-                >
-                  <option value={1}>1 fila</option>
-                  <option value={2}>2 filas</option>
-                </Select>
+                {bloque.tipo !== 'hero' && (
+                  <Select
+                    value={bloque.filas}
+                    onChange={(e) =>
+                      onCambiarFilas(Number(e.target.value) as 1 | 2)
+                    }
+                    aria-label="Filas del bloque"
+                    className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
+                  >
+                    <option value={1}>1 fila</option>
+                    <option value={2}>2 filas</option>
+                  </Select>
+                )}
               </div>
             )}
             {onFiltros && (
@@ -481,6 +473,10 @@ function ContenidoBloque({
 
 function HeroBloque({ props }: { props: PanelLayoutProps }) {
   const { datos, horizonteControl } = props
+  const sinActividad =
+    datos.cuentas.length === 0 &&
+    datos.movimientos.length === 0 &&
+    datos.pagos.length === 0
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -500,7 +496,11 @@ function HeroBloque({ props }: { props: PanelLayoutProps }) {
           </div>
           <div className="flex flex-col items-end gap-1.5 text-right">
             <Badge variant="neutral" size="sm">
-              Datos del {datos.actualizado ? formatearFecha(datos.actualizado) : '—'}
+              {datos.actualizado
+                ? `Datos del ${formatearFecha(datos.actualizado)}`
+                : sinActividad
+                  ? 'Empieza aquí'
+                  : 'Sin verificar'}
             </Badge>
             {datos.desactualizado && (
               <span className="inline-flex items-center gap-1 text-xs font-medium text-warning">

@@ -678,28 +678,37 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
   const usuarioId = user.id
 
   try {
-  const [cuentas, pagos, movimientos, respuestaConfig, flujoMensual, respuestaAnalitica] =
-    await Promise.all([
-      buscarCuentasConSaldo(usuarioId, cliente),
-      buscarPagosProximos(usuarioId, cliente),
-      buscarMovimientosRecientes(usuarioId, cliente),
+  const [
+    cuentas,
+    pagos,
+    movimientos,
+    respuestaConfig,
+    flujoMensual,
+    respuestaAnalitica,
+    respuestaNombres,
+  ] = await Promise.all([
+    buscarCuentasConSaldo(usuarioId, cliente),
+    buscarPagosProximos(usuarioId, cliente),
+    buscarMovimientosRecientes(usuarioId, cliente),
+    cliente
+      .from('configuracion')
+      .select('vista, widgets, layout, proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
+      .eq('usuario_id', usuarioId)
+      .maybeSingle(),
+    buscarFlujoMensual(usuarioId, cliente),
+    Promise.all([
       cliente
-        .from('configuracion')
-        .select('vista, widgets, layout, proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
+        .from('transaccion')
+        .select('tipo, monto, fecha, categoria_id')
         .eq('usuario_id', usuarioId)
-        .maybeSingle(),
-      buscarFlujoMensual(usuarioId, cliente),
-      Promise.all([
-        cliente
-          .from('transaccion')
-          .select('tipo, monto, fecha, categoria_id')
-          .eq('usuario_id', usuarioId)
-          .gte('fecha', mesHace(hoyLocal(), 5))
-          .order('fecha', { ascending: false })
-          .limit(2000),
-        cliente.from('categoria').select('categoria_id, nombre').eq('usuario_id', usuarioId),
-      ]),
-    ])
+        .gte('fecha', mesHace(hoyLocal(), 5))
+        .order('fecha', { ascending: false })
+        .limit(2000),
+      cliente.from('categoria').select('categoria_id, nombre').eq('usuario_id', usuarioId),
+    ]),
+    // Incluye archivadas: el historial reciente debe conservar el nombre real.
+    cliente.from('cuenta').select('cuenta_id, nombre').eq('usuario_id', usuarioId),
+  ])
 
   const configuracion = respuestaConfig.data as {
     vista?: string | null
@@ -713,13 +722,18 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
 
   const pagosVisibles = pagos.filter((p) => !(p.es_tarjeta && p.monto <= 0))
 
-  const cuentaPorId = new Map(cuentas.map((c) => [c.cuenta_id, c]))
+  const nombrePorCuenta = new Map(
+    (respuestaNombres.data ?? []).map((c: { cuenta_id: number; nombre: string }) => [
+      c.cuenta_id,
+      c.nombre,
+    ])
+  )
 
   const pagosConNombre = pagosVisibles.map((p) => ({
     ...p,
     cuenta_nombre:
       p.cuenta_id != null
-        ? (cuentaPorId.get(p.cuenta_id)?.nombre ?? 'Cuenta')
+        ? (nombrePorCuenta.get(p.cuenta_id) ?? 'Cuenta')
         : null,
   }))
 
@@ -741,7 +755,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     pagos: pagosConNombre,
     movimientos: movimientos.map((t) => ({
       ...t,
-      cuenta_nombre: cuentaPorId.get(t.cuenta_id)?.nombre ?? 'Cuenta',
+      cuenta_nombre: nombrePorCuenta.get(t.cuenta_id) ?? 'Cuenta',
     })),
     alertas: detectarAlertas(cuentas, pagosConNombre),
     vista: configuracion?.vista === 'escritorio' ? 'escritorio' : 'movil',
@@ -770,7 +784,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     proximoIngreso: configuracion?.proximo_ingreso ?? null,
     actualizado: configuracion?.actualizado ?? null,
     desactualizado:
-      configuracion?.actualizado == null ||
+      configuracion?.actualizado != null &&
       diasEntre(configuracion.actualizado.slice(0, 10), hoy) > 7,
   }
   } catch (e) {
