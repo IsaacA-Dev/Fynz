@@ -11,6 +11,7 @@ import {
   LayoutTemplate,
   Pencil,
   Plus,
+  RefreshCw,
   Settings2,
   Trash2,
 } from 'lucide-react'
@@ -65,6 +66,7 @@ interface PanelLayoutProps {
   onNuevoIngreso: () => void
   onTransferir: () => void
   onNuevaCuenta: () => void
+  onPonerAlDia: () => void
   onEditarCuenta: (cuenta: Cuenta) => void
   onEliminarCuenta: (cuenta: Cuenta) => void
   onNuevoPago: () => void
@@ -472,7 +474,7 @@ function ContenidoBloque({
 }
 
 function HeroBloque({ props }: { props: PanelLayoutProps }) {
-  const { datos, horizonteControl } = props
+  const { datos, horizonteControl, onPonerAlDia } = props
   const sinActividad =
     datos.cuentas.length === 0 &&
     datos.movimientos.length === 0 &&
@@ -507,6 +509,18 @@ function HeroBloque({ props }: { props: PanelLayoutProps }) {
                 <AlertTriangle className="size-3.5" aria-hidden />
                 Verifica tus saldos
               </span>
+            )}
+            {datos.cuentas.length > 0 && (
+              <Button
+                type="button"
+                variant={datos.desactualizado ? 'solid' : 'secondary'}
+                size="sm"
+                onClick={onPonerAlDia}
+                className="mt-0.5"
+              >
+                <RefreshCw className="size-3.5" aria-hidden />
+                Poner al día
+              </Button>
             )}
           </div>
         </div>
@@ -648,7 +662,7 @@ function CuentasBloque({
   props: PanelLayoutProps
   verMas: { verMasCuentas: boolean; setVerMasCuentas: Dispatch<SetStateAction<boolean>> }
 }) {
-  const { datos, onNuevaCuenta, onEditarCuenta, onEliminarCuenta } = props
+  const { datos, onNuevaCuenta, onPonerAlDia, onEditarCuenta, onEliminarCuenta } = props
   const mostradas = verMas.verMasCuentas
     ? datos.cuentas
     : datos.cuentas.slice(0, LIMITE)
@@ -657,16 +671,31 @@ function CuentasBloque({
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <h4 className="text-eyebrow uppercase text-fg-subtle">Cuentas</h4>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onNuevaCuenta}
-          aria-label="Nueva cuenta"
-          className="size-8 text-brand hover:bg-brand-soft"
-        >
-          <Plus className="size-4" aria-hidden />
-        </Button>
+        <div className="flex items-center gap-1">
+          {datos.cuentas.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onPonerAlDia}
+              aria-label="Poner al día"
+              title="Poner al día"
+              className="size-8 text-fg-muted hover:bg-brand-soft hover:text-brand"
+            >
+              <RefreshCw className="size-4" aria-hidden />
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onNuevaCuenta}
+            aria-label="Nueva cuenta"
+            className="size-8 text-brand hover:bg-brand-soft"
+          >
+            <Plus className="size-4" aria-hidden />
+          </Button>
+        </div>
       </div>
 
       {datos.cuentas.length === 0 ? (

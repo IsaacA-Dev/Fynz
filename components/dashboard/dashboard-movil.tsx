@@ -26,6 +26,7 @@ interface DashboardMovilProps {
   onNuevoIngreso: () => void
   onTransferir: () => void
   onNuevaCuenta: () => void
+  onPonerAlDia: () => void
   onEditarCuenta: (cuenta: Cuenta) => void
   onEliminarCuenta: (cuenta: Cuenta) => void
   onNuevoPago: () => void

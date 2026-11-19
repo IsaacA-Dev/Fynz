@@ -9,6 +9,7 @@ import { FormTransferencia } from '@/components/movimiento/form-transferencia'
 import { FormLiquidar } from '@/components/movimiento/form-liquidar'
 import { FormMontoTarjeta } from '@/components/movimiento/form-monto-tarjeta'
 import { FormCuenta } from '@/components/cuenta/form-cuenta'
+import { FormPuestaAlDia } from '@/components/cuenta/form-puesta-al-dia'
 import { FormPago } from '@/components/pago/form-pago'
 import { useIsMobile } from '@/components/hooks/use-is-mobile'
 import { DashboardMovil } from '@/components/dashboard/dashboard-movil'
@@ -44,6 +45,7 @@ type SheetState =
   | { tipo: 'editarCuenta'; cuenta: Cuenta }
   | { tipo: 'pago' }
   | { tipo: 'editarPago'; pago: ProximoPago }
+  | { tipo: 'puestaAlDia' }
 
 export function DashboardContent({ datos: datosInicial }: DashboardContentProps) {
   const [datos, setDatos] = useState(datosInicial)
@@ -146,6 +148,7 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
     onNuevoIngreso: () => setSheet({ tipo: 'movimiento', tipoMov: 'ingreso' }),
     onTransferir: () => setSheet({ tipo: 'transferencia' }),
     onNuevaCuenta: () => setSheet({ tipo: 'cuenta' }),
+    onPonerAlDia: () => setSheet({ tipo: 'puestaAlDia' }),
     onEditarCuenta: (cuenta: Cuenta) => setSheet({ tipo: 'editarCuenta', cuenta }),
     onEliminarCuenta: (cuenta: Cuenta) => setEliminando(cuenta),
     onNuevoPago: () => setSheet({ tipo: 'pago' }),
@@ -219,6 +222,21 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
         {(sheet?.tipo === 'cuenta' || sheet?.tipo === 'editarCuenta') && (
           <FormCuenta
             cuenta={sheet.tipo === 'editarCuenta' ? sheet.cuenta : undefined}
+            onClose={cerrar}
+          />
+        )}
+      </Sheet>
+
+      <Sheet
+        open={sheet?.tipo === 'puestaAlDia'}
+        title="Poner al día"
+        onClose={cerrar}
+      >
+        {sheet?.tipo === 'puestaAlDia' && (
+          <FormPuestaAlDia
+            cuentas={datos.cuentas}
+            pagos={datos.pagos}
+            hoy={hoy}
             onClose={cerrar}
           />
         )}

@@ -232,11 +232,26 @@ El acceso es con correo y contraseña. Incluye:
 
 Si Supabase ya crea la sesión al registrarse, Fynz entra directamente al panel. Si la confirmación por correo está activa, muestra el aviso para revisar el buzón.
 
+### 4.13 Poner al día
+
+Cuando pasan días sin registrar movimientos, los saldos de Fynz dejan de reflejar la realidad. **Poner al día** permite reconciliar todo en un solo lugar sin borrar el historial.
+
+El panel lista las cuentas activas con su saldo o deuda actual y un campo para escribir el valor real de hoy. Antes de confirmar muestra la diferencia de cada cuenta. También reúne los pagos vencidos pendientes: si ya se pagaron, se marcan y se elige la cuenta de origen.
+
+Al confirmar, Fynz:
+
+1. Liquida los pagos vencidos seleccionados.
+2. Ajusta cada cuenta al saldo o deuda real escrita, registrando un **Ajuste de saldo** trazable.
+3. Marca la configuración como actualizada hoy.
+4. Re-sincroniza los ciclos de las tarjetas afectadas.
+
+El orden evita dobles conteos: el saldo escrito es el que queda después de los pagos. La función está disponible en el hero y en la cabecera de Cuentas. No modifica el saldo inicial, no borra movimientos y no archiva cuentas.
+
 ## 5. Calidad y QA
 
 ### 5.1 Pruebas automatizadas
 
-`bun test` cubre **153 pruebas en 14 archivos**, entre ellas:
+`bun test` cubre **162 pruebas en 15 archivos**, entre ellas:
 
 - Disponible Real y horizontes.
 - Transferencias y conservación de liquidez.
@@ -244,6 +259,7 @@ Si Supabase ya crea la sesión al registrarse, Fynz entra directamente al panel.
 - Ciclos de tarjeta: compras antes y después del corte, pagos totales y parciales, monto manual y mínimo.
 - Simulador de compras.
 - Categorías, historial y filtros.
+- Puesta al día: diferencias, validaciones y selección de pagos vencidos.
 - Formato de dinero en centavos y fechas de calendario.
 - Layout, presets, widgets y drag & drop.
 - Errores, logs y recuperación.
@@ -266,7 +282,7 @@ El recorrido E2E completo quedó **superado** con datos sintéticos en Supabase,
 - **P2:** nombre de cuentas archivadas en el historial reciente, densidad móvil y mensaje de registro con sesión automática.
 - **P3:** altura automática del hero y semántica del estado inicial.
 
-El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos de los cuatro tipos, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
+El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos de los cuatro tipos, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
 
 ## 6. Seguridad e integridad
 
@@ -303,8 +319,9 @@ El registro de movimientos usa la fecha del día. La edición retroactiva de la 
 4. Antes de una compra importante, usa el simulador para comparar efectivo, débito o crédito.
 5. Si una cuenta no alcanza para un cobro domiciliado, Fynz indica cuánto falta.
 6. Al cubrir una obligación, la liquida desde la cuenta de origen; si es un pago mensual, se genera el siguiente periodo.
-7. Cuando cierra un ciclo de tarjeta, aparece el pago estimado y puede ajustarse al monto del estado de cuenta.
-8. Consulta el historial para entender cualquier cambio y conserva la trazabilidad aunque archive una cuenta.
+7. Si pasaron días sin usar Fynz, abre **Poner al día**, escribe los saldos reales y marca los pagos vencidos que ya cubrió.
+8. Cuando cierra un ciclo de tarjeta, aparece el pago estimado y puede ajustarse al monto del estado de cuenta.
+9. Consulta el historial para entender cualquier cambio y conserva la trazabilidad aunque archive una cuenta.
 
 ## 9. Criterio para considerar Fynz listo para producción
 

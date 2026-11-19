@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { createServerSupabase } from './supabase/server'
 import { aCentavos } from './dinero'
-import { diasEntre, hoyLocal, siguienteDiaCobro } from './fechas'
+import { diasEntre, esAtrasado, hoyLocal, siguienteDiaCobro } from './fechas'
 import {
   compromisosDeseados,
   ciclosDeTarjeta,
@@ -30,7 +30,7 @@ export type Respuesta = { ok: true } | { ok: false; error: string }
 
 type Cliente = Awaited<ReturnType<typeof createServerSupabase>>
 
-import { traducirError } from './errores'
+import { MENSAJES_SQL, traducirError } from './errores'
 import { errorDesdeRpc, logError } from './logs'
 
 async function clienteAutenticado(): Promise<Cliente | null> {
@@ -1140,6 +1140,271 @@ export async function liquidarPago(
       }
     }
   })
+}
+
+export interface DatosPuestaAlDia {
+  ajustes: Array<{ cuentaId: number; saldoObjetivo: number }>
+  pagos: Array<{ pagoId: number; cuentaOrigen: number }>
+}
+
+export type RespuestaPuestaAlDia =
+  | {
+      ok: true
+      resumen: { cuentasAjustadas: number; pagosLiquidados: number }
+    }
+  | { ok: false; error: string }
+
+interface CuentaPuestaAlDiaServidor {
+  cuenta_id: number
+  nombre: string
+  metodo: Metodo
+  dia_corte: number | null
+  dia_pago: number | null
+  limite: number | null
+}
+
+interface PagoPuestaAlDiaServidor {
+  proximo_pago_id: number
+  descripcion: string
+  monto: number
+  fecha_vencimiento: string
+  pagado: boolean
+  archivada: boolean
+  es_tarjeta: boolean
+  cuenta_id: number | null
+}
+
+/**
+ * Puesta al día: liquida los pagos vencidos seleccionados y luego ajusta las
+ * cuentas al saldo o deuda real de hoy. Los saldos se leen de la base de datos,
+ * nunca del cliente. El orden es intencional: primero los pagos, después los
+ * ajustes, para que el saldo final sea exactamente el que escribió la persona.
+ */
+export async function ponerAlDia(
+  datos: DatosPuestaAlDia
+): Promise<RespuestaPuestaAlDia> {
+  const inicio = Date.now()
+
+  try {
+    const cliente = await clienteAutenticado()
+    if (!cliente) throw new Error('no_autorizado')
+    const {
+      data: { user },
+    } = await cliente.auth.getUser()
+    if (!user) throw new Error('no_autorizado')
+
+    if (!Array.isArray(datos.ajustes) || !Array.isArray(datos.pagos)) {
+      throw new Error('datos_invalidos')
+    }
+    if (datos.ajustes.length > 100 || datos.pagos.length > 100) {
+      throw new Error('datos_invalidos')
+    }
+
+    const ajustesPorCuenta = new Map<number, number>()
+    for (const ajuste of datos.ajustes) {
+      const cuentaId = Number(ajuste.cuentaId)
+      const saldoObjetivo = Number(ajuste.saldoObjetivo)
+      if (
+        !Number.isInteger(cuentaId) ||
+        cuentaId <= 0 ||
+        !Number.isInteger(saldoObjetivo) ||
+        saldoObjetivo < 0
+      ) {
+        throw new Error('datos_invalidos')
+      }
+      ajustesPorCuenta.set(cuentaId, saldoObjetivo)
+    }
+
+    const pagosPorSeleccion = new Map<number, number>()
+    for (const pago of datos.pagos) {
+      const pagoId = Number(pago.pagoId)
+      const cuentaOrigen = Number(pago.cuentaOrigen)
+      if (
+        !Number.isInteger(pagoId) ||
+        pagoId <= 0 ||
+        !Number.isInteger(cuentaOrigen) ||
+        cuentaOrigen <= 0
+      ) {
+        throw new Error('datos_invalidos')
+      }
+      pagosPorSeleccion.set(pagoId, cuentaOrigen)
+    }
+
+    const listaAjustes = [...ajustesPorCuenta].map(
+      ([cuentaId, saldoObjetivo]) => ({ cuentaId, saldoObjetivo })
+    )
+    const listaPagos = [...pagosPorSeleccion].map(
+      ([pagoId, cuentaOrigen]) => ({ pagoId, cuentaOrigen })
+    )
+
+    if (listaAjustes.length === 0 && listaPagos.length === 0) {
+      throw new Error('sin_cambios')
+    }
+
+    const idsCuentas = [
+      ...new Set([
+        ...listaAjustes.map((ajuste) => ajuste.cuentaId),
+        ...listaPagos.map((pago) => pago.cuentaOrigen),
+      ]),
+    ]
+
+    const { data: cuentasData, error: errorCuentas } = await cliente
+      .from('cuenta')
+      .select('cuenta_id, nombre, metodo, dia_corte, dia_pago, limite')
+      .eq('usuario_id', user.id)
+      .eq('archivada', false)
+      .in('cuenta_id', idsCuentas)
+    if (errorCuentas) throw errorDesdeRpc(errorCuentas)
+
+    const cuentaPorId = new Map<number, CuentaPuestaAlDiaServidor>()
+    for (const cuenta of (cuentasData ?? []) as CuentaPuestaAlDiaServidor[]) {
+      cuentaPorId.set(cuenta.cuenta_id, {
+        cuenta_id: Number(cuenta.cuenta_id),
+        nombre: cuenta.nombre,
+        metodo: cuenta.metodo,
+        dia_corte: cuenta.dia_corte != null ? aEntero(cuenta.dia_corte) : null,
+        dia_pago: cuenta.dia_pago != null ? aEntero(cuenta.dia_pago) : null,
+        limite: cuenta.limite != null ? aEntero(cuenta.limite) : null,
+      })
+    }
+
+    for (const ajuste of listaAjustes) {
+      if (!cuentaPorId.has(ajuste.cuentaId)) {
+        throw new Error('cuenta_no_encontrada')
+      }
+    }
+
+    const pagoPorId = new Map<number, PagoPuestaAlDiaServidor>()
+    if (listaPagos.length > 0) {
+      const { data: pagosData, error: errorPagos } = await cliente
+        .from('proximo_pago')
+        .select(
+          'proximo_pago_id, descripcion, monto, fecha_vencimiento, pagado, archivada, es_tarjeta, cuenta_id'
+        )
+        .eq('usuario_id', user.id)
+        .in(
+          'proximo_pago_id',
+          listaPagos.map((pago) => pago.pagoId)
+        )
+      if (errorPagos) throw errorDesdeRpc(errorPagos)
+
+      for (const pago of (pagosData ?? []) as PagoPuestaAlDiaServidor[]) {
+        pagoPorId.set(Number(pago.proximo_pago_id), {
+          ...pago,
+          monto: aEntero(pago.monto),
+          cuenta_id: pago.cuenta_id != null ? Number(pago.cuenta_id) : null,
+        })
+      }
+    }
+
+    const hoy = hoyLocal()
+    const pagosEjecutar: Array<{
+      pagoId: number
+      cuentaOrigen: number
+      monto: number
+    }> = []
+
+    for (const seleccion of listaPagos) {
+      const pago = pagoPorId.get(seleccion.pagoId)
+      if (!pago || pago.archivada) throw new Error('pago_no_encontrado')
+      if (pago.pagado) continue
+      if (!esAtrasado(pago.fecha_vencimiento, hoy)) {
+        throw new Error('pago_no_vencido')
+      }
+
+      const origen = cuentaPorId.get(seleccion.cuentaOrigen)
+      if (!origen) throw new Error('cuenta_no_encontrada')
+      if (origen.metodo === 'credito') throw new Error('cuenta_no_liquida')
+      if (pago.monto <= 0) throw new Error('monto_invalido')
+
+      pagosEjecutar.push({
+        pagoId: seleccion.pagoId,
+        cuentaOrigen: seleccion.cuentaOrigen,
+        monto: pago.monto,
+      })
+    }
+
+    // 1. Liquidar pagos vencidos (ya validados contra la base de datos).
+    let pagosLiquidados = 0
+    for (const pago of pagosEjecutar) {
+      const resultado = await liquidarPago(pago.pagoId, {
+        cuentaId: pago.cuentaOrigen,
+        monto: pago.monto,
+      })
+      if (!resultado.ok) {
+        if (resultado.error === MENSAJES_SQL.pago_ya_liquidado) continue
+        return { ok: false, error: resultado.error }
+      }
+      pagosLiquidados += 1
+    }
+
+    // 2. Ajustar cada cuenta al saldo o deuda real de hoy.
+    let cuentasAjustadas = 0
+    for (const ajuste of listaAjustes) {
+      const cuenta = cuentaPorId.get(ajuste.cuentaId)
+      if (!cuenta) throw new Error('cuenta_no_encontrada')
+
+      const resultado = await actualizarCuenta(ajuste.cuentaId, {
+        nombre: cuenta.nombre,
+        metodo: cuenta.metodo,
+        saldoObjetivo: ajuste.saldoObjetivo,
+        diaCorte: cuenta.dia_corte,
+        diaPago: cuenta.dia_pago,
+        limite: cuenta.limite,
+      })
+      if (!resultado.ok) return { ok: false, error: resultado.error }
+      cuentasAjustadas += 1
+    }
+
+    // 3. Marcar la configuración como actualizada hoy.
+    const { error: errorConfig } = await cliente.rpc(
+      'fynz_guardar_configuracion',
+      {
+        p_usuario: user.id,
+        p_widgets: null,
+        p_vista: null,
+        p_proximo_ingreso: null,
+        p_horizonte_preferido: null,
+      }
+    )
+    if (errorConfig) {
+      logError(
+        { accion: 'ponerAlDia', contexto: 'configuracion' },
+        errorDesdeRpc(errorConfig)
+      )
+    }
+
+    // 4. Re-sincronizar los ciclos de las tarjetas afectadas.
+    const tarjetas = new Set<number>()
+    for (const ajuste of listaAjustes) {
+      if (cuentaPorId.get(ajuste.cuentaId)?.metodo === 'credito') {
+        tarjetas.add(ajuste.cuentaId)
+      }
+    }
+    for (const pago of pagosEjecutar) {
+      const fila = pagoPorId.get(pago.pagoId)
+      if (fila?.es_tarjeta && fila.cuenta_id != null) {
+        tarjetas.add(fila.cuenta_id)
+      }
+    }
+    for (const tarjetaId of tarjetas) {
+      try {
+        await sincronizarCompromisosTarjeta(user.id, tarjetaId, cliente)
+      } catch {
+        // La puesta al día ya quedó aplicada; se re-sincroniza en la próxima operación.
+      }
+    }
+
+    await registrarAuditoria(cliente, user.id, 'poner_al_dia', 'cuenta')
+
+    return {
+      ok: true,
+      resumen: { cuentasAjustadas, pagosLiquidados },
+    }
+  } catch (e) {
+    logError({ accion: 'ponerAlDia' }, e, Date.now() - inicio)
+    return { ok: false, error: traducirError(e) }
+  }
 }
 
 export async function guardarTablero(tablero: unknown): Promise<Respuesta> {

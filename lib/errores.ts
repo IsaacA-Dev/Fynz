@@ -21,6 +21,9 @@ export const MENSAJES_SQL: Record<string, string> = {
   pago_ya_liquidado: 'Este pago ya fue liquidado.',
   pago_no_adelantable: 'Solo se pueden adelantar pagos mensuales normales.',
   ya_existe_siguiente_periodo: 'Ya existe el siguiente periodo de este pago.',
+  pago_no_vencido: 'Ese pago todavía no está vencido.',
+  sin_cambios: 'No hay cambios que guardar.',
+  datos_invalidos: 'Los datos de la puesta al día no son válidos.',
   contrasena_corta: 'La contraseña debe tener al menos 8 caracteres.',
 }
 
