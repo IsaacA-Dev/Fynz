@@ -116,6 +116,7 @@ export function impactoCompra(opciones: {
       cuenta_nombre: null,
       recurrente: true,
       dia_cobro: Number(vencimientoCiclo.slice(8, 10)),
+      frecuencia: 'mensual',
       es_tarjeta: true,
     }
 

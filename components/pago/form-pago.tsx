@@ -15,6 +15,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { actualizarProximoPago, crearProximoPago } from '@/lib/acciones-servidor'
 import { centavosACadena, parseCentavos } from '@/lib/dinero'
+import { FRECUENCIAS, type Frecuencia } from '@/lib/recurrencia'
 import type { Cuenta, ProximoPago } from '@/lib/acciones'
 
 interface FormPagoProps {
@@ -24,16 +25,23 @@ interface FormPagoProps {
 }
 
 export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
+  const frecuenciaInicial: Frecuencia = pago
+    ? (pago.frecuencia ?? (pago.recurrente ? 'mensual' : 'unico'))
+    : 'unico'
+
   const [descripcion, setDescripcion] = useState(pago?.descripcion ?? '')
   const [monto, setMonto] = useState(
     pago != null ? centavosACadena(pago.monto) : ''
   )
-  const [recurrente, setRecurrente] = useState(pago?.recurrente ?? false)
+  const [frecuencia, setFrecuencia] =
+    useState<Frecuencia>(frecuenciaInicial)
   const [diaCobro, setDiaCobro] = useState(
     pago?.dia_cobro != null ? String(pago.dia_cobro) : ''
   )
   const [fecha, setFecha] = useState(
-    pago && !pago.recurrente ? pago.fecha_vencimiento.slice(0, 10) : ''
+    pago && frecuenciaInicial !== 'mensual'
+      ? pago.fecha_vencimiento.slice(0, 10)
+      : ''
   )
   const [reprogramarFecha, setReprogramarFecha] = useState('')
   const [domiciliado, setDomiciliado] = useState(
@@ -46,6 +54,7 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
   const { addToast } = useToast()
 
   const esEdicion = pago != null
+  const esMensual = frecuencia === 'mensual'
 
   const cuentasDomiciliables = cuentas.filter(
     (c) =>
@@ -54,8 +63,10 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
   )
 
   const diaValido =
-    !recurrente ||
+    !esMensual ||
     (diaCobro !== '' && Number(diaCobro) >= 1 && Number(diaCobro) <= 31)
+
+  const fechaValida = esMensual || fecha !== ''
 
   const montoValido = (() => {
     try {
@@ -69,12 +80,8 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
     descripcion.trim().length > 0 &&
     montoValido &&
     diaValido &&
-    (recurrente || fecha !== '') &&
+    fechaValida &&
     (!domiciliado || cuentaId !== '')
-
-  const handleTipoTiempo = (valor: boolean) => {
-    setRecurrente(valor)
-  }
 
   const handleDomiciliado = (valor: boolean) => {
     setDomiciliado(valor)
@@ -89,12 +96,15 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
       const datos = {
         descripcion: descripcion.trim(),
         monto: parseCentavos(monto),
-        fechaVencimiento: recurrente ? null : fecha,
+        fechaVencimiento: esMensual ? null : fecha,
         domiciliado,
         cuentaId: domiciliado ? Number(cuentaId) : null,
-        recurrente,
-        diaCobro: recurrente ? Number(diaCobro) : null,
-        reprogramarFecha: esEdicion && recurrente && reprogramarFecha !== '' ? reprogramarFecha : null,
+        frecuencia,
+        diaCobro: esMensual ? Number(diaCobro) : null,
+        reprogramarFecha:
+          esEdicion && esMensual && reprogramarFecha !== ''
+            ? reprogramarFecha
+            : null,
       }
       const resultado = esEdicion
         ? await actualizarProximoPago(pago.proximo_pago_id, datos)
@@ -119,11 +129,26 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
     }
   }
 
+  const ayudaFrecuencia =
+    FRECUENCIAS.find((opcion) => opcion.valor === frecuencia)?.ayuda ?? ''
+
+  const campoFecha = (etiqueta: string) => (
+    <FormField label={etiqueta} hint={ayudaFrecuencia} required>
+      <Input
+        type="date"
+        value={fecha}
+        onChange={(e) => setFecha(e.target.value)}
+        leadingIcon={<CalendarDays className="size-4" />}
+        required
+      />
+    </FormField>
+  )
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <FormField label="Descripción" required>
         <Input
-          placeholder="Ej. Renta, Luz, Netflix..."
+          placeholder="Ej. Renta, Luz, Comedor..."
           value={descripcion}
           onChange={(e) => setDescripcion(e.target.value)}
           maxLength={60}
@@ -149,32 +174,39 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
         <p className="text-sm font-medium text-fg-muted">Frecuencia</p>
         <Tabs
           defaultValue="unico"
-          value={recurrente ? 'mensual' : 'unico'}
-          onValueChange={(valor) => handleTipoTiempo(valor === 'mensual')}
+          value={frecuencia}
+          onValueChange={(valor) => setFrecuencia(valor as Frecuencia)}
           className="space-y-3"
         >
           <TabsList
             aria-label="Frecuencia del pago"
-            className="grid w-full grid-cols-2"
+            className="grid w-full grid-cols-4"
           >
-            <TabsTrigger value="unico" className="w-full">
-              Único
-            </TabsTrigger>
-            <TabsTrigger value="mensual" className="w-full">
-              Mensual
-            </TabsTrigger>
+            {FRECUENCIAS.map((opcion) => (
+              <TabsTrigger
+                key={opcion.valor}
+                value={opcion.valor}
+                className="w-full px-1.5"
+              >
+                {opcion.etiqueta}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <TabsContent value="unico">
-            <FormField label="Fecha de vencimiento" required>
-              <Input
-                type="date"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                leadingIcon={<CalendarDays className="size-4" />}
-                required
-              />
-            </FormField>
+            {campoFecha('Fecha de vencimiento')}
+          </TabsContent>
+
+          <TabsContent value="semanal">
+            {campoFecha(
+              esEdicion ? 'Próximo vencimiento' : 'Primer vencimiento'
+            )}
+          </TabsContent>
+
+          <TabsContent value="quincenal">
+            {campoFecha(
+              esEdicion ? 'Próximo vencimiento' : 'Primer vencimiento'
+            )}
           </TabsContent>
 
           <TabsContent value="mensual" className="space-y-3">

@@ -107,11 +107,19 @@ Fynz mueve dinero entre cuentas líquidas propias sin alterar el Disponible Real
 La sección **Próximos pagos** reúne los compromisos pendientes:
 
 - **Pagos únicos**, con fecha de vencimiento.
+- **Pagos semanales**, con una fecha de primer vencimiento; el siguiente periodo suma 7 días.
+- **Pagos quincenales**, con una fecha de primer vencimiento; el siguiente periodo suma 14 días.
 - **Pagos mensuales**, con día de cobro recurrente.
 - **Pagos domiciliados**, vinculados a una cuenta líquida.
 - **Pagos de tarjeta**, generados por los ciclos de crédito.
 
-Un pago mensual genera el siguiente periodo al liquidarse. El plan y cada instancia son entidades distintas: eliminar el plan no borra las instancias ya pagadas.
+Al liquidar un pago recurrente se genera el siguiente periodo: +7 días, +14 días o el mismo día del mes siguiente, según la frecuencia. El siguiente periodo conserva el **monto planificado original** del compromiso, aunque el pago liquidado haya sido distinto. El plan y cada instancia son entidades distintas: eliminar el plan no borra las instancias ya pagadas.
+
+### Reservas semanales
+
+Una forma recomendada de usar las frecuencias semanales es crear **reservas** para gastos controlados, por ejemplo comedor y transporte. Se crean como pagos semanales con vencimiento al cierre de la semana; el Disponible Real los resta desde que existen, aunque todavía no se hayan pagado.
+
+Durante la semana no se registran individualmente los gastos planificados: solo los imprevistos. Si el gasto real difiere de la reserva, se ajusta el monto del compromiso o se usa **Poner al día**. Las reservas semanales son para efectivo o débito; cuando el gasto se hace con tarjeta, el ciclo de la tarjeta ya cubre ese compromiso.
 
 Si un pago domiciliado no alcanza a cubrirse con el saldo de su cuenta, aparece una alerta con el faltante. Si la fecha ya pasó y sigue pendiente, se muestra en rojo como **Atrasado**.
 
@@ -251,7 +259,7 @@ El orden evita dobles conteos: el saldo escrito es el que queda después de los 
 
 ### 5.1 Pruebas automatizadas
 
-`bun test` cubre **162 pruebas en 15 archivos**, entre ellas:
+`bun test` cubre **173 pruebas en 16 archivos**, entre ellas:
 
 - Disponible Real y horizontes.
 - Transferencias y conservación de liquidez.
@@ -260,6 +268,7 @@ El orden evita dobles conteos: el saldo escrito es el que queda después de los 
 - Simulador de compras.
 - Categorías, historial y filtros.
 - Puesta al día: diferencias, validaciones y selección de pagos vencidos.
+- Frecuencias de pago: semanal +7, quincenal +14, mensual y único.
 - Formato de dinero en centavos y fechas de calendario.
 - Layout, presets, widgets y drag & drop.
 - Errores, logs y recuperación.
@@ -282,7 +291,9 @@ El recorrido E2E completo quedó **superado** con datos sintéticos en Supabase,
 - **P2:** nombre de cuentas archivadas en el historial reciente, densidad móvil y mensaje de registro con sesión automática.
 - **P3:** altura automática del hero y semántica del estado inicial.
 
-El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos de los cuatro tipos, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
+- **Frecuencias:** se validaron altas, liquidación y adelanto semanal/quincenal, la conservación del monto planificado en el siguiente periodo y la conciliación de un pago semanal vencido con **Poner al día**.
+
+El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos únicos, semanales (+7), quincenales (+14), mensuales, domiciliados y de tarjeta, adelanto de periodo, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
 
 ## 6. Seguridad e integridad
 

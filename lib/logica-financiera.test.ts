@@ -36,6 +36,7 @@ function pago(overrides: Partial<ProximoPago> = {}): ProximoPago {
     cuenta_id: null,
     cuenta_nombre: null,
     recurrente: false,
+    frecuencia: 'unico',
     dia_cobro: null,
     es_tarjeta: false,
     ...overrides,

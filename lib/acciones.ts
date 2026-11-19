@@ -1,9 +1,11 @@
 import type { AlertaDomiciliado as Alerta } from './logica-financiera'
 import type { Horizonte } from './horizonte'
+import type { Frecuencia } from './recurrencia'
 import type { ConfiguracionLayout } from './layout'
 import type { FlujoMensual, ConfigTablero } from './tablero'
 
 export type { Horizonte, TipoHorizonte } from './horizonte'
+export type { Frecuencia } from './recurrencia'
 export type { BloqueLayout, ConfiguracionLayout, TipoBloque } from './layout'
 
 export type Metodo = 'debito' | 'credito' | 'efectivo'
@@ -38,6 +40,7 @@ export interface ProximoPago {
   cuenta_nombre: string | null
   recurrente: boolean
   dia_cobro: number | null
+  frecuencia: Frecuencia
   es_tarjeta: boolean
   minimo?: number | null
 }

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import { esAtrasado } from '@/lib/fechas'
+import { etiquetaFrecuencia } from '@/lib/recurrencia'
 import type { ProximoPago, Vista } from '@/lib/acciones'
 
 interface PagoRowProps {
@@ -83,7 +84,7 @@ export function PagoRow({
           {pago.recurrente && (
             <Badge variant="brand" size="sm">
               <Repeat className="size-3" aria-hidden />
-              {pago.dia_cobro != null ? `Repite día ${pago.dia_cobro}` : 'Repite'}
+              {etiquetaFrecuencia(pago.frecuencia, pago.dia_cobro)}
             </Badge>
           )}
           {pago.domiciliado && (

@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import { createServerSupabase } from './supabase/server'
 import { aCentavos } from './dinero'
-import { diasEntre, esAtrasado, hoyLocal, siguienteDiaCobro } from './fechas'
+import { diasEntre, esAtrasado, hoyLocal } from './fechas'
 import {
   compromisosDeseados,
   ciclosDeTarjeta,
@@ -16,6 +16,7 @@ import {
   detectarAlertas,
 } from './logica-financiera'
 import { sanearLayout } from './layout'
+import { esFrecuencia, esRecurrente, fechaInicialPago, type Frecuencia } from './recurrencia'
 import { agregarFlujoMensual, sanearTablero } from './tablero'
 import type {
   Cuenta,
@@ -166,6 +167,11 @@ async function buscarPagosProximos(
     cuenta_nombre: null,
     recurrente: p.recurrente === true,
     dia_cobro: p.dia_cobro != null ? aEntero(p.dia_cobro) : null,
+    frecuencia: esFrecuencia(p.frecuencia)
+      ? p.frecuencia
+      : p.recurrente === true
+        ? 'mensual'
+        : 'unico',
     es_tarjeta: p.es_tarjeta === true,
     minimo: p.minimo != null ? aEntero(p.minimo) : null,
   }))
@@ -991,7 +997,7 @@ export async function crearProximoPago(datos: {
   fechaVencimiento?: string | null
   domiciliado: boolean
   cuentaId?: number | null
-  recurrente?: boolean | null
+  frecuencia: Frecuencia
   diaCobro?: number | null
 }): Promise<Respuesta> {
   return intentar('crearProximoPago', async () => {
@@ -1002,13 +1008,17 @@ export async function crearProximoPago(datos: {
     } = await cliente.auth.getUser()
     if (!user) throw new Error('no_autorizado')
 
-    const recurrente = datos.recurrente === true
+    if (!esFrecuencia(datos.frecuencia)) throw new Error('frecuencia_invalida')
+    const recurrente = esRecurrente(datos.frecuencia)
     const monto = aCentavos(datos.monto)
     if (monto <= 0) throw new Error('monto_invalido')
 
-    const fecha = recurrente
-      ? siguienteDiaCobro(datos.diaCobro ?? 0, hoyLocal())
-      : datos.fechaVencimiento ?? ''
+    const fecha = fechaInicialPago({
+      frecuencia: datos.frecuencia,
+      fechaVencimiento: datos.fechaVencimiento,
+      diaCobro: datos.diaCobro ?? null,
+      hoy: hoyLocal(),
+    })
 
     if (!fecha || fecha.length < 10) throw new Error('fecha_invalida')
 
@@ -1020,9 +1030,11 @@ export async function crearProximoPago(datos: {
       p_domiciliado: datos.domiciliado,
       p_cuenta_id: datos.domiciliado ? (datos.cuentaId ?? null) : null,
       p_recurrente: recurrente,
-      p_dia_cobro: recurrente ? (datos.diaCobro ?? null) : null,
+      p_dia_cobro:
+        datos.frecuencia === 'mensual' ? (datos.diaCobro ?? null) : null,
       p_es_tarjeta: false,
       p_idempotencia: nuevoIdem(),
+      p_frecuencia: datos.frecuencia,
     })
     if (error) throw errorDesdeRpc(error)
   })
@@ -1036,7 +1048,7 @@ export async function actualizarProximoPago(
     fechaVencimiento?: string | null
     domiciliado: boolean
     cuentaId?: number | null
-    recurrente?: boolean | null
+    frecuencia: Frecuencia
     diaCobro?: number | null
     reprogramarFecha?: string | null
   }
@@ -1049,14 +1061,18 @@ export async function actualizarProximoPago(
     } = await cliente.auth.getUser()
     if (!user) throw new Error('no_autorizado')
 
-    const recurrente = datos.recurrente === true
+    if (!esFrecuencia(datos.frecuencia)) throw new Error('frecuencia_invalida')
+    const recurrente = esRecurrente(datos.frecuencia)
     const monto = aCentavos(datos.monto)
     if (monto <= 0) throw new Error('monto_invalido')
 
-    const fecha = recurrente
-      ? (datos.reprogramarFecha?.slice(0, 10) ||
-        siguienteDiaCobro(datos.diaCobro ?? 0, hoyLocal()))
-      : (datos.fechaVencimiento?.slice(0, 10) ?? '')
+    const fecha = fechaInicialPago({
+      frecuencia: datos.frecuencia,
+      fechaVencimiento: datos.fechaVencimiento,
+      diaCobro: datos.diaCobro ?? null,
+      hoy: hoyLocal(),
+      reprogramarFecha: datos.reprogramarFecha,
+    })
 
     if (!fecha || fecha.length < 10) throw new Error('fecha_invalida')
 
@@ -1069,7 +1085,9 @@ export async function actualizarProximoPago(
       p_domiciliado: datos.domiciliado,
       p_cuenta_id: datos.domiciliado ? (datos.cuentaId ?? null) : null,
       p_recurrente: recurrente,
-      p_dia_cobro: recurrente ? (datos.diaCobro ?? null) : null,
+      p_dia_cobro:
+        datos.frecuencia === 'mensual' ? (datos.diaCobro ?? null) : null,
+      p_frecuencia: datos.frecuencia,
     })
     if (error) throw errorDesdeRpc(error)
   })
