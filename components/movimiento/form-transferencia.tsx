@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { ArrowLeftRight, DollarSign } from 'lucide-react'
+import { Alert } from '@/components/ui/alert'
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -79,9 +80,13 @@ export function FormTransferencia({ cuentas, onClose }: FormTransferenciaProps) 
 
   if (cuentasLiquidas.length < 2) {
     return (
-      <p className="text-sm text-[var(--color-text-muted)] text-center py-4">
-        Necesitas al menos 2 cuentas de efectivo o débito para transferir.
-      </p>
+      <Alert
+        variant="info"
+        title="Necesitas al menos 2 cuentas líquidas"
+      >
+        Agrega otra cuenta de efectivo o débito para poder transferir entre
+        ellas.
+      </Alert>
     )
   }
 

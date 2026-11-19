@@ -6,6 +6,12 @@ import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/toast'
 import { actualizarProximoPago, crearProximoPago } from '@/lib/acciones-servidor'
 import { centavosACadena, parseCentavos } from '@/lib/dinero'
@@ -139,123 +145,113 @@ export function FormPago({ cuentas, pago, onClose }: FormPagoProps) {
         />
       </FormField>
 
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1.5">
-          Frecuencia
-        </label>
-        <div className="flex rounded-xl overflow-hidden border border-[var(--color-border)]">
-          <button
-            type="button"
-            onClick={() => handleTipoTiempo(false)}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              !recurrente
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40'
-            }`}
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium text-fg-muted">Frecuencia</p>
+        <Tabs
+          defaultValue="unico"
+          value={recurrente ? 'mensual' : 'unico'}
+          onValueChange={(valor) => handleTipoTiempo(valor === 'mensual')}
+          className="space-y-3"
+        >
+          <TabsList
+            aria-label="Frecuencia del pago"
+            className="grid w-full grid-cols-2"
           >
-            Único
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTipoTiempo(true)}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              recurrente
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40'
-            }`}
-          >
-            Mensual
-          </button>
-        </div>
-      </div>
+            <TabsTrigger value="unico" className="w-full">
+              Único
+            </TabsTrigger>
+            <TabsTrigger value="mensual" className="w-full">
+              Mensual
+            </TabsTrigger>
+          </TabsList>
 
-      {recurrente ? (
-        <div className="space-y-3">
-          <FormField label="Día de cobro (1-31)" required>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              max="31"
-              placeholder="Ej. 25"
-              value={diaCobro}
-              onChange={(e) => setDiaCobro(e.target.value)}
-              leadingIcon={<Repeat className="size-4" />}
-              required
-            />
-          </FormField>
-          {esEdicion && (
-            <FormField
-              label="Reprogramar esta instancia (opcional)"
-              hint="El día de cobro seguirá aplicando a los siguientes periodos."
-            >
+          <TabsContent value="unico">
+            <FormField label="Fecha de vencimiento" required>
               <Input
                 type="date"
-                value={reprogramarFecha}
-                onChange={(e) => setReprogramarFecha(e.target.value)}
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
                 leadingIcon={<CalendarDays className="size-4" />}
+                required
               />
             </FormField>
-          )}
-        </div>
-      ) : (
-        <FormField label="Fecha de vencimiento" required>
-          <Input
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            leadingIcon={<CalendarDays className="size-4" />}
-            required
-          />
-        </FormField>
-      )}
+          </TabsContent>
 
-      <div>
-        <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-1.5">
-          Domiciliado
-        </label>
-        <div className="flex rounded-xl overflow-hidden border border-[var(--color-border)]">
-          <button
-            type="button"
-            onClick={() => handleDomiciliado(false)}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              !domiciliado
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40'
-            }`}
-          >
-            Normal
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDomiciliado(true)}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-              domiciliado
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40'
-            }`}
-          >
-            Domiciliado
-          </button>
-        </div>
+          <TabsContent value="mensual" className="space-y-3">
+            <FormField label="Día de cobro (1-31)" required>
+              <Input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="31"
+                placeholder="Ej. 25"
+                value={diaCobro}
+                onChange={(e) => setDiaCobro(e.target.value)}
+                leadingIcon={<Repeat className="size-4" />}
+                required
+              />
+            </FormField>
+            {esEdicion && (
+              <FormField
+                label="Reprogramar esta instancia (opcional)"
+                hint="El día de cobro seguirá aplicando a los siguientes periodos."
+              >
+                <Input
+                  type="date"
+                  value={reprogramarFecha}
+                  onChange={(e) => setReprogramarFecha(e.target.value)}
+                  leadingIcon={<CalendarDays className="size-4" />}
+                />
+              </FormField>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {domiciliado && (
-        <FormField label="Cuenta que se cobrará" required>
-          <Select
-            value={cuentaId}
-            onChange={(e) => setCuentaId(e.target.value)}
-            required
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium text-fg-muted">Domiciliado</p>
+        <Tabs
+          defaultValue="normal"
+          value={domiciliado ? 'domiciliado' : 'normal'}
+          onValueChange={(valor) => handleDomiciliado(valor === 'domiciliado')}
+          className="space-y-3"
+        >
+          <TabsList
+            aria-label="Tipo de cobro"
+            className="grid w-full grid-cols-2"
           >
-            <option value="">Selecciona una cuenta</option>
-            {cuentasDomiciliables.map((c) => (
-              <option key={c.cuenta_id} value={c.cuenta_id}>
-                {c.nombre}
-              </option>
-            ))}
-          </Select>
-        </FormField>
-      )}
+            <TabsTrigger value="normal" className="w-full">
+              Normal
+            </TabsTrigger>
+            <TabsTrigger value="domiciliado" className="w-full">
+              Domiciliado
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="normal">
+            <p className="text-xs leading-relaxed text-fg-muted">
+              Lo marcarás como pagado manualmente cuando lo cubras.
+            </p>
+          </TabsContent>
+
+          <TabsContent value="domiciliado">
+            <FormField label="Cuenta que se cobrará" required>
+              <Select
+                value={cuentaId}
+                onChange={(e) => setCuentaId(e.target.value)}
+                required
+              >
+                <option value="">Selecciona una cuenta</option>
+                {cuentasDomiciliables.map((c) => (
+                  <option key={c.cuenta_id} value={c.cuenta_id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <Button type="submit" loading={loading} disabled={!valido} className="w-full">
         {esEdicion ? 'Guardar Cambios' : 'Crear Pago'}

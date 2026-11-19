@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState, type FormEvent } from 'react'
-import { AlertTriangle, Check, DollarSign, Pencil, Trash2, X } from 'lucide-react'
+import { Check, DollarSign, Pencil, Trash2, X } from 'lucide-react'
+import { Alert } from '@/components/ui/alert'
+import { Chip } from '@/components/ui/chip'
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -18,7 +20,7 @@ import {
 } from '@/lib/acciones-servidor'
 import { CATEGORIAS_SUGERIDAS, normalizarNombreCategoria } from '@/lib/categorias'
 import { parseCentavos } from '@/lib/dinero'
-import { impactoCompra } from '@/lib/simulador'
+import { impactoCompra, type ImpactoCompra } from '@/lib/simulador'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import type { Cuenta, Horizonte, ProximoPago, TipoMovimiento } from '@/lib/acciones'
 
@@ -30,6 +32,49 @@ interface FormMovimientoProps {
   disponibleReal: number
   hoy: string
   onClose: () => void
+}
+
+function tonoImpacto(impacto: ImpactoCompra): {
+  variant: 'info' | 'warning' | 'danger'
+  title: string
+} {
+  if (impacto.tipo === 'liquido') {
+    const rompeCapacidad =
+      impacto.disponibleDespues < 0 || impacto.alertas.length > 0
+    if (rompeCapacidad) {
+      return {
+        variant: 'danger',
+        title: 'Este gasto compromete tus pagos',
+      }
+    }
+    return {
+      variant: 'info',
+      title: 'Impacto en tu Disponible Real',
+    }
+  }
+
+  if (
+    impacto.dentroDelHorizonte &&
+    impacto.disponibleDespues != null &&
+    impacto.disponibleDespues < 0
+  ) {
+    return {
+      variant: 'danger',
+      title: 'El pago de este ciclo no cabe en tu horizonte',
+    }
+  }
+
+  if (impacto.dentroDelHorizonte && impacto.vencimientoCiclo != null) {
+    return {
+      variant: 'warning',
+      title: 'Este ciclo reduce tu Disponible Real',
+    }
+  }
+
+  return {
+    variant: 'info',
+    title: 'Impacto de la compra con crédito',
+  }
 }
 
 export function FormMovimiento({
@@ -93,6 +138,8 @@ export function FormMovimiento({
         hoy,
       })
     : null
+
+  const tono = impacto ? tonoImpacto(impacto) : null
 
   const crearNueva = async () => {
     const normalizado = normalizarNombreCategoria(nuevaCategoria)
@@ -206,81 +253,113 @@ export function FormMovimiento({
         </Select>
       </FormField>
 
-      {impacto && (
-        <div className="bg-[var(--color-border)]/30 rounded-xl p-3 space-y-1.5">
+      {impacto && tono && (
+        <Alert variant={tono.variant} title={tono.title}>
           {impacto.tipo === 'liquido' ? (
-            <>
-              <p className="text-sm text-[var(--color-text-muted)]">
+            <div className="space-y-2">
+              <p>
                 Disponible hoy{' '}
-                <strong className="text-[var(--color-text)]">
+                <strong className="text-fg">
                   {formatearDinero(impacto.disponibleAntes)}
                 </strong>{' '}
                 → después{' '}
-                <strong className="text-[var(--color-text)]">
+                <strong className="text-fg">
                   {formatearDinero(impacto.disponibleDespues)}
                 </strong>
+                .
               </p>
-              {impacto.alertas.map((alerta) => (
-                <p
-                  key={`${alerta.cuentaNombre}-${alerta.descripcion}`}
-                  className="flex items-start gap-1.5 text-xs text-[var(--color-warning)]"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <span>
-                    La cuenta {alerta.cuentaNombre} no alcanzaría para{' '}
-                    <strong>{alerta.descripcion}</strong>: faltarían{' '}
-                    <strong>{formatearDinero(alerta.faltante)}</strong>.
-                  </span>
+              {impacto.disponibleDespues < 0 && (
+                <p>
+                  El gasto deja tu Disponible Real en negativo: no alcanza para
+                  cubrir todos los compromisos del horizonte.
                 </p>
-              ))}
-            </>
+              )}
+              {impacto.alertas.length > 0 ? (
+                <div className="space-y-1.5">
+                  {impacto.alertas.map((alerta) => (
+                    <p key={`${alerta.cuentaNombre}-${alerta.descripcion}`}>
+                      La cuenta{' '}
+                      <strong className="text-fg">{alerta.cuentaNombre}</strong>{' '}
+                      no alcanzaría para{' '}
+                      <strong className="text-fg">{alerta.descripcion}</strong>:
+                      faltarían{' '}
+                      <strong className="text-fg">
+                        {formatearDinero(alerta.faltante)}
+                      </strong>
+                      .
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                impacto.disponibleDespues >= 0 && (
+                  <p>Tus pagos del horizonte seguirían cubiertos.</p>
+                )
+              )}
+            </div>
           ) : (
-            <>
-              <p className="text-sm text-[var(--color-text-muted)]">
+            <div className="space-y-2">
+              <p>
                 Deuda de la tarjeta:{' '}
-                <strong className="text-[var(--color-danger)]">
+                <strong className="text-fg">
                   {formatearDinero(impacto.deudaAntes)}
                 </strong>{' '}
                 →{' '}
-                <strong className="text-[var(--color-danger)]">
+                <strong className="text-fg">
                   {formatearDinero(impacto.deudaDespues)}
                 </strong>
                 {impacto.vencimientoCiclo && (
                   <>
                     {' '}
                     · este ciclo vence el{' '}
-                    <strong className="text-[var(--color-text)]">
+                    <strong className="text-fg">
                       {formatearFecha(impacto.vencimientoCiclo)}
                     </strong>
                   </>
                 )}
+                .
               </p>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                El dinero líquido no cambia hoy: la tarjeta se pagará después.
-              </p>
-              {impacto.vencimientoCiclo && impacto.montoCompromiso != null && (
-                impacto.dentroDelHorizonte && impacto.disponibleDespues != null ? (
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    Disponible con ese ciclo:{' '}
-                    <strong className="text-[var(--color-text)]">
-                      {formatearDinero(impacto.disponibleAntes)}
-                    </strong>{' '}
-                    →{' '}
-                    <strong className="text-[var(--color-text)]">
-                      {formatearDinero(impacto.disponibleDespues)}
-                    </strong>
-                  </p>
-                ) : (
-                  <p className="text-xs text-amber-300">
-                    Este pago (vence el {formatearFecha(impacto.vencimientoCiclo)}) queda
-                    después de tu horizonte: no baja el Disponible Real hoy; lo verás
-                    como presión futura.
-                  </p>
-                )
+              <p>El dinero líquido no cambia hoy: la tarjeta se paga después.</p>
+
+              {impacto.vencimientoCiclo ? (
+                <>
+                  {impacto.montoCompromiso != null && (
+                    <p>
+                      Pago estimado del ciclo:{' '}
+                      <strong className="text-fg">
+                        {formatearDinero(impacto.montoCompromiso)}
+                      </strong>
+                      .
+                    </p>
+                  )}
+                  {impacto.dentroDelHorizonte &&
+                  impacto.disponibleDespues != null ? (
+                    <p>
+                      Disponible con ese ciclo:{' '}
+                      <strong className="text-fg">
+                        {formatearDinero(impacto.disponibleAntes)}
+                      </strong>{' '}
+                      →{' '}
+                      <strong className="text-fg">
+                        {formatearDinero(impacto.disponibleDespues)}
+                      </strong>
+                      .
+                    </p>
+                  ) : (
+                    <p>
+                      Este pago queda después de tu horizonte: no baja el
+                      Disponible Real hoy; lo verás como presión futura.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p>
+                  No pudimos estimar el ciclo con los datos actuales; revisa el
+                  pago indicado en tu estado de cuenta.
+                </p>
               )}
-            </>
+            </div>
           )}
-        </div>
+        </Alert>
       )}
 
       <FormField label="Descripción (opcional)">
@@ -318,17 +397,26 @@ export function FormMovimiento({
         {categorias.length === 0 && (
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIAS_SUGERIDAS.slice(0, 5).map((sugerida) => (
-              <button
-                type="button"
+              <Chip
                 key={sugerida}
+                role="button"
+                tabIndex={0}
+                interactive
+                variant="neutral"
                 onClick={() => {
                   setCategoriaId('__nueva')
                   setNuevaCategoria(sugerida)
                 }}
-                className="text-xs px-2.5 py-1 rounded-full bg-[var(--color-border)]/40 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
+                onKeyDown={(evento) => {
+                  if (evento.key === 'Enter' || evento.key === ' ') {
+                    evento.preventDefault()
+                    setCategoriaId('__nueva')
+                    setNuevaCategoria(sugerida)
+                  }
+                }}
               >
                 {sugerida}
-              </button>
+              </Chip>
             ))}
           </div>
         )}
@@ -344,34 +432,39 @@ export function FormMovimiento({
                 autoFocus
               />
             </FormField>
-            <button
+            <Button
               type="button"
+              size="icon"
               onClick={crearNueva}
               aria-label="Crear categoría"
-              className="mb-0.5 p-3 rounded-panel bg-brand text-on-brand hover:bg-brand-hover transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
+              className="mb-0.5 shrink-0"
             >
-              <Check className="size-4" />
-            </button>
+              <Check className="size-4" aria-hidden />
+            </Button>
           </div>
         )}
 
         {categorias.length > 0 && (
           <div className="pt-1">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setEditandoCategorias((v) => !v)}
-              className="text-xs font-medium text-[var(--color-primary)] hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+              className="h-7 px-0 text-xs text-brand hover:bg-transparent hover:text-brand-hover"
             >
               {editandoCategorias ? (
                 <>
-                  <X className="w-3 h-3" /> Cerrar administración
+                  <X className="size-3" aria-hidden />
+                  Cerrar administración
                 </>
               ) : (
                 <>
-                  <Pencil className="w-3 h-3" /> Administrar categorías
+                  <Pencil className="size-3" aria-hidden />
+                  Administrar categorías
                 </>
               )}
-            </button>
+            </Button>
 
             {editandoCategorias && (
               <div className="mt-2 space-y-1.5">
@@ -387,50 +480,57 @@ export function FormMovimiento({
                             autoFocus
                           />
                         </FormField>
-                        <button
+                        <Button
                           type="button"
+                          size="icon"
                           onClick={() => guardarRenombrado(c)}
                           aria-label="Guardar nombre"
-                          className="mb-0.5 p-2 rounded-panel bg-brand text-on-brand hover:bg-brand-hover transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
+                          className="mb-0.5 shrink-0"
                         >
-                          <Check className="size-3.5" />
-                        </button>
-                        <button
+                          <Check className="size-3.5" aria-hidden />
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setRenombrandoId(null)}
                           aria-label="Cancelar"
-                          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors shrink-0"
+                          className="mb-0.5 shrink-0"
                         >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                          <X className="size-3.5" aria-hidden />
+                        </Button>
                       </>
                     ) : (
                       <>
-                        <span className="text-sm text-[var(--color-text)] flex-1 truncate">
+                        <span className="flex-1 truncate text-sm text-fg">
                           {c.nombre}
                         </span>
-                        <span className="text-[10px] text-[var(--color-text-muted)] shrink-0">
+                        <span className="shrink-0 text-[10px] text-fg-muted">
                           {c.usos} uso{c.usos === 1 ? '' : 's'}
                         </span>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => {
                             setRenombrandoId(c.categoria_id)
                             setRenombrandoNombre(c.nombre)
                           }}
                           aria-label={`Renombrar ${c.nombre}`}
-                          className="p-1.5 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors shrink-0"
+                          className="size-8 shrink-0 text-fg-muted hover:bg-brand-soft hover:text-brand"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
+                          <Pencil className="size-3.5" aria-hidden />
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setConfirmandoEliminar(c)}
                           aria-label={`Eliminar ${c.nombre}`}
-                          className="p-1.5 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] transition-colors shrink-0"
+                          className="size-8 shrink-0 text-fg-muted hover:bg-danger-soft hover:text-danger"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          <Trash2 className="size-3.5" aria-hidden />
+                        </Button>
                       </>
                     )}
                   </div>

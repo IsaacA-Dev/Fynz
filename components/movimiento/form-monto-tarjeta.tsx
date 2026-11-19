@@ -5,6 +5,7 @@ import { RotateCcw, Save } from 'lucide-react'
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import { guardarMontoManualTarjeta } from '@/lib/acciones-servidor'
 import { centavosACadena, parseCentavos } from '@/lib/dinero'
@@ -75,17 +76,17 @@ export function FormMontoTarjeta({ pago, onClose }: FormMontoTarjetaProps) {
 
   return (
     <form onSubmit={guardar} className="space-y-4">
-      <div className="bg-[var(--color-border)]/40 rounded-xl p-4">
-        <p className="text-sm font-medium text-[var(--color-text)]">{pago.descripcion}</p>
-        <p className="text-xs text-[var(--color-text-muted)]">
+      <Card variant="soft" className="p-4">
+        <p className="text-sm font-medium text-fg">{pago.descripcion}</p>
+        <p className="text-xs text-fg-muted">
           Vence el {formatearFecha(pago.fecha_vencimiento)} · estimado{' '}
           {formatearDinero(pago.monto)}
         </p>
-      </div>
+      </Card>
 
-      <p className="text-xs text-[var(--color-text-muted)]">
-        Si tu estado de cuenta indica otra cantidad, escríbela aquí. Fynz la usará como el
-        pago de este ciclo; la deuda real sigue calculándose sola.
+      <p className="text-xs leading-relaxed text-fg-muted">
+        Si tu estado de cuenta indica otra cantidad, escríbela aquí. Fynz la
+        usará como el pago de este ciclo; la deuda real sigue calculándose sola.
       </p>
 
       <FormField label="Monto que sí pagarás (opcional)">
@@ -117,15 +118,18 @@ export function FormMontoTarjeta({ pago, onClose }: FormMontoTarjetaProps) {
         Usar mi monto del estado de cuenta
       </Button>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={quitarManual}
         disabled={loading}
-        className="w-full text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-1"
+        aria-label="Quitar monto manual"
+        className="w-full text-danger hover:bg-danger-soft hover:text-danger"
       >
-        <RotateCcw className="w-3 h-3" />
+        <RotateCcw className="size-3" aria-hidden />
         Quitar monto manual
-      </button>
+      </Button>
     </form>
   )
 }

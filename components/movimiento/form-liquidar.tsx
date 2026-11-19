@@ -6,6 +6,7 @@ import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import { liquidarPago } from '@/lib/acciones-servidor'
 import { centavosACadena, parseCentavos } from '@/lib/dinero'
@@ -68,27 +69,27 @@ export function FormLiquidar({ pago, cuentas, onClose }: FormLiquidarProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-[var(--color-border)]/40 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-[var(--color-text)]">{pago.descripcion}</p>
-          <p className="text-xs text-[var(--color-text-muted)]">
+      <Card variant="soft" className="flex items-center justify-between gap-3 p-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-fg">{pago.descripcion}</p>
+          <p className="text-xs text-fg-muted">
             Vence el {formatearFecha(pago.fecha_vencimiento)}
           </p>
           {pago.es_tarjeta && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            <p className="mt-0.5 text-xs text-fg-muted">
               Monto estimado del ciclo: {formatearDinero(pago.monto)}
             </p>
           )}
           {pago.es_tarjeta && pago.minimo != null && pago.minimo > 0 && (
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="text-xs text-fg-muted">
               Mín. del banco: {formatearDinero(pago.minimo)}
             </p>
           )}
         </div>
-        <p className="text-xl font-bold text-[var(--color-text)]">
+        <p className="shrink-0 text-xl font-semibold text-fg">
           {formatearDinero(pago.monto)}
         </p>
-      </div>
+      </Card>
 
       <FormField
         label={pago.es_tarjeta ? 'Monto a pagar' : 'Monto'}
