@@ -156,32 +156,9 @@
       color-mix(in oklab, var(--ds-fg) 6%, transparent),
     0 28px 56px -28px color-mix(in oklab, var(--ds-fg) 28%, transparent);
 
-  /* Aliases heredados: se retiran al cerrar la migración */
+  /* Tokens de marca usados por el logo (no son parte del contrato semántico) */
   --ds-brand-deep: #172554;
-  --ds-line-soft: #f3f4f6;
   --ds-logo-text: #111827;
-
-  --background: var(--ds-surface-muted);
-  --foreground: var(--ds-fg);
-  --color-background: var(--ds-surface-muted);
-  --color-surface: var(--ds-surface);
-  --color-text: var(--ds-fg);
-  --color-text-muted: var(--ds-fg-muted);
-  --color-primary: var(--ds-brand);
-  --color-primary-hover: var(--ds-brand-hover);
-  --color-primary-soft: var(--ds-brand-soft);
-  --color-success: var(--ds-success);
-  --color-success-soft: var(--ds-success-soft);
-  --color-warning: var(--ds-warning);
-  --color-warning-soft: var(--ds-warning-soft);
-  --color-danger: var(--ds-danger);
-  --color-danger-soft: var(--ds-danger-soft);
-  --color-error: var(--ds-danger);
-  --color-border: var(--ds-line);
-  --color-border-soft: var(--ds-line-soft);
-  --color-banner-start: var(--ds-brand);
-  --color-banner-end: var(--ds-brand-deep);
-  --color-logo-text: var(--ds-logo-text);
 }
 
 /* ============================================================
@@ -249,7 +226,6 @@
     0 28px 56px -28px color-mix(in oklab, #000 75%, transparent);
 
   --ds-brand-deep: #1e3a8a;
-  --ds-line-soft: #172033;
   --ds-logo-text: #e5e7eb;
 }
 

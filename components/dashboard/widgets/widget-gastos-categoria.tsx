@@ -8,13 +8,17 @@ import { aCentavos } from '@/lib/dinero'
 import type { WidgetProps } from './registry'
 
 const COLORES = [
-  'var(--color-primary)',
-  'var(--color-success)',
-  '#8b5cf6',
-  '#f59e0b',
-  '#14b8a6',
-  '#64748b',
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
 ]
+
+function colorCategoria(nombre: string, indice: number): string {
+  if (nombre === 'Sin categoría') return 'var(--color-fg-subtle)'
+  return COLORES[indice % COLORES.length]
+}
 
 export function WidgetGastosCategoria({ datos, filtros }: WidgetProps) {
   const { animar, reducirMovimiento } = useAnime()
@@ -59,7 +63,7 @@ export function WidgetGastosCategoria({ datos, filtros }: WidgetProps) {
 
   if (entradas.length === 0) {
     return (
-      <p className="text-sm text-[var(--color-text-muted)] py-2">
+      <p className="py-2 text-sm text-fg-muted">
         Aún no hay gastos registrados con categoría.
       </p>
     )
@@ -69,12 +73,12 @@ export function WidgetGastosCategoria({ datos, filtros }: WidgetProps) {
 
   return (
     <div className="space-y-2" ref={contenedorRef}>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] @lg:text-xs text-[var(--color-text-muted)]">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-muted @lg:text-xs">
         {entradas.map(([nombre], indice) => (
           <span key={nombre} className="flex items-center gap-1">
             <span
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: COLORES[indice % COLORES.length] }}
+              style={{ backgroundColor: colorCategoria(nombre, indice) }}
             />
             {nombre}
           </span>
@@ -84,7 +88,7 @@ export function WidgetGastosCategoria({ datos, filtros }: WidgetProps) {
       <div className="space-y-1.5">
         {entradas.map(([nombre, monto], indice) => (
           <div key={nombre} className="flex items-center gap-2 text-sm">
-            <span className="text-xs @lg:text-sm text-[var(--color-text-muted)] w-28 truncate shrink-0">
+            <span className="w-28 shrink-0 truncate text-xs text-fg-muted @lg:text-sm">
               {nombre}
             </span>
             <div
@@ -92,18 +96,18 @@ export function WidgetGastosCategoria({ datos, filtros }: WidgetProps) {
               className="h-2.5 rounded-full flex-1 max-w-xs"
               style={{
                 width: `${Math.max((monto / maximo) * 100, 4)}%`,
-                backgroundColor: COLORES[indice % COLORES.length],
+                backgroundColor: colorCategoria(nombre, indice),
                 transformOrigin: 'left',
               }}
             />
-            <span className="text-sm font-medium text-[var(--color-text)] ml-auto">
+            <span className="ml-auto text-sm font-medium text-fg">
               {formatearDinero(monto)}
             </span>
           </div>
         ))}
       </div>
 
-      <p className="text-[10px] @lg:text-xs text-[var(--color-text-muted)] pt-1">
+      <p className="pt-1 text-[10px] text-fg-muted @lg:text-xs">
         Total {formatearDinero(total)} en el periodo.
       </p>
     </div>

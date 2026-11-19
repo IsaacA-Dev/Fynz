@@ -21,7 +21,7 @@ export function WidgetPromedioDiario({ datos, filtros }: WidgetProps) {
 
   if (!conMovimientos) {
     return (
-      <p className="text-sm text-[var(--color-text-muted)] py-2">
+      <p className="py-2 text-sm text-fg-muted">
         Sin gastos en los últimos {diasWindow} días.
       </p>
     )
@@ -33,17 +33,17 @@ export function WidgetPromedioDiario({ datos, filtros }: WidgetProps) {
 
   return (
     <div className="space-y-1">
-      <p className="text-sm text-[var(--color-text-muted)] @lg:text-base">
+      <p className="text-sm text-fg-muted @lg:text-base">
         Gastas en promedio{' '}
-        <strong className="text-[var(--color-text)]">{formatearDinero(promedio)}</strong> al
+        <strong className="text-fg">{formatearDinero(promedio)}</strong> al
         día (últimos {diasWindow} días).
       </p>
       {diasCubiertos != null && (
-        <p className="text-xs text-[var(--color-text-muted)] @lg:text-sm">
+        <p className="text-xs text-fg-muted @lg:text-sm">
           A ese ritmo, tu liquidez actual cubre ~
-          <strong className="text-[var(--color-text)]"> {diasCubiertos} días</strong>
+          <strong className="text-fg"> {diasCubiertos} días</strong>
           {diasCubiertos < 30 && (
-            <span className="text-[var(--color-warning)]"> — es buen momento de ajustar.</span>
+            <span className="text-warning"> — es buen momento de ajustar.</span>
           )}
           .
         </p>

@@ -62,7 +62,7 @@ export function WidgetSaldoPorCuenta({ datos, filtros }: WidgetProps) {
                 <div
                   data-barra
                   className={`h-full rounded-full ${
-                    esDeuda ? 'bg-danger' : 'bg-brand'
+                    esDeuda ? 'bg-danger' : 'bg-chart-1'
                   }`}
                   style={{ width: `${pct}%`, transformOrigin: 'left' }}
                 />
