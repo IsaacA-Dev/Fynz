@@ -121,7 +121,7 @@ export function HorizonteControl({
             onChange={(evento) =>
               onPersistirPreferido(null, evento.target.value || null)
             }
-            className="sr-only"
+            className="sr-only h-px w-px"
             aria-label="Elegir fecha límite"
           />
         </label>

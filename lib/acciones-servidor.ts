@@ -272,12 +272,14 @@ async function sincronizarCompromisosTarjeta(
     estado: c.estado,
   }))
 
+  // PostgREST ya serializa los arrays a jsonb. Enviar JSON.stringify() aquí
+  // produce un escalar de tipo string y jsonb_array_elements falla con 22023.
   const { error } = await cliente.rpc('fynz_sincronizar_compromisos_tarjeta', {
     p_usuario: usuarioId,
     p_cuenta_id: tarjetaId,
-    p_ciclos: JSON.stringify(payload),
+    p_ciclos: payload,
     p_hoy: hoy,
-    p_compromisos: JSON.stringify(compromisos),
+    p_compromisos: compromisos,
   })
 
   if (error) logError({ accion: 'sincronizarCompromisosTarjeta', ids: [tarjetaId] }, errorDesdeRpc(error))

@@ -122,7 +122,11 @@ export function useDialogoNativo({
   }, [liberarBloqueo, limpiarSalida]);
 
   const alCancelar = (evento: SyntheticEvent<HTMLDialogElement>) => {
+    // El evento nativo `cancel` no burbujea, pero React lo despacha por el
+    // árbol: sin esta guarda, cerrar un diálogo anidado cierra al padre.
+    if (evento.target !== evento.currentTarget) return;
     evento.preventDefault();
+    evento.stopPropagation();
     alCambiarRef.current(false);
   };
 
@@ -140,7 +144,10 @@ export function useDialogoNativo({
     punteroEnFondoRef.current = false;
   };
 
-  const alCerrarNativo = () => {
+  const alCerrarNativo = (evento: SyntheticEvent<HTMLDialogElement>) => {
+    // `close` tampoco burbujea; React lo propaga por el árbol de componentes.
+    if (evento.target !== evento.currentTarget) return;
+    evento.stopPropagation();
     if (open) alCambiarRef.current(false);
   };
 
