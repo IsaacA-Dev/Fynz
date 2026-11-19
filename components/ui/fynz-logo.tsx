@@ -1,7 +1,6 @@
 'use client'
 
-import { useId, useLayoutEffect, useRef } from 'react'
-import { useAnime } from '@/components/hooks/use-anime'
+import { useId } from 'react'
 
 function useGradientId() {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '')
@@ -29,14 +28,8 @@ export function FynzMark({ size = 32 }: { size?: number }) {
           y2="88"
           gradientUnits="userSpaceOnUse"
         >
-          <stop
-            offset="0%"
-            stopColor="var(--color-banner-start, #2563eb)"
-          />
-          <stop
-            offset="100%"
-            stopColor="var(--color-banner-end, #172554)"
-          />
+          <stop offset="0%" stopColor="var(--ds-brand)" />
+          <stop offset="100%" stopColor="var(--ds-brand-deep)" />
         </linearGradient>
       </defs>
 
@@ -53,7 +46,7 @@ export function FynzMark({ size = 32 }: { size?: number }) {
       {/* F principal */}
       <path
         d="M32 73V31C32 25.5 36.5 21 42 21H69"
-        stroke="white"
+        stroke="var(--ds-on-brand)"
         strokeWidth="10"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -62,7 +55,7 @@ export function FynzMark({ size = 32 }: { size?: number }) {
       {/* Brazo central convertido en crecimiento */}
       <path
         d="M32 52H48C53 52 57 50.5 60.5 47L69 38.5"
-        stroke="white"
+        stroke="var(--ds-on-brand)"
         strokeWidth="10"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -70,9 +63,8 @@ export function FynzMark({ size = 32 }: { size?: number }) {
 
       {/* Destello */}
       <path
-        data-chispa="true"
         d="M82 10 L83.9 15.1 L89 17 L83.9 18.9 L82 24 L80.1 18.9 L75 17 L80.1 15.1 Z"
-        fill="white"
+        fill="var(--ds-on-brand)"
         style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
       />
     </svg>
@@ -84,7 +76,7 @@ export function FynzWordmark({ height = 20 }: { height?: number }) {
     <span
       aria-hidden="true"
       style={{
-        color: 'var(--color-logo-text, #172554)',
+        color: 'var(--ds-logo-text)',
         fontFamily: 'Manrope, Inter, system-ui, sans-serif',
         fontSize: height,
         fontWeight: 750,
@@ -114,63 +106,3 @@ export function FynzLogo({ height = 30 }: { height?: number }) {
   )
 }
 
-export function FynzLogoAnimado({ height = 30 }: { height?: number }) {
-  const { animar, reducirMovimiento } = useAnime()
-  const contenedorRef = useRef<HTMLSpanElement>(null)
-
-  useLayoutEffect(() => {
-    const contenedor = contenedorRef.current
-    if (!contenedor || reducirMovimiento) return
-
-    const marca = contenedor.querySelector<HTMLElement>('[data-marca]')
-    const palabra = contenedor.querySelector<HTMLElement>('[data-palabra]')
-    const chispa = contenedor.querySelector<SVGElement>('[data-chispa]')
-
-    if (marca) {
-      marca.style.opacity = '0'
-      animar(marca, {
-        duracion: 'normal',
-        opacity: [0, 1],
-        scale: [0.92, 1],
-      })
-    }
-
-    if (palabra) {
-      palabra.style.opacity = '0'
-      animar(palabra, {
-        delay: 180,
-        duracion: 'normal',
-        opacity: [0, 1],
-        translateY: [8, 0],
-      })
-    }
-
-    if (chispa) {
-      chispa.style.opacity = '0'
-      animar(chispa, {
-        delay: 450,
-        duracion: 'rapida',
-        opacity: [0, 1],
-        scale: [0.3, 1],
-      })
-    }
-  }, [animar, reducirMovimiento])
-
-  return (
-    <span
-      ref={contenedorRef}
-      className="inline-flex shrink-0 items-center"
-      style={{ gap: height * 0.25 }}
-      role="img"
-      aria-label="Fynz"
-    >
-      <span aria-hidden="true" data-marca>
-        <FynzMark size={height} />
-      </span>
-
-      <span aria-hidden="true" data-palabra>
-        <FynzWordmark height={height * 0.7} />
-      </span>
-    </span>
-  )
-}

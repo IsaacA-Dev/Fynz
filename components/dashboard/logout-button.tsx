@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 import { createBrowserSupabase } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/toast'
+import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export function LogoutButton() {
@@ -20,12 +22,17 @@ export function LogoutButton() {
 
   return (
     <>
-      <button
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => setOpen(true)}
-        className="bg-[var(--color-border-soft)] text-[var(--color-text)] px-4 py-2 rounded-full text-sm font-medium hover:bg-[var(--color-border)] transition-colors"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+        className="text-fg-muted hover:bg-surface-muted hover:text-fg"
       >
-        Cerrar Sesión
-      </button>
+        <LogOut className="size-4" aria-hidden />
+      </Button>
 
       <ConfirmDialog
         open={open}

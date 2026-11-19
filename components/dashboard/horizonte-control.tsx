@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, Sparkles } from 'lucide-react'
+import { CalendarDays, Sparkles, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Chip } from '@/components/ui/chip'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils/cn'
 import { formatearFecha } from '@/lib/utils/format'
 import type { Horizonte } from '@/lib/acciones'
 
@@ -38,9 +42,24 @@ export function HorizonteControl({
       activo: horizonte.preferido == null && horizonte.preferidoFecha == null,
       alTocar: () => onPersistirPreferido(null, null),
     },
-    { clave: '7', etiqueta: '7 días', activo: horizonte.preferido === 7, alTocar: () => onPersistirPreferido(7, null) },
-    { clave: '15', etiqueta: '15 días', activo: horizonte.preferido === 15, alTocar: () => onPersistirPreferido(15, null) },
-    { clave: '30', etiqueta: '30 días', activo: horizonte.preferido === 30, alTocar: () => onPersistirPreferido(30, null) },
+    {
+      clave: '7',
+      etiqueta: '7 días',
+      activo: horizonte.preferido === 7,
+      alTocar: () => onPersistirPreferido(7, null),
+    },
+    {
+      clave: '15',
+      etiqueta: '15 días',
+      activo: horizonte.preferido === 15,
+      alTocar: () => onPersistirPreferido(15, null),
+    },
+    {
+      clave: '30',
+      etiqueta: '30 días',
+      activo: horizonte.preferido === 30,
+      alTocar: () => onPersistirPreferido(30, null),
+    },
   ]
 
   const guardarIngreso = (valor: string) => {
@@ -56,79 +75,107 @@ export function HorizonteControl({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-1.5">
         {chips.map((chip) => (
-          <button
+          <Chip
             key={chip.clave}
-            type="button"
-            disabled={guardando}
-            onClick={chip.alTocar}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 ${
-              chip.activo
-                ? 'bg-[var(--color-primary)] text-white'
-                : 'bg-[var(--color-surface)]/80 text-[var(--color-text-muted)] border border-[var(--color-border-soft)] hover:text-[var(--color-primary)]'
-            }`}
+            role="button"
+            tabIndex={0}
+            aria-pressed={chip.activo}
+            aria-disabled={guardando || undefined}
+            interactive
+            variant={chip.activo ? 'brand' : 'neutral'}
+            onClick={() => {
+              if (!guardando) chip.alTocar()
+            }}
+            onKeyDown={(evento) => {
+              if (
+                !guardando &&
+                (evento.key === 'Enter' || evento.key === ' ')
+              ) {
+                evento.preventDefault()
+                chip.alTocar()
+              }
+            }}
+            className={guardando ? 'pointer-events-none opacity-60' : ''}
           >
             {chip.etiqueta}
-          </button>
+          </Chip>
         ))}
 
         <label
-          className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer disabled:opacity-50 ${
-            esFecha
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'bg-[var(--color-surface)]/80 text-[var(--color-text-muted)] border border-[var(--color-border-soft)] hover:text-[var(--color-primary)]'
-          }`}
+          className={cn(
+            'inline-flex rounded-full focus-within:ring-2 focus-within:ring-brand/80',
+            guardando && 'pointer-events-none opacity-60'
+          )}
         >
-          <span className="inline-flex items-center gap-1">
-            <CalendarDays className="w-3 h-3" />
+          <Chip
+            interactive
+            variant={esFecha ? 'brand' : 'neutral'}
+            className="cursor-pointer"
+          >
+            <CalendarDays className="size-3" aria-hidden />
             Fecha
-          </span>
-          <input
+          </Chip>
+          <Input
             type="date"
             value={esFecha ? (horizonte.preferidoFecha ?? '') : ''}
-            onChange={(e) => onPersistirPreferido(null, e.target.value || null)}
+            onChange={(evento) =>
+              onPersistirPreferido(null, evento.target.value || null)
+            }
             className="sr-only"
             aria-label="Elegir fecha límite"
           />
         </label>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
-        <button
+      <div className="flex flex-wrap items-center gap-2 text-xs text-fg-muted">
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           disabled={guardando}
           onClick={() => {
             setMostrarIngreso((v) => !v)
             setFechaIngreso(proximoIngreso ?? '')
           }}
-          className="inline-flex items-center gap-1 font-medium text-[var(--color-primary)] hover:opacity-80 disabled:opacity-50"
+          aria-expanded={mostrarIngreso}
+          aria-controls="campo-proximo-ingreso"
+          className="h-7 px-0 text-xs text-brand hover:bg-transparent hover:text-brand-hover"
         >
-          <Sparkles className="w-3 h-3" />
+          <Sparkles className="size-3" aria-hidden />
           {proximoIngreso
             ? `Próximo ingreso: ${formatearFecha(proximoIngreso)}`
             : 'Registrar próximo ingreso'}
-        </button>
+        </Button>
 
         {mostrarIngreso && (
-          <div className="flex items-center gap-2 w-full">
-            <Input
-              label=""
-              type="date"
-              value={fechaIngreso}
-              onChange={(e) => guardarIngreso(e.target.value)}
+          <div className="flex w-full items-end gap-2">
+            <FormField
+              htmlFor="campo-proximo-ingreso"
+              label="Fecha del próximo ingreso"
               className="flex-1"
-            />
+            >
+              <Input
+                type="date"
+                value={fechaIngreso}
+                onChange={(evento) => guardarIngreso(evento.target.value)}
+              />
+            </FormField>
             {proximoIngreso && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 disabled={guardando}
                 onClick={() => {
                   setFechaIngreso('')
                   onPersistirIngreso(null)
                 }}
-                className="text-xs text-[var(--color-danger)] font-medium hover:opacity-80 disabled:opacity-50"
+                aria-label="Quitar próximo ingreso"
+                className="mb-0.5 text-danger hover:bg-danger-soft hover:text-danger"
               >
+                <X className="size-3" aria-hidden />
                 Quitar
-              </button>
+              </Button>
             )}
           </div>
         )}

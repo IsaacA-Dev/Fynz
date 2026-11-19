@@ -1,39 +1,26 @@
-'use client'
-
-import Link from 'next/link'
-import { Ghost } from 'lucide-react'
-import { Entrada } from '@/components/ui/motion'
+import Link from "next/link";
+import { Ghost } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6 overflow-hidden relative">
-      <Entrada duracion="destacada" className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[var(--color-primary)]/10 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[var(--color-primary)]/10 blur-3xl" />
-      </Entrada>
-
-      <Entrada
-        duracion="destacada"
-        desdeY={30}
-        desdeEscala={0.96}
-        className="relative text-center space-y-6"
-      >
-        <Entrada duracion="destacada" delay={200} desdeY={0} desdeEscala={0.6} className="flex justify-center">
-          <Ghost size={72} className="text-[var(--color-primary)]" />
-        </Entrada>
-
-        <div className="space-y-2">
-          <h1 className="text-5xl font-bold tracking-tight text-[var(--color-text)]">404</h1>
-          <p className="text-[var(--color-text-muted)] text-lg">Página no encontrada</p>
-        </div>
-
-        <Link
-          href="/"
-          className="inline-flex items-center justify-center px-6 py-3 bg-[var(--color-primary)] text-white rounded-xl font-semibold hover:bg-[var(--color-primary-hover)] transition-colors"
-        >
-          Volver al inicio
-        </Link>
-      </Entrada>
+    <main className="min-h-dvh grid place-items-center bg-surface-muted px-6 py-10">
+      <Card className="w-full max-w-md p-8 text-center">
+        <Ghost
+          className="mx-auto size-16 text-brand"
+          aria-hidden
+        />
+        <h1 className="mt-4 text-5xl font-semibold tracking-tight text-fg">
+          404
+        </h1>
+        <p className="mt-2 text-sm text-fg-muted">
+          Página no encontrada
+        </p>
+        <Button asChild className="mt-6">
+          <Link href="/">Volver al inicio</Link>
+        </Button>
+      </Card>
     </main>
-  )
+  );
 }

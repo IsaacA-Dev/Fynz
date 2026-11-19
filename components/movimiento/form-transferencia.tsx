@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from 'react'
 import { ArrowLeftRight, DollarSign } from 'lucide-react'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -78,47 +80,67 @@ export function FormTransferencia({ cuentas, onClose }: FormTransferenciaProps) 
 
   if (cuentasLiquidas.length < 2) {
     return (
-      <p className="text-sm text-[var(--color-text-muted)] text-center py-4">
-        Necesitas al menos 2 cuentas de efectivo o débito para transferir.
-      </p>
+      <Alert
+        variant="info"
+        title="Necesitas al menos 2 cuentas líquidas"
+      >
+        Agrega otra cuenta de efectivo o débito para poder transferir entre
+        ellas.
+      </Alert>
     )
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Select label="Cuenta origen" value={origen} onChange={(e) => { setOrigen(e.target.value); if (destino === e.target.value) setDestino('') }} required>
-        <option value="">Elige la cuenta</option>
-        {cuentasOrigen.map((c) => (
-          <option key={c.cuenta_id} value={c.cuenta_id}>
-            {c.nombre}
-          </option>
-        ))}
-      </Select>
+      <FormField label="Cuenta origen" required>
+        <Select
+          value={origen}
+          onChange={(e) => {
+            setOrigen(e.target.value)
+            if (destino === e.target.value) setDestino('')
+          }}
+          required
+        >
+          <option value="">Elige la cuenta</option>
+          {cuentasOrigen.map((c) => (
+            <option key={c.cuenta_id} value={c.cuenta_id}>
+              {c.nombre}
+            </option>
+          ))}
+        </Select>
+      </FormField>
 
-      <Select label="Cuenta destino" value={destino} onChange={(e) => setDestino(e.target.value)} required>
-        <option value="">Elige la cuenta</option>
-        {cuentasDestino.map((c) => (
-          <option key={c.cuenta_id} value={c.cuenta_id}>
-            {c.nombre}
-          </option>
-        ))}
-      </Select>
+      <FormField label="Cuenta destino" required>
+        <Select
+          value={destino}
+          onChange={(e) => setDestino(e.target.value)}
+          required
+        >
+          <option value="">Elige la cuenta</option>
+          {cuentasDestino.map((c) => (
+            <option key={c.cuenta_id} value={c.cuenta_id}>
+              {c.nombre}
+            </option>
+          ))}
+        </Select>
+      </FormField>
 
-      <Input
-        label="Monto"
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={monto}
-        onChange={(e) => setMonto(e.target.value)}
-        icon={<DollarSign className="w-4 h-4" />}
-        required
-      />
+      <FormField label="Monto" required>
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={monto}
+          onChange={(e) => setMonto(e.target.value)}
+          leadingIcon={<DollarSign className="size-4" />}
+          required
+        />
+      </FormField>
 
-      <Button type="submit" loading={loading} disabled={!valido}>
-        <ArrowLeftRight className="w-4 h-4" />
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
+        <ArrowLeftRight className="size-4" />
         Transferir
       </Button>
 

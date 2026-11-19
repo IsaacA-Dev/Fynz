@@ -1,15 +1,20 @@
-'use client'
+"use client";
 
-import { useLayoutEffect, useRef } from 'react'
-import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
-import { useAnime } from '@/components/hooks/use-anime'
-import { useToast, type ToastType } from './toast-provider'
+import { useEffect } from "react";
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
+import { useToast, type ToastType } from "./toast-provider";
 
-const icons = {
-  success: <CheckCircle2 size={18} className="text-[var(--color-primary)]" />,
-  error: <AlertCircle size={18} className="text-[var(--color-error)]" />,
-  info: <Info size={18} className="text-[var(--color-primary)]" />,
-}
+const ICONOS = {
+  success: CheckCircle2,
+  error: AlertCircle,
+  info: Info,
+} as const;
+
+const COLORES = {
+  success: "text-success",
+  error: "text-danger",
+  info: "text-info",
+} as const;
 
 function ToastItem({
   id,
@@ -17,68 +22,62 @@ function ToastItem({
   type,
   saliendo,
 }: {
-  id: number
-  message: string
-  type: ToastType
-  saliendo?: boolean
+  id: number;
+  message: string;
+  type: ToastType;
+  saliendo?: boolean;
 }) {
-  const { animar, reducirMovimiento } = useAnime()
-  const { removeToast, descartarToast } = useToast()
-  const ref = useRef<HTMLDivElement | null>(null)
+  const { removeToast, descartarToast } = useToast();
+  const Icono = ICONOS[type];
+  const color = COLORES[type];
 
-  useLayoutEffect(() => {
-    const elemento = ref.current
-    if (!elemento || reducirMovimiento) return
-    animar(elemento, {
-      duracion: 'rapida',
-      opacity: [0, 1],
-      translateY: [-12, 0],
-      scale: [0.96, 1],
-    })
-  }, [animar, reducirMovimiento])
-
-  useLayoutEffect(() => {
-    const elemento = ref.current
-    if (!elemento || !saliendo) return
-    if (reducirMovimiento) {
-      descartarToast(id)
-      return
-    }
-    animar(elemento, {
-      duracion: 'rapida',
-      opacity: [1, 0],
-      translateY: [0, -8],
-      scale: [0.96, 0.96],
-      onComplete: () => descartarToast(id),
-    })
-  }, [animar, reducirMovimiento, saliendo, descartarToast, id])
+  useEffect(() => {
+    if (!saliendo) return;
+    const reducido =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const temporizador = window.setTimeout(
+      () => descartarToast(id),
+      reducido ? 0 : 220
+    );
+    return () => window.clearTimeout(temporizador);
+  }, [saliendo, descartarToast, id]);
 
   return (
     <div
-      ref={ref}
-      className="flex items-center gap-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 shadow-sm"
+      role={type === "error" ? "alert" : "status"}
+      className={`flex items-center gap-3 rounded-panel border border-line bg-surface px-4 py-3 shadow-soft ${
+        saliendo
+          ? "pointer-events-none animate-fade-out"
+          : "animate-fade-up"
+      }`}
     >
-      {icons[type as ToastType]}
-      <p className="flex-1 text-sm text-[var(--color-text)]">{message}</p>
+      <Icono aria-hidden className={`size-4 shrink-0 ${color}`} />
+      <p className="flex-1 text-sm text-fg">{message}</p>
       <button
+        type="button"
         onClick={() => removeToast(id)}
-        className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+        className="rounded-full p-1 text-fg-subtle transition-colors hover:bg-surface-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
         aria-label="Cerrar notificación"
       >
-        <X size={16} />
+        <X className="size-4" />
       </button>
     </div>
-  )
+  );
 }
 
 export function ToastViewport() {
-  const { toasts } = useToast()
+  const { toasts } = useToast();
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-xs">
+    <div
+      aria-live="polite"
+      aria-atomic="false"
+      className="fixed right-4 top-4 z-50 flex w-[calc(100%-2rem)] max-w-xs flex-col gap-2"
+    >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} {...toast} />
       ))}
     </div>
-  )
+  );
 }

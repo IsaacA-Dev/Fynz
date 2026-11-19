@@ -1,33 +1,30 @@
-import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase/server'
-import { FormRecuperar } from '@/components/login/form-recuperar'
-import { FynzLogo } from '@/components/ui/fynz-logo'
+import { redirect } from "next/navigation";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { AuthContainer } from "@/components/login/auth-container";
+import { FormRecuperar } from "@/components/login/form-recuperar";
 
 export default async function Recuperar({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string }>
+  searchParams: Promise<{ code?: string }>;
 }) {
-  const { code } = await searchParams
+  const { code } = await searchParams;
   if (!code) {
-    redirect('/login')
+    redirect("/login");
   }
 
-  const supabase = await createServerSupabase()
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-background)]">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex justify-center">
-          <FynzLogo height={44} />
-        </div>
-        <FormRecuperar
-          errorInicial={
-            error ? 'El enlace expiró o no es válido. Solicita uno nuevo desde el inicio de sesión.' : null
-          }
-        />
-      </div>
-    </main>
-  )
+    <AuthContainer>
+      <FormRecuperar
+        errorInicial={
+          error
+            ? "El enlace expiró o no es válido. Solicita uno nuevo desde el inicio de sesión."
+            : null
+        }
+      />
+    </AuthContainer>
+  );
 }

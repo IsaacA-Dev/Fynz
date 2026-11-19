@@ -4,7 +4,13 @@ import { formatearDinero } from '@/lib/utils/format'
 import { aCentavos } from '@/lib/dinero'
 import type { WidgetProps } from './registry'
 
-const PALETA = ['#2563eb', '#14b8a6', '#8b5cf6', '#f59e0b', '#ec4899', '#64748b']
+const PALETA = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+]
 
 export function WidgetDistribucionSaldos({ datos }: WidgetProps) {
   const liquidas = datos.cuentas.filter(
@@ -18,7 +24,7 @@ export function WidgetDistribucionSaldos({ datos }: WidgetProps) {
 
   if (total === 0) {
     return (
-      <p className="text-sm text-[var(--color-text-muted)] py-2">
+      <p className="py-2 text-sm text-fg-muted">
         Sin dinero líquido en este momento.
       </p>
     )
@@ -46,7 +52,7 @@ export function WidgetDistribucionSaldos({ datos }: WidgetProps) {
   return (
     <div className="flex items-center gap-4">
       <svg viewBox="0 0 120 120" className="w-28 h-28 @lg:w-36 @lg:h-36 shrink-0 -rotate-90" role="img" aria-label="Distribución de saldos">
-        <circle cx="60" cy="60" r={radio} fill="none" stroke="var(--color-border-soft)" strokeWidth="14" />
+        <circle cx="60" cy="60" r={radio} fill="none" stroke="var(--color-line)" strokeWidth="14" />
         {segmentos.map((segmento) => (
           <circle
             key={segmento.nombre}
@@ -66,14 +72,14 @@ export function WidgetDistribucionSaldos({ datos }: WidgetProps) {
         {segmentos.map((segmento) => (
           <div key={segmento.nombre} className="flex items-center gap-2 text-xs @lg:text-sm">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: segmento.color }} />
-            <span className="text-[var(--color-text-muted)] truncate">{segmento.nombre}</span>
-            <span className="font-medium text-[var(--color-text)] ml-auto shrink-0">
+            <span className="truncate text-fg-muted">{segmento.nombre}</span>
+            <span className="ml-auto shrink-0 font-medium text-fg">
               {formatearDinero(segmento.monto)}
             </span>
           </div>
         ))}
         {deuda > 0 && (
-          <p className="text-[10px] text-[var(--color-danger)] pt-1">
+          <p className="pt-1 text-[10px] text-danger">
             Deuda en tarjetas: {formatearDinero(deuda)} (no es dinero tuyo).
           </p>
         )}

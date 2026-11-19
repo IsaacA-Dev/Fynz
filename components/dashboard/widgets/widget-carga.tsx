@@ -41,7 +41,7 @@ export function WidgetCargaPagos({ datos, filtros }: WidgetProps) {
 
   if (puntos.length === 0) {
     return (
-      <p className="text-xs text-[var(--color-text-muted)]">
+      <p className="text-xs text-fg-muted">
         {filtros.horizonte != null
           ? `Sin pagos pendientes en los próximos ${filtros.horizonte} días.`
           : 'Sin pagos pendientes.'}
@@ -55,7 +55,7 @@ export function WidgetCargaPagos({ datos, filtros }: WidgetProps) {
         <polyline
           points={puntosSvg}
           fill="none"
-          stroke="var(--color-primary)"
+          stroke="var(--color-chart-1)"
           strokeWidth="1.5"
           vectorEffect="non-scaling-stroke"
         />
@@ -69,7 +69,7 @@ export function WidgetCargaPagos({ datos, filtros }: WidgetProps) {
               cx={x}
               cy={y}
               r="1.6"
-              fill="var(--color-primary)"
+              fill="var(--color-chart-1)"
               style={{ opacity: 0 }}
             />
           )
@@ -77,11 +77,11 @@ export function WidgetCargaPagos({ datos, filtros }: WidgetProps) {
       </svg>
 
       <div className="flex items-center justify-between gap-2 text-xs @lg:text-sm">
-        <span className="font-semibold text-[var(--color-text)]">
+        <span className="font-semibold text-fg">
           Total {formatearDinero(total)}
         </span>
         {mayor && (
-          <span className="text-[var(--color-text-muted)] truncate">
+          <span className="truncate text-fg-muted">
             Mayor: {mayor.descripcion} · {formatearDinero(mayor.monto)}
           </span>
         )}

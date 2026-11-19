@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sheet } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import { Chip } from '@/components/ui/chip'
 import type { FiltrosTablero } from '@/lib/tablero'
 import { REGISTRO_WIDGETS, type FiltroWidget } from './registry'
 
@@ -79,35 +80,48 @@ function ContenidoFiltros({
     <div className="space-y-5">
       {filtrosDisponibles.map((clave) => (
         <div key={clave}>
-          <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+          <p className="mb-2 text-eyebrow uppercase text-fg-subtle">
             {ETIQUETAS[clave]}
           </p>
           <div className="flex flex-wrap gap-2">
-            {(OPCIONES[clave] as { valor: never; etiqueta: string }[]).map((opcion) => (
-              <button
-                key={String(opcion.valor)}
-                onClick={() => elegir(clave, opcion.valor)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  activo(clave, opcion.valor)
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'bg-[var(--color-border-soft)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
-                }`}
-              >
-                {opcion.etiqueta}
-              </button>
-            ))}
+            {(OPCIONES[clave] as { valor: never; etiqueta: string }[]).map(
+              (opcion) => {
+                const seleccionado = activo(clave, opcion.valor)
+                return (
+                  <Chip
+                    key={String(opcion.valor)}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={seleccionado}
+                    interactive
+                    variant={seleccionado ? 'brand' : 'neutral'}
+                    onClick={() => elegir(clave, opcion.valor)}
+                    onKeyDown={(evento) => {
+                      if (evento.key === 'Enter' || evento.key === ' ') {
+                        evento.preventDefault()
+                        elegir(clave, opcion.valor)
+                      }
+                    }}
+                  >
+                    {opcion.etiqueta}
+                  </Chip>
+                )
+              }
+            )}
           </div>
         </div>
       ))}
 
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="secondary"
           onClick={onCerrar}
-          className="flex-1 py-2.5 rounded-xl font-medium bg-[var(--color-border)]/50 text-[var(--color-text)] hover:bg-[var(--color-border)] transition-colors"
+          className="flex-1"
         >
           Cancelar
-        </button>
+        </Button>
         <Button
+          className="flex-1"
           onClick={() => {
             onGuardar(borrador)
             onCerrar()

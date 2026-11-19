@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from 'react'
 import { Check, DollarSign } from 'lucide-react'
+import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import { liquidarPago } from '@/lib/acciones-servidor'
 import { centavosACadena, parseCentavos } from '@/lib/dinero'
@@ -67,58 +69,67 @@ export function FormLiquidar({ pago, cuentas, onClose }: FormLiquidarProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-[var(--color-border)]/40 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-[var(--color-text)]">{pago.descripcion}</p>
-          <p className="text-xs text-[var(--color-text-muted)]">
+      <Card variant="soft" className="flex items-center justify-between gap-3 p-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-fg">{pago.descripcion}</p>
+          <p className="text-xs text-fg-muted">
             Vence el {formatearFecha(pago.fecha_vencimiento)}
           </p>
           {pago.es_tarjeta && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+            <p className="mt-0.5 text-xs text-fg-muted">
               Monto estimado del ciclo: {formatearDinero(pago.monto)}
             </p>
           )}
           {pago.es_tarjeta && pago.minimo != null && pago.minimo > 0 && (
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="text-xs text-fg-muted">
               Mín. del banco: {formatearDinero(pago.minimo)}
             </p>
           )}
         </div>
-        <p className="text-xl font-bold text-[var(--color-text)]">
+        <p className="shrink-0 text-xl font-semibold text-fg">
           {formatearDinero(pago.monto)}
         </p>
-      </div>
+      </Card>
 
-      <Input
+      <FormField
         label={pago.es_tarjeta ? 'Monto a pagar' : 'Monto'}
-        type="number"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        value={montoTexto}
-        onChange={(e) => setMontoTexto(e.target.value)}
-        icon={<DollarSign className="w-4 h-4" />}
+        hint={
+          esPagoParcial
+            ? 'Pago parcial: el compromiso del ciclo se reducirá al resto pendiente.'
+            : undefined
+        }
         required
-      />
+      >
+        <Input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          value={montoTexto}
+          onChange={(e) => setMontoTexto(e.target.value)}
+          leadingIcon={<DollarSign className="size-4" />}
+          required
+        />
+      </FormField>
 
-      {esPagoParcial && (
-        <p className="text-xs text-[var(--color-text-muted)] -mt-1">
-          Pago parcial: el compromiso del ciclo se reducirá al resto pendiente.
-        </p>
-      )}
+      <FormField label="¿Desde qué cuenta se pagó?" required>
+        <Select
+          value={cuentaId}
+          onChange={(e) => setCuentaId(e.target.value)}
+          required
+        >
+          <option value="">Selecciona una cuenta</option>
+          {cuentasLiquidas.map((c) => (
+            <option key={c.cuenta_id} value={c.cuenta_id}>
+              {c.nombre}
+            </option>
+          ))}
+        </Select>
+      </FormField>
 
-      <Select label="¿Desde qué cuenta se pagó?" value={cuentaId} onChange={(e) => setCuentaId(e.target.value)} required>
-        <option value="">Selecciona una cuenta</option>
-        {cuentasLiquidas.map((c) => (
-          <option key={c.cuenta_id} value={c.cuenta_id}>
-            {c.nombre}
-          </option>
-        ))}
-      </Select>
-
-      <Button type="submit" loading={loading} disabled={!valido}>
-        <Check className="w-4 h-4" />
+      <Button type="submit" loading={loading} disabled={!valido} className="w-full">
+        <Check className="size-4" />
         Confirmar pago
       </Button>
     </form>

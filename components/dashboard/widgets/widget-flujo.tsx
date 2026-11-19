@@ -38,12 +38,12 @@ export function WidgetFlujoMensual({ datos, filtros }: WidgetProps) {
 
   return (
     <div className="space-y-2" ref={contenedorRef}>
-      <div className="flex justify-end gap-3 text-[10px] @lg:text-xs text-[var(--color-text-muted)]">
+      <div className="flex justify-end gap-3 text-[10px] text-fg-muted @lg:text-xs">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-success)]" /> Ingresos
+          <span className="size-2 rounded-full bg-chart-2" /> Ingresos
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[var(--color-text-muted)]" /> Gastos
+          <span className="size-2 rounded-full bg-chart-5" /> Gastos
         </span>
       </div>
 
@@ -54,7 +54,7 @@ export function WidgetFlujoMensual({ datos, filtros }: WidgetProps) {
               <div
                 data-flujo
                 title={`Ingresos ${formatearDinero(mes.ingresos)}`}
-                className="w-3 rounded-t bg-[var(--color-success)]"
+                className="w-3 rounded-t bg-chart-2"
                 style={{
                   height: Math.max((mes.ingresos / valorMax) * ALTO_BARRA, mes.ingresos > 0 ? 4 : 0),
                   transformOrigin: 'bottom',
@@ -63,14 +63,14 @@ export function WidgetFlujoMensual({ datos, filtros }: WidgetProps) {
               <div
                 data-flujo
                 title={`Gastos ${formatearDinero(mes.egresos)}`}
-                className="w-3 rounded-t bg-[var(--color-text-muted)]"
+                className="w-3 rounded-t bg-chart-5"
                 style={{
                   height: Math.max((mes.egresos / valorMax) * ALTO_BARRA, mes.egresos > 0 ? 4 : 0),
                   transformOrigin: 'bottom',
                 }}
               />
             </div>
-            <span className="text-[10px] @lg:text-xs text-[var(--color-text-muted)]">
+            <span className="text-[10px] text-fg-muted @lg:text-xs">
               {etiquetaMes(mes.mes)}
             </span>
           </div>
