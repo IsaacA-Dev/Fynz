@@ -1,5 +1,7 @@
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { OPERACION_LABELS } from '@/lib/historial'
+import { cn } from '@/lib/utils/cn'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import type { MovimientoLista } from '@/lib/acciones'
 
@@ -11,55 +13,70 @@ interface MovimientoRowProps {
 export function MovimientoRow({ movimiento, onVer }: MovimientoRowProps) {
   const esIngreso = movimiento.tipo === 'ingreso'
   const etiquetaOp =
-    movimiento.operacion != null ? OPERACION_LABELS[movimiento.operacion] ?? null : null
+    movimiento.operacion != null
+      ? (OPERACION_LABELS[movimiento.operacion] ?? null)
+      : null
 
-  return (
-    <button
-      type="button"
-      onClick={onVer}
-      disabled={!onVer}
-      className={`p-4 flex items-center justify-between gap-3 w-full text-left transition-colors ${
-        onVer
-          ? 'hover:bg-[var(--color-background)] cursor-pointer'
-          : 'cursor-default'
-      }`}
-    >
-      <div className="flex items-center gap-3 min-w-0">
+  const contenido = (
+    <>
+      <div className="flex min-w-0 items-center gap-3">
         <span
-          className={`w-9 h-9 @lg:w-11 @lg:h-11 rounded-full flex items-center justify-center shrink-0 ${
+          className={cn(
+            'flex size-9 shrink-0 items-center justify-center rounded-full @lg:size-11',
             esIngreso
-              ? 'bg-[var(--color-success-soft)] text-[var(--color-success)]'
-              : 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]'
-          }`}
+              ? 'bg-success-soft text-success'
+              : 'bg-surface-muted text-fg-muted'
+          )}
         >
           {esIngreso ? (
-            <ArrowDownLeft className="w-4 h-4 @lg:w-5 @lg:h-5" />
+            <ArrowDownLeft className="size-4 @lg:size-5" aria-hidden />
           ) : (
-            <ArrowUpRight className="w-4 h-4 @lg:w-5 @lg:h-5" />
+            <ArrowUpRight className="size-4 @lg:size-5" aria-hidden />
           )}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-[var(--color-text)] truncate flex items-center gap-1.5 @lg:text-base">
-            {movimiento.descripcion ?? (esIngreso ? 'Ingreso' : 'Egreso')}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="truncate text-sm font-medium text-fg @lg:text-base">
+              {movimiento.descripcion ?? (esIngreso ? 'Ingreso' : 'Egreso')}
+            </p>
             {etiquetaOp && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)] shrink-0">
+              <Badge variant="neutral" size="sm">
                 {etiquetaOp}
-              </span>
+              </Badge>
             )}
-          </p>
-          <p className="text-xs text-[var(--color-text-muted)] @lg:text-sm">
+          </div>
+          <p className="text-xs text-fg-muted @lg:text-sm">
             {movimiento.cuenta_nombre} · {formatearFecha(movimiento.fecha)}
           </p>
         </div>
       </div>
       <p
-        className={`shrink-0 text-sm font-semibold @lg:text-base ${
-          esIngreso ? 'text-[var(--color-success)]' : 'text-[var(--color-text)]'
-        }`}
+        className={cn(
+          'shrink-0 text-sm font-semibold @lg:text-base',
+          esIngreso ? 'text-success' : 'text-fg'
+        )}
       >
         {esIngreso ? '+' : '-'}
         {formatearDinero(movimiento.monto)}
       </p>
-    </button>
+    </>
+  )
+
+  if (onVer) {
+    return (
+      <button
+        type="button"
+        onClick={onVer}
+        className="flex w-full items-center justify-between gap-3 py-3 text-left transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80"
+      >
+        {contenido}
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 py-3">
+      {contenido}
+    </div>
   )
 }

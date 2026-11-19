@@ -7,8 +7,11 @@ import { LogoutButton } from '@/components/dashboard/logout-button'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { FynzLogo } from '@/components/ui/fynz-logo'
-import { Entrada } from '@/components/ui/motion'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { ThemeSwitcher } from '@/components/theme/theme-switcher'
 import { PanelLayout } from '@/components/dashboard/panel'
+import { cn } from '@/lib/utils/cn'
 import type { ReactNode } from 'react'
 import type { Cuenta, DatosDashboard, ProximoPago, Vista } from '@/lib/acciones'
 
@@ -41,24 +44,20 @@ const TABS = [
 export function DashboardMovil(props: DashboardMovilProps) {
   const { datos, hoy } = props
   const [tab, setTab] = useState(0)
-  const [direccion, setDireccion] = useState(1)
   const [verMasPagos, setVerMasPagos] = useState(false)
-
-  const cambiarTab = (nuevo: number) => {
-    if (nuevo === tab) return
-    setDireccion(nuevo > tab ? 1 : -1)
-    setTab(nuevo)
-  }
 
   const pagosMostrados = verMasPagos ? datos.pagos : datos.pagos.slice(0, LIMITE)
   const movimientosMostrados = datos.movimientos.slice(0, LIMITE)
 
   return (
-    <main className="min-h-screen bg-[var(--color-background)]">
-      <div className="max-w-md mx-auto">
-        <header className="flex justify-between items-center px-6 pt-6 pb-2">
+    <main className="min-h-dvh bg-surface-muted">
+      <div className="mx-auto max-w-md">
+        <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-6">
           <FynzLogo height={26} />
-          <LogoutButton />
+          <div className="flex items-center gap-1">
+            <ThemeSwitcher />
+            <LogoutButton />
+          </div>
         </header>
 
         <div>
@@ -69,38 +68,44 @@ export function DashboardMovil(props: DashboardMovilProps) {
           )}
 
           {tab === 1 && (
-            <Entrada
+            <div
               key="tab-pagos"
-              duracion="normal"
-              desdeX={30 * direccion}
-              className="px-6 pb-8 pt-4 space-y-3"
+              className="animate-fade-in space-y-3 px-6 pb-8 pt-4"
             >
-              {/* ===== Tab 1: Próximos Pagos ===== */}
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-[var(--color-text)] px-1">Próximos Pagos</h3>
-                <button
+              <div className="flex items-center justify-between gap-2 px-1">
+                <h3 className="text-eyebrow uppercase text-fg-subtle">
+                  Próximos pagos
+                </h3>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={props.onNuevoPago}
                   aria-label="Nuevo pago"
-                  className="w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-hover)] transition-colors"
+                  className="size-8 text-brand hover:bg-brand-soft"
                 >
-                  <Plus className="w-4 h-4" />
-                </button>
+                  <Plus className="size-4" aria-hidden />
+                </Button>
               </div>
 
               {datos.pagos.length === 0 ? (
-                <div className="bg-[var(--color-surface)] rounded-2xl p-6 text-center shadow-sm border border-[var(--color-border-soft)] space-y-3">
-                  <p className="text-sm text-[var(--color-text-muted)]">
+                <Card variant="soft" className="p-6 text-center">
+                  <p className="text-sm text-fg-muted">
                     No hay pagos pendientes por el momento.
                   </p>
-                  <button
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={props.onNuevoPago}
-                    className="bg-[var(--color-primary)] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[var(--color-primary-hover)] transition-colors"
+                    className="mt-3"
                   >
-                    + Nuevo Pago
-                  </button>
-                </div>
+                    <Plus className="size-3.5" aria-hidden />
+                    Nuevo pago
+                  </Button>
+                </Card>
               ) : (
-                <div className="bg-[var(--color-surface)] rounded-2xl shadow-sm border border-[var(--color-border-soft)] divide-y divide-[var(--color-border-soft)]">
+                <Card className="divide-y divide-line">
                   {pagosMostrados.map((p) => (
                     <PagoRow
                       key={p.proximo_pago_id}
@@ -111,81 +116,97 @@ export function DashboardMovil(props: DashboardMovilProps) {
                       onEliminar={() => props.onEliminarPago(p)}
                       onPagar={() => props.onPagarPago(p)}
                       onAdelantar={
-                        p.recurrente && !p.es_tarjeta ? () => props.onAdelantarPago(p) : undefined
+                        p.recurrente && !p.es_tarjeta
+                          ? () => props.onAdelantarPago(p)
+                          : undefined
                       }
                     />
                   ))}
-                </div>
+                </Card>
               )}
 
               {datos.pagos.length > LIMITE && (
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setVerMasPagos((v) => !v)}
-                  className="w-full text-xs font-medium text-[var(--color-primary)] py-2 hover:opacity-80 transition-opacity"
+                  className="w-full"
                 >
-                  {verMasPagos ? 'Ver menos' : `Ver más (${datos.pagos.length - LIMITE})`}
-                </button>
+                  {verMasPagos
+                    ? 'Ver menos'
+                    : `Ver más (${datos.pagos.length - LIMITE})`}
+                </Button>
               )}
-            </Entrada>
+            </div>
           )}
 
           {tab === 2 && (
-            <Entrada
+            <div
               key="tab-historial"
-              duracion="normal"
-              desdeX={30 * direccion}
-              className="px-6 pb-8 pt-4 space-y-3"
+              className="animate-fade-in space-y-3 px-6 pb-8 pt-4"
             >
-              {/* ===== Tab 2: Historial ===== */}
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-semibold text-[var(--color-text)]">Historial Reciente</h3>
+              <div className="flex items-center justify-between gap-2 px-1">
+                <h3 className="text-eyebrow uppercase text-fg-subtle">
+                  Historial reciente
+                </h3>
                 <Link
                   href="/historial"
-                  className="text-xs font-medium text-[var(--color-primary)] hover:opacity-80 transition-opacity"
+                  className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
                 >
                   Ver todo
                 </Link>
               </div>
 
               {datos.movimientos.length === 0 ? (
-                <div className="bg-[var(--color-surface)] rounded-2xl p-6 text-center shadow-sm border border-[var(--color-border-soft)]">
-                  <p className="text-sm text-[var(--color-text-muted)]">
+                <Card variant="soft" className="p-6 text-center">
+                  <p className="text-sm text-fg-muted">
                     Tus movimientos aparecerán aquí.
                   </p>
-                </div>
+                </Card>
               ) : (
-                <div className="bg-[var(--color-surface)] rounded-2xl shadow-sm border border-[var(--color-border-soft)] divide-y divide-[var(--color-border-soft)]">
+                <Card className="divide-y divide-line">
                   {movimientosMostrados.map((t) => (
-                    <MovimientoRow key={t.transaccion_id} movimiento={t} />
+                    <MovimientoRow
+                      key={t.transaccion_id}
+                      movimiento={t}
+                    />
                   ))}
-                </div>
+                </Card>
               )}
 
               {datos.movimientos.length > LIMITE && (
                 <Link
                   href="/historial"
-                  className="block w-full text-center text-xs font-medium text-[var(--color-primary)] py-2 hover:opacity-80 transition-opacity"
+                  className="block w-full text-center text-xs font-medium text-brand transition-colors hover:text-brand-hover"
                 >
-                  Ver todo ({datos.movimientos.length - LIMITE} movimientos recientes más)
+                  Ver todo ({datos.movimientos.length - LIMITE} movimientos
+                  recientes más)
                 </Link>
               )}
-            </Entrada>
+            </div>
           )}
         </div>
 
-        <nav className="sticky bottom-0 z-40 bg-[var(--color-background)]/90 backdrop-blur border-t border-[var(--color-border-soft)]">
+        <nav
+          aria-label="Navegación principal"
+          className="sticky bottom-0 z-40 border-t border-line bg-surface/90 backdrop-blur"
+        >
           <div className="grid grid-cols-3">
             {TABS.map(({ id, label, Icon }) => (
               <button
                 key={id}
-                onClick={() => cambiarTab(id)}
-                className={`flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors ${
+                type="button"
+                onClick={() => setTab(id)}
+                aria-current={tab === id ? 'page' : undefined}
+                className={cn(
+                  'flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80',
                   tab === id
-                    ? 'text-[var(--color-primary)]'
-                    : 'text-[var(--color-text-muted)]'
-                }`}
+                    ? 'text-brand'
+                    : 'text-fg-muted hover:text-fg'
+                )}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="size-5" aria-hidden />
                 {label}
               </button>
             ))}

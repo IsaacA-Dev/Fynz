@@ -1,7 +1,12 @@
 'use client'
 
 import { Check } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Sheet } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils/cn'
 import {
   PRESETS_LAYOUT,
   coincideConPreset,
@@ -17,58 +22,69 @@ interface DialogoDisenoProps {
   onCerrar: () => void
 }
 
-export function DialogoDiseno({ open, layout, onAplicar, onCerrar }: DialogoDisenoProps) {
+export function DialogoDiseno({
+  open,
+  layout,
+  onAplicar,
+  onCerrar,
+}: DialogoDisenoProps) {
   return (
     <Sheet open={open} title="Diseño del panel" onClose={onCerrar}>
       {open && (
-        <div className="space-y-3">
-          {PRESETS_LAYOUT.map((preset) => {
-            const activo = coincideConPreset(layout, preset.id)
-            return (
-              <div
-                key={preset.id}
-                className={`bg-[var(--color-surface)] rounded-xl p-3 border flex gap-3 items-start transition-colors ${
-                  activo
-                    ? 'border-[var(--color-primary)]'
-                    : 'border-[var(--color-border-soft)]'
-                }`}
-              >
-                <MiniPreset preset={preset} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-1.5">
-                    {preset.nombre}
-                    {activo && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
-                        <Check className="w-3 h-3" />
-                        Actual
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-[var(--color-text-muted)] leading-relaxed mt-0.5">
-                    {preset.descripcion}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onAplicar(preset.id)}
-                    disabled={activo}
-                    className={`mt-2 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
-                      activo
-                        ? 'bg-[var(--color-border-soft)] text-[var(--color-text-muted)] cursor-default'
-                        : 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]'
-                    }`}
-                  >
-                    {activo ? 'En uso' : 'Aplicar'}
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+        <Tabs defaultValue="disenos" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="disenos">Diseños</TabsTrigger>
+            <TabsTrigger value="ayuda">Cómo funciona</TabsTrigger>
+          </TabsList>
 
-          <p className="text-xs text-[var(--color-text-muted)]">
-            Los diseños reordenan y ajustan el tamaño de tus secciones y widgets; nada se
-            elimina. Puedes seguir afinando a mano después.
-          </p>
-        </div>
+          <TabsContent value="disenos" className="space-y-3">
+            {PRESETS_LAYOUT.map((preset) => {
+              const activo = coincideConPreset(layout, preset.id)
+              return (
+                <Card
+                  key={preset.id}
+                  variant={activo ? 'outline' : 'soft'}
+                  className={cn('flex gap-3 p-3', activo && 'ring-1 ring-brand')}
+                >
+                  <MiniPreset preset={preset} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="text-sm font-semibold text-fg">
+                        {preset.nombre}
+                      </p>
+                      {activo && (
+                        <Badge variant="brand" size="sm">
+                          <Check className="size-3" aria-hidden />
+                          Actual
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs leading-relaxed text-fg-muted">
+                      {preset.descripcion}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onAplicar(preset.id)}
+                      disabled={activo}
+                      className="mt-2"
+                    >
+                      {activo ? 'En uso' : 'Aplicar'}
+                    </Button>
+                  </div>
+                </Card>
+              )
+            })}
+          </TabsContent>
+
+          <TabsContent value="ayuda">
+            <p className="text-sm leading-relaxed text-fg-muted">
+              Los diseños reordenan y ajustan el tamaño de tus secciones y
+              widgets; nada se elimina. Puedes seguir afinando a mano después.
+            </p>
+          </TabsContent>
+        </Tabs>
       )}
     </Sheet>
   )
@@ -76,35 +92,58 @@ export function DialogoDiseno({ open, layout, onAplicar, onCerrar }: DialogoDise
 
 function claseCelda(tipo: TipoBloque): string {
   if (tipo === 'hero') {
-    return 'bg-linear-to-br from-[var(--color-banner-start)] to-[var(--color-banner-end)]'
+    return 'bg-brand'
   }
   if (tipo === 'widget') {
-    return 'bg-[var(--color-primary-soft)] border border-[var(--color-primary)]/30'
+    return 'border border-brand/20 bg-brand-soft'
   }
-  return 'bg-[var(--color-background)] border border-[var(--color-border-soft)]'
+  return 'border border-line bg-surface-muted'
 }
 
 function MiniPreset({ preset }: { preset: PresetLayout }) {
-  const celdas: Array<{ id: string; tipo: TipoBloque; ancho: number; filas: number }> = []
+  const celdas: Array<{
+    id: string
+    tipo: TipoBloque
+    ancho: number
+    filas: number
+  }> = []
   const { ancho: anchoWidget, filas: filasWidget, despuesDe } = preset.widgets
   for (const spec of preset.bloques) {
-    celdas.push({ id: spec.tipo, tipo: spec.tipo, ancho: spec.ancho, filas: spec.filas })
+    celdas.push({
+      id: spec.tipo,
+      tipo: spec.tipo,
+      ancho: spec.ancho,
+      filas: spec.filas,
+    })
     if (spec.tipo === despuesDe) {
-      celdas.push({ id: 'widget-a', tipo: 'widget', ancho: anchoWidget, filas: filasWidget })
-      celdas.push({ id: 'widget-b', tipo: 'widget', ancho: anchoWidget, filas: filasWidget })
+      celdas.push({
+        id: 'widget-a',
+        tipo: 'widget',
+        ancho: anchoWidget,
+        filas: filasWidget,
+      })
+      celdas.push({
+        id: 'widget-b',
+        tipo: 'widget',
+        ancho: anchoWidget,
+        filas: filasWidget,
+      })
     }
   }
 
   return (
     <div
       aria-hidden
-      className="grid grid-cols-4 gap-[3px] auto-rows-[11px] w-24 shrink-0 rounded-md overflow-hidden"
+      className="grid w-24 shrink-0 auto-rows-2.5 grid-cols-4 gap-0.5 overflow-hidden rounded-panel"
     >
       {celdas.map((celda) => (
         <div
           key={celda.id}
-          className={`rounded-[3px] ${claseCelda(celda.tipo)}`}
-          style={{ gridColumn: `span ${celda.ancho}`, gridRow: `span ${celda.filas}` }}
+          className={cn('rounded', claseCelda(celda.tipo))}
+          style={{
+            gridColumn: `span ${celda.ancho}`,
+            gridRow: `span ${celda.filas}`,
+          }}
         />
       ))}
     </div>

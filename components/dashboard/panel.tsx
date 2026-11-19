@@ -18,6 +18,10 @@ import { CuentaRow } from '@/components/dashboard/rows/cuenta-row'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { NumeroAnimado } from '@/components/ui/motion/numero-animado'
+import { Alert } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Select } from '@/components/ui/select'
 import { REGISTRO_WIDGETS } from '@/components/dashboard/widgets/registry'
 import { DialogoCrear } from '@/components/dashboard/widgets/dialogo-crear'
@@ -39,6 +43,7 @@ import {
   type ConfiguracionLayout,
   type TipoBloque,
 } from '@/lib/layout'
+import { cn } from '@/lib/utils/cn'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import type { Cuenta, DatosDashboard, ProximoPago, Vista } from '@/lib/acciones'
 
@@ -174,56 +179,51 @@ export function PanelLayout(props: PanelLayoutProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-[var(--color-text)]">Tu panel</p>
-        <button
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium text-fg-muted">Tu panel</p>
+        <Button
           type="button"
+          variant={editando ? 'solid' : 'secondary'}
+          size="sm"
           onClick={() => setEditando((v) => !v)}
-          className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full transition-colors ${
-            editando
-              ? 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)]'
-              : 'bg-[var(--color-surface)] border border-[var(--color-border-soft)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)]'
-          }`}
+          aria-pressed={editando}
         >
           {editando ? (
             <>
-              <Pencil className="w-3.5 h-3.5" />
+              <Pencil className="size-3.5" aria-hidden />
               Listo
             </>
           ) : (
             <>
-              <Settings2 className="w-3.5 h-3.5" />
+              <Settings2 className="size-3.5" aria-hidden />
               Editar panel
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {editando && (
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            Arrastra para reordenar (o usa el asa con las flechas del teclado). Tu
-            configuración se guarda al soltar.
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="max-w-xl text-xs leading-relaxed text-fg-muted">
+            Arrastra para reordenar (o usa el asa con las flechas del teclado).
+            Tu configuración se guarda al soltar.
           </p>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             {escritorio && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setDialogoDiseno(true)}
-                className="inline-flex items-center gap-1.5 bg-[var(--color-surface)] border border-[var(--color-border-soft)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] text-xs font-medium px-3 py-2 rounded-full transition-colors"
               >
-                <LayoutTemplate className="w-3.5 h-3.5" />
+                <LayoutTemplate className="size-3.5" aria-hidden />
                 Diseño
-              </button>
+              </Button>
             )}
-            <button
-              type="button"
-              onClick={() => setDialogo(true)}
-              className="inline-flex items-center gap-1.5 bg-[var(--color-primary)] text-white text-xs font-medium px-3 py-2 rounded-full hover:bg-[var(--color-primary-hover)] transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
+            <Button type="button" size="sm" onClick={() => setDialogo(true)}>
+              <Plus className="size-3.5" aria-hidden />
               Añadir
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -252,7 +252,16 @@ export function PanelLayout(props: PanelLayoutProps) {
             onCambiarFilas={(filas) => cambiarFilas(bloque, filas)}
             filasEfectivas={filasEfectivas(bloque, datos)}
           >
-            <ContenidoBloque bloque={bloque} props={props} verMas={{ verMasCuentas, setVerMasCuentas, verMasPagos, setVerMasPagos }} />
+            <ContenidoBloque
+              bloque={bloque}
+              props={props}
+              verMas={{
+                verMasCuentas,
+                setVerMasCuentas,
+                verMasPagos,
+                setVerMasPagos,
+              }}
+            />
           </BloqueShell>
         ))}
       </div>
@@ -321,88 +330,104 @@ function BloqueShell({
   onCambiarFilas: (filas: 1 | 2) => void
   children: ReactNode
 }) {
+  const etiqueta =
+    bloque.tipo === 'widget'
+      ? (REGISTRO_WIDGETS[bloque.widget ?? '']?.nombre ?? 'Widget')
+      : nombreBloque(bloque.tipo)
+
   return (
     <section
       data-clave={bloque.id}
-      className={`@container relative flex flex-col rounded-2xl border ${
-        arrastrando
-          ? 'z-40 border-[var(--color-primary)] shadow-2xl ring-1 ring-[var(--color-primary)]'
-          : 'border-transparent'
-      }`}
+      className={cn(
+        '@container relative flex min-h-0 flex-col',
+        arrastrando && 'z-40'
+      )}
       style={{
         gridColumn: escritorio ? `span ${Math.min(bloque.ancho, columnas)}` : undefined,
         gridRow: escritorio ? `span ${Math.min(filasEfectivas, 2)}` : undefined,
       }}
     >
-      {editando && (
-        <div className="flex items-center gap-1.5 px-1 pb-1.5">
-          <button
-            type="button"
-            onPointerDown={onIniciar}
-            onKeyDown={onTeclado}
-            aria-label={`Mover ${nombreBloque(bloque.tipo)}`}
-            aria-pressed={arrastrando}
-            style={{ touchAction: 'none' }}
-            className="p-1.5 rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-border-soft)] hover:text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] transition-colors cursor-grab active:cursor-grabbing"
-          >
-            <GripVertical className="w-4 h-4" />
-          </button>
-          <span className="text-xs font-medium text-[var(--color-text)] flex-1">
-            {bloque.tipo === 'widget'
-              ? (REGISTRO_WIDGETS[bloque.widget ?? '']?.nombre ?? 'Widget')
-              : nombreBloque(bloque.tipo)}
-          </span>
-          {escritorio && (
-            <div className="flex items-center gap-1">
-              <Select
-                value={bloque.ancho}
-                onChange={(e) =>
-                  onCambiarAncho(Number(e.target.value) as 1 | 2 | 3 | 4)
-                }
-                aria-label="Columnas del bloque"
-                className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
-              >
-                <option value={1}>1 col</option>
-                <option value={2}>2 cols</option>
-                <option value={3}>3 cols</option>
-                <option value={4}>4 cols</option>
-              </Select>
-              <Select
-                value={bloque.filas}
-                onChange={(e) =>
-                  onCambiarFilas(Number(e.target.value) as 1 | 2)
-                }
-                aria-label="Filas del bloque"
-                className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
-              >
-                <option value={1}>1 fila</option>
-                <option value={2}>2 filas</option>
-              </Select>
-            </div>
-          )}
-          {onFiltros && (
-            <button
+      <Card
+        className={cn(
+          'flex flex-1 flex-col overflow-hidden',
+          editando && 'border-brand/30',
+          arrastrando && 'ring-2 ring-brand shadow-lift'
+        )}
+      >
+        {editando && (
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-line bg-surface-muted/60 px-3 py-2">
+            <Button
               type="button"
-              onClick={onFiltros}
-              aria-label="Configurar filtros"
-              className="p-1.5 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
+              variant="ghost"
+              size="icon"
+              onPointerDown={onIniciar}
+              onKeyDown={onTeclado}
+              aria-label={`Mover ${etiqueta}`}
+              aria-pressed={arrastrando}
+              style={{ touchAction: 'none' }}
+              className="size-7 cursor-grab text-fg-muted active:cursor-grabbing"
             >
-              <Settings2 className="w-4 h-4" />
-            </button>
-          )}
-          {onQuitar && (
-            <button
-              type="button"
-              onClick={onQuitar}
-              aria-label="Quitar bloque"
-              className="p-1.5 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
-      {children}
+              <GripVertical className="size-4" aria-hidden />
+            </Button>
+            <span className="flex-1 truncate text-xs font-medium text-fg">
+              {etiqueta}
+            </span>
+            {escritorio && (
+              <div className="flex items-center gap-1">
+                <Select
+                  value={bloque.ancho}
+                  onChange={(e) =>
+                    onCambiarAncho(Number(e.target.value) as 1 | 2 | 3 | 4)
+                  }
+                  aria-label="Columnas del bloque"
+                  className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
+                >
+                  <option value={1}>1 col</option>
+                  <option value={2}>2 cols</option>
+                  <option value={3}>3 cols</option>
+                  <option value={4}>4 cols</option>
+                </Select>
+                <Select
+                  value={bloque.filas}
+                  onChange={(e) =>
+                    onCambiarFilas(Number(e.target.value) as 1 | 2)
+                  }
+                  aria-label="Filas del bloque"
+                  className="h-7 w-auto rounded-full pl-2 pr-7 text-xs"
+                >
+                  <option value={1}>1 fila</option>
+                  <option value={2}>2 filas</option>
+                </Select>
+              </div>
+            )}
+            {onFiltros && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onFiltros}
+                aria-label="Configurar filtros"
+                className="size-7 text-fg-muted hover:bg-brand-soft hover:text-brand"
+              >
+                <Settings2 className="size-4" aria-hidden />
+              </Button>
+            )}
+            {onQuitar && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onQuitar}
+                aria-label="Quitar bloque"
+                className="size-7 text-fg-muted hover:bg-danger-soft hover:text-danger"
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </Button>
+            )}
+          </div>
+        )}
+        <div className="flex flex-1 flex-col p-4">{children}</div>
+      </Card>
     </section>
   )
 }
@@ -439,11 +464,11 @@ function ContenidoBloque({
       if (!definicion) return null
       const Contenido = definicion.Componente
       return (
-        <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm flex-1 min-h-[240px] flex flex-col">
-          <h4 className="text-xs font-semibold text-[var(--color-text)] mb-2.5 @lg:text-sm">
+        <div className="flex flex-1 flex-col">
+          <h4 className="text-eyebrow uppercase text-fg-subtle">
             {definicion.nombre}
           </h4>
-          <div className="flex-1 flex flex-col justify-center">
+          <div className="flex flex-1 flex-col justify-center pt-3">
             <Contenido datos={props.datos} filtros={bloque.filtros} />
           </div>
         </div>
@@ -458,131 +483,161 @@ function HeroBloque({ props }: { props: PanelLayoutProps }) {
   const { datos, horizonteControl } = props
 
   return (
-    <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm space-y-4 flex-1 flex flex-col">
-      <div className="bg-linear-to-br from-[var(--color-banner-start)] to-[var(--color-banner-end)] rounded-2xl p-6 text-white shadow-xl shadow-blue-600/20 flex-1">
-        <p className="text-white/85 text-sm font-medium mb-1 @4xl:text-base">Disponible Real</p>
-        <h2 className="font-bold tracking-tight break-words text-3xl @lg:text-4xl @4xl:text-5xl">
-          <NumeroAnimado valor={datos.disponibleReal} duracion="normal" />
-        </h2>
-        <p className="text-white/70 text-xs font-medium mt-1.5 @4xl:text-sm">
-          Disponible {datos.horizonte.etiqueta}
-        </p>
-        <p className="text-white/55 text-[11px] font-medium mt-1">
-          Datos del {datos.actualizado ? formatearFecha(datos.actualizado) : '—'}
-          {datos.desactualizado && <span className="text-amber-200"> · verifica tus saldos</span>}
-        </p>
-      </div>
+    <div className="flex flex-1 flex-col gap-4">
+      <Card
+        variant="soft"
+        className="rounded-panel bg-brand-softer p-5 @lg:p-6"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-eyebrow uppercase text-brand">Disponible Real</p>
+            <p className="mt-1 break-words text-3xl font-semibold tracking-tight text-fg @lg:text-4xl @4xl:text-5xl">
+              <NumeroAnimado valor={datos.disponibleReal} duracion="normal" />
+            </p>
+            <p className="mt-1.5 text-sm text-fg-muted">
+              Disponible {datos.horizonte.etiqueta}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1.5 text-right">
+            <Badge variant="neutral" size="sm">
+              Datos del {datos.actualizado ? formatearFecha(datos.actualizado) : '—'}
+            </Badge>
+            {datos.desactualizado && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-warning">
+                <AlertTriangle className="size-3.5" aria-hidden />
+                Verifica tus saldos
+              </span>
+            )}
+          </div>
+        </div>
+      </Card>
 
       <div>{horizonteControl}</div>
 
       {datos.alertas.length > 0 && (
-        <div className="bg-[var(--color-warning-soft)] border border-[var(--color-warning)]/25 rounded-2xl p-4 space-y-3">
-          <div className="flex items-center gap-2 text-[var(--color-warning)]">
-            <AlertTriangle className="w-4 h-4" />
-            <h3 className="text-sm font-semibold">
-              No alcanza el saldo para tus pagos domiciliados
-            </h3>
+        <Alert
+          variant="warning"
+          title="No alcanza el saldo para tus pagos domiciliados"
+        >
+          <div className="space-y-2">
+            {datos.alertas.map((a) => (
+              <p key={a.pagoId}>
+                <strong>{a.descripcion}</strong> (domiciliado, vence{' '}
+                {formatearFecha(a.fechaVencimiento)}): faltan{' '}
+                <strong>{formatearDinero(a.faltante)}</strong> para cubrirlo en{' '}
+                {a.cuentaNombre}.
+              </p>
+            ))}
           </div>
-          {datos.alertas.map((a) => (
-            <p key={a.pagoId} className="text-xs text-[var(--color-warning)] leading-relaxed">
-              <strong>{a.descripcion}</strong> (domiciliado, vence{' '}
-              {formatearFecha(a.fechaVencimiento)}): faltan{' '}
-              <strong>{formatearDinero(a.faltante)}</strong> para cubrirlo en {a.cuentaNombre}.
-            </p>
-          ))}
-        </div>
+        </Alert>
       )}
 
       {datos.presionFutura.length > 0 && (
-        <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-[var(--color-text)]">Presión futura</h3>
-            <p className="text-xs text-[var(--color-text-muted)]">
+        <div className="rounded-panel bg-surface-muted p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-eyebrow uppercase text-fg-subtle">
+              Presión futura
+            </h3>
+            <p className="text-xs text-fg-muted">
               después del {formatearFecha(datos.horizonte.fechaLimite)}
             </p>
           </div>
-          <p className="text-xs text-[var(--color-text-muted)]">
+          <p className="mt-2 text-xs leading-relaxed text-fg-muted">
             No se descuentan del Disponible Real, pero tenlos presentes.
           </p>
-          {datos.presionFutura.slice(0, 5).map((pago) => (
-            <div key={pago.proximo_pago_id} className="flex items-center justify-between gap-2 text-sm">
-              <span className="text-[var(--color-text-muted)] truncate">
-                {pago.descripcion} · {formatearFecha(pago.fecha_vencimiento)}
-              </span>
-              <span className="text-[var(--color-text)] font-medium shrink-0">
-                {formatearDinero(pago.monto)}
-              </span>
-            </div>
-          ))}
+          <div className="mt-3 divide-y divide-line">
+            {datos.presionFutura.slice(0, 5).map((pago) => (
+              <div
+                key={pago.proximo_pago_id}
+                className="flex items-center justify-between gap-2 py-1.5 text-sm"
+              >
+                <span className="truncate text-fg-muted">
+                  {pago.descripcion} · {formatearFecha(pago.fecha_vencimiento)}
+                </span>
+                <span className="shrink-0 font-medium text-fg">
+                  {formatearDinero(pago.monto)}
+                </span>
+              </div>
+            ))}
+          </div>
           {datos.presionFutura.length > 5 && (
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="mt-2 text-xs text-fg-muted">
               +{datos.presionFutura.length - 5} pagos más
             </p>
           )}
         </div>
       )}
-    </section>
+    </div>
   )
 }
 
 function EstadisticasBloque({ props }: { props: PanelLayoutProps }) {
   const { datos } = props
   return (
-    <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm flex-1 flex flex-col">
-      <h4 className="text-xs font-semibold text-[var(--color-text)] mb-2.5 @lg:text-sm">Resumen</h4>
-      <div className="grid grid-cols-2 gap-4 flex-1 place-content-center">
+    <div className="flex flex-1 flex-col gap-3">
+      <h4 className="text-eyebrow uppercase text-fg-subtle">Resumen</h4>
+      <div className="grid flex-1 grid-cols-2 place-content-center gap-4">
         <div>
-          <p className="text-[var(--color-text-muted)] text-xs font-medium mb-1 @lg:text-sm">Dinero Líquido</p>
-          <p className="text-xl font-semibold text-[var(--color-text)] @lg:text-2xl @4xl:text-3xl">
+          <p className="mb-1 text-xs font-medium text-fg-muted @lg:text-sm">
+            Dinero líquido
+          </p>
+          <p className="text-xl font-semibold text-fg @lg:text-2xl @4xl:text-3xl">
             {formatearDinero(datos.dineroLiquido)}
           </p>
         </div>
         <div>
-          <p className="text-[var(--color-text-muted)] text-xs font-medium mb-1 @lg:text-sm">Pagos del horizonte</p>
-          <p className="text-xl font-semibold text-[var(--color-danger)] @lg:text-2xl @4xl:text-3xl">
+          <p className="mb-1 text-xs font-medium text-fg-muted @lg:text-sm">
+            Pagos del horizonte
+          </p>
+          <p className="text-xl font-semibold text-fg @lg:text-2xl @4xl:text-3xl">
             -{formatearDinero(datos.totalPagos)}
           </p>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
 
 function AccionesBloque({ props }: { props: PanelLayoutProps }) {
   const { onNuevoGasto, onNuevoIngreso, onTransferir } = props
   return (
-    <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm flex-1 flex flex-col">
-      <h4 className="text-xs font-semibold text-[var(--color-text)] mb-2.5 @lg:text-sm">Acciones rápidas</h4>
-      <div className="grid grid-cols-3 gap-3 flex-1">
-        <button
+    <div className="flex flex-1 flex-col gap-3">
+      <h4 className="text-eyebrow uppercase text-fg-subtle">
+        Acciones rápidas
+      </h4>
+      <div className="grid flex-1 grid-cols-3 gap-2">
+        <Button
+          type="button"
+          variant="secondary"
           onClick={onNuevoGasto}
-          className="bg-[var(--color-surface)] rounded-2xl p-4 @lg:p-5 shadow-sm border border-[var(--color-border-soft)] flex flex-col items-center gap-2 hover:bg-[var(--color-background)] transition-colors"
+          aria-label="Registrar gasto"
+          className="h-auto flex-col gap-2 py-4"
         >
-          <span className="text-[var(--color-text-muted)]">
-            <ArrowUpRight className="w-5 h-5 @lg:w-6 @lg:h-6" />
-          </span>
-          <span className="text-xs font-medium text-[var(--color-text)] @lg:text-sm">Gasto</span>
-        </button>
-        <button
+          <ArrowUpRight className="size-5 text-fg-muted" aria-hidden />
+          <span className="text-xs font-medium">Gasto</span>
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
           onClick={onNuevoIngreso}
-          className="bg-[var(--color-surface)] rounded-2xl p-4 @lg:p-5 shadow-sm border border-[var(--color-border-soft)] flex flex-col items-center gap-2 hover:bg-[var(--color-background)] transition-colors"
+          aria-label="Registrar ingreso"
+          className="h-auto flex-col gap-2 py-4"
         >
-          <span className="text-[var(--color-success)]">
-            <ArrowDownLeft className="w-5 h-5 @lg:w-6 @lg:h-6" />
-          </span>
-          <span className="text-xs font-medium text-[var(--color-text)] @lg:text-sm">Ingreso</span>
-        </button>
-        <button
+          <ArrowDownLeft className="size-5 text-success" aria-hidden />
+          <span className="text-xs font-medium">Ingreso</span>
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
           onClick={onTransferir}
-          className="bg-[var(--color-surface)] rounded-2xl p-4 @lg:p-5 shadow-sm border border-[var(--color-border-soft)] flex flex-col items-center gap-2 hover:bg-[var(--color-background)] transition-colors"
+          aria-label="Transferir entre cuentas"
+          className="h-auto flex-col gap-2 py-4"
         >
-          <span className="text-[var(--color-primary)]">
-            <ArrowLeftRight className="w-5 h-5 @lg:w-6 @lg:h-6" />
-          </span>
-          <span className="text-xs font-medium text-[var(--color-text)] @lg:text-sm">Transferir</span>
-        </button>
+          <ArrowLeftRight className="size-5 text-brand" aria-hidden />
+          <span className="text-xs font-medium">Transferir</span>
+        </Button>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -599,32 +654,33 @@ function CuentasBloque({
     : datos.cuentas.slice(0, LIMITE)
 
   return (
-    <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm space-y-3 flex-1 flex flex-col">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--color-text)] @lg:text-sm">Cuentas</h4>
-        <button
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-eyebrow uppercase text-fg-subtle">Cuentas</h4>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={onNuevaCuenta}
           aria-label="Nueva cuenta"
-          className="w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-hover)] transition-colors"
+          className="size-8 text-brand hover:bg-brand-soft"
         >
-          <Plus className="w-4 h-4" />
-        </button>
+          <Plus className="size-4" aria-hidden />
+        </Button>
       </div>
 
       {datos.cuentas.length === 0 ? (
-        <div className="py-4 text-center space-y-3 flex-1 flex flex-col items-center justify-center">
-          <p className="text-sm text-[var(--color-text-muted)]">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-4 text-center">
+          <p className="text-sm text-fg-muted">
             Aún no tienes cuentas. Agrega la primera para empezar.
           </p>
-          <button
-            onClick={onNuevaCuenta}
-            className="bg-[var(--color-primary)] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[var(--color-primary-hover)] transition-colors"
-          >
-            + Nueva Cuenta
-          </button>
+          <Button type="button" variant="secondary" size="sm" onClick={onNuevaCuenta}>
+            <Plus className="size-3.5" aria-hidden />
+            Nueva cuenta
+          </Button>
         </div>
       ) : (
-        <div className="divide-y divide-[var(--color-border-soft)] flex-1">
+        <div className="flex-1 divide-y divide-line">
           {mostradas.map((c) => (
             <CuentaRow
               key={c.cuenta_id}
@@ -637,14 +693,17 @@ function CuentasBloque({
       )}
 
       {datos.cuentas.length > LIMITE && (
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => verMas.setVerMasCuentas((v) => !v)}
-          className="w-full text-xs font-medium text-[var(--color-primary)] py-1 hover:opacity-80 transition-opacity mt-auto"
+          className="mt-auto w-full"
         >
           {verMas.verMasCuentas ? 'Ver menos' : `Ver más (${datos.cuentas.length - LIMITE})`}
-        </button>
+        </Button>
       )}
-    </section>
+    </div>
   )
 }
 
@@ -668,32 +727,33 @@ function PagosBloque({
   const mostrados = verMas.verMasPagos ? datos.pagos : datos.pagos.slice(0, LIMITE)
 
   return (
-    <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm space-y-3 flex-1 flex flex-col">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--color-text)] @lg:text-sm">Próximos pagos</h4>
-        <button
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-eyebrow uppercase text-fg-subtle">Próximos pagos</h4>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={onNuevoPago}
           aria-label="Nuevo pago"
-          className="w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-hover)] transition-colors"
+          className="size-8 text-brand hover:bg-brand-soft"
         >
-          <Plus className="w-4 h-4" />
-        </button>
+          <Plus className="size-4" aria-hidden />
+        </Button>
       </div>
 
       {datos.pagos.length === 0 ? (
-        <div className="py-4 text-center space-y-3 flex-1 flex flex-col items-center justify-center">
-          <p className="text-sm text-[var(--color-text-muted)]">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 py-4 text-center">
+          <p className="text-sm text-fg-muted">
             No hay pagos pendientes por el momento.
           </p>
-          <button
-            onClick={onNuevoPago}
-            className="bg-[var(--color-primary)] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[var(--color-primary-hover)] transition-colors"
-          >
-            + Nuevo Pago
-          </button>
+          <Button type="button" variant="secondary" size="sm" onClick={onNuevoPago}>
+            <Plus className="size-3.5" aria-hidden />
+            Nuevo pago
+          </Button>
         </div>
       ) : (
-        <div className="divide-y divide-[var(--color-border-soft)] flex-1">
+        <div className="flex-1 divide-y divide-line">
           {mostrados.map((p) => (
             <PagoRow
               key={p.proximo_pago_id}
@@ -712,42 +772,47 @@ function PagosBloque({
       )}
 
       {datos.pagos.length > LIMITE && (
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => verMas.setVerMasPagos((v) => !v)}
-          className="w-full text-xs font-medium text-[var(--color-primary)] py-1 hover:opacity-80 transition-opacity mt-auto"
+          className="mt-auto w-full"
         >
           {verMas.verMasPagos ? 'Ver menos' : `Ver más (${datos.pagos.length - LIMITE})`}
-        </button>
+        </Button>
       )}
-    </section>
+    </div>
   )
 }
 
 function HistorialBloque({ props }: { props: PanelLayoutProps }) {
   const { datos } = props
   return (
-    <section className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border-soft)] p-4 shadow-sm space-y-3 flex-1 flex flex-col">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-[var(--color-text)] @lg:text-sm">Historial reciente</h4>
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-eyebrow uppercase text-fg-subtle">
+          Historial reciente
+        </h4>
         <Link
           href="/historial"
-          className="text-xs font-medium text-[var(--color-primary)] hover:opacity-80 transition-opacity"
+          className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
         >
           Ver todo
         </Link>
       </div>
 
       {datos.movimientos.length === 0 ? (
-        <p className="py-4 text-center text-sm text-[var(--color-text-muted)] flex-1 flex items-center justify-center">
+        <p className="flex flex-1 items-center justify-center py-4 text-center text-sm text-fg-muted">
           Tus movimientos aparecerán aquí.
         </p>
       ) : (
-        <div className="divide-y divide-[var(--color-border-soft)] -mx-5 px-5 flex-1">
+        <div className="flex-1 divide-y divide-line">
           {datos.movimientos.slice(0, LIMITE).map((t) => (
             <MovimientoRow key={t.transaccion_id} movimiento={t} />
           ))}
         </div>
       )}
-    </section>
+    </div>
   )
 }
