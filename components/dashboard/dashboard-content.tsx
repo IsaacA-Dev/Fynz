@@ -16,6 +16,7 @@ import { useIsMobile } from '@/components/hooks/use-is-mobile'
 import { DashboardMovil } from '@/components/dashboard/dashboard-movil'
 import { DashboardEscritorio } from '@/components/dashboard/dashboard-escritorio'
 import { HorizonteControl } from '@/components/dashboard/horizonte-control'
+import { InstallPwaPrompt } from '@/components/pwa/install-pwa-prompt'
 import {
   adelantarPeriodo,
   eliminarCuenta,
@@ -203,6 +204,8 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
       ) : (
         <DashboardEscritorio {...propsCabecera} />
       )}
+
+      <InstallPwaPrompt />
 
       <Sheet
         open={sheet?.tipo === 'movimiento'}

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { History, Home, Plus, Receipt } from 'lucide-react'
 import { LogoutButton } from '@/components/dashboard/logout-button'
+import { InstallPwaButton } from '@/components/pwa/install-pwa-button'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { FynzLogo } from '@/components/ui/fynz-logo'
@@ -35,11 +36,12 @@ export function DashboardMovil(props: BentoDashboardProps) {
   return (
     <main className="min-h-dvh bg-surface-muted pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-md">
-        <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-6">
+        <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
             <FynzLogo height={26} />
           </Link>
           <div className="flex items-center gap-1">
+            <InstallPwaButton />
             <ThemeSwitcher />
             <LogoutButton />
           </div>

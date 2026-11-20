@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { LogoutButton } from '@/components/dashboard/logout-button'
+import { InstallPwaButton } from '@/components/pwa/install-pwa-button'
 import { FynzLogo } from '@/components/ui/fynz-logo'
 import { ThemeSwitcher } from '@/components/theme/theme-switcher'
 import {
@@ -18,6 +19,7 @@ export function DashboardEscritorio(props: BentoDashboardProps) {
             <FynzLogo height={30} />
           </Link>
           <div className="flex items-center gap-2">
+            <InstallPwaButton />
             <ThemeSwitcher />
             <LogoutButton />
           </div>
