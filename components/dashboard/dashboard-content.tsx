@@ -11,6 +11,7 @@ import { FormMontoTarjeta } from '@/components/movimiento/form-monto-tarjeta'
 import { FormCuenta } from '@/components/cuenta/form-cuenta'
 import { FormPuestaAlDia } from '@/components/cuenta/form-puesta-al-dia'
 import { FormPago } from '@/components/pago/form-pago'
+import { DialogoWidgets } from '@/components/dashboard/dialogo-widgets'
 import { useIsMobile } from '@/components/hooks/use-is-mobile'
 import { DashboardMovil } from '@/components/dashboard/dashboard-movil'
 import { DashboardEscritorio } from '@/components/dashboard/dashboard-escritorio'
@@ -21,6 +22,7 @@ import {
   eliminarProximoPago,
   guardarHorizonte,
   guardarProximoIngreso,
+  guardarWidgetsActivos,
   obtenerDatosDashboard,
 } from '@/lib/acciones-servidor'
 import { hoyLocal } from '@/lib/fechas'
@@ -50,6 +52,7 @@ type SheetState =
 export function DashboardContent({ datos: datosInicial }: DashboardContentProps) {
   const [datos, setDatos] = useState(datosInicial)
   const [sheet, setSheet] = useState<SheetState | null>(null)
+  const [dialogoWidgets, setDialogoWidgets] = useState(false)
   const [eliminando, setEliminando] = useState<Cuenta | null>(null)
   const [eliminandoPago, setEliminandoPago] = useState<ProximoPago | null>(null)
   const [adelantandoPago, setAdelantandoPago] = useState<ProximoPago | null>(null)
@@ -83,6 +86,17 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
   const cerrar = () => {
     setSheet(null)
     void actualizarDatos()
+  }
+
+  const guardarWidgets = async (activos: string[]) => {
+    const resultado = await guardarWidgetsActivos(activos)
+    if (!resultado.ok) {
+      addToast(resultado.error, 'error')
+      return false
+    }
+    addToast('Widgets actualizados', 'success')
+    await actualizarDatos()
+    return true
   }
 
   const confirmarEliminar = async () => {
@@ -149,6 +163,7 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
     onTransferir: () => setSheet({ tipo: 'transferencia' }),
     onNuevaCuenta: () => setSheet({ tipo: 'cuenta' }),
     onPonerAlDia: () => setSheet({ tipo: 'puestaAlDia' }),
+    onEditarWidgets: () => setDialogoWidgets(true),
     onEditarCuenta: (cuenta: Cuenta) => setSheet({ tipo: 'editarCuenta', cuenta }),
     onEliminarCuenta: (cuenta: Cuenta) => setEliminando(cuenta),
     onNuevoPago: () => setSheet({ tipo: 'pago' }),
@@ -292,6 +307,13 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
         cancelLabel="Cancelar"
         onConfirm={confirmarAdelantar}
         onCancel={() => setAdelantandoPago(null)}
+      />
+
+      <DialogoWidgets
+        open={dialogoWidgets}
+        activos={datos.widgetsActivos}
+        onGuardar={guardarWidgets}
+        onCerrar={() => setDialogoWidgets(false)}
       />
     </>
   )

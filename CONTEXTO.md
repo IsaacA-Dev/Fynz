@@ -178,34 +178,21 @@ La simulación no registra nada hasta que la persona confirma la operación.
 
 Cada movimiento abre un detalle en panel lateral con su relación: cuenta de origen, pareja de una transferencia, pago liquidado, tarjeta, categoría y fecha. El historial conserva los nombres de cuentas archivadas.
 
-### 4.8 Panel adaptable
+### 4.8 Bento Grid fijo
 
-En teléfonos, la experiencia se organiza en tres pestañas:
+El dashboard de escritorio usa un **Bento Grid fijo de 12 columnas** en `lg`/`xl`:
 
-- **Inicio:** Disponible Real, horizonte, resumen, acciones rápidas y cuentas.
-- **Pagos:** próximos pagos y presión futura.
-- **Historial:** movimientos recientes y acceso al historial completo.
+- **Fila 1:** Hero de Disponible Real (7 columnas) + Próximos pagos (5 columnas).
+- **Fila 2:** Cuentas (5 columnas) + Historial reciente (7 columnas).
+- **Fila 3:** franja de widgets activos, distribuida según cuántos haya.
 
-La navegación inferior es fija y reserva espacio al final del scroll para no tapar la última tarjeta. En pantallas grandes, el panel usa una cuadrícula de hasta cuatro columnas que se adapta al ancho disponible.
+El Hero integra el Disponible Real, el horizonte, el resumen de dinero líquido y pagos del horizonte, las acciones rápidas (Gasto, Ingreso, Transferir), el acceso a **Poner al día**, las alertas y la presión futura.
 
-Desde **Editar panel** se puede:
+No existe modo edición, arrastre, presets, ni controles de columnas o filas. La única personalización del panel es elegir qué widgets se muestran.
 
-- Reordenar bloques.
-- Cambiar el ancho de cada bloque.
-- Cambiar la altura de los bloques (el hero tiene altura automática).
-- Quitar bloques.
-- Elegir entre los diseños **Clásico**, **Columna**, **Compacto** y **Analítico**.
-- Añadir widgets y configurar sus filtros.
+En móvil se usa el mismo Bento apilado en una columna. Se conservan las pestañas **Inicio**, **Pagos** e **Historial** y la navegación inferior fija. El botón **Widgets** está disponible tanto en escritorio como en móvil.
 
-El hero ocupa una fila cuando no hay alertas ni presión futura, y crece a dos solo cuando aparece contenido adicional real.
-
-### 4.9 Reordenar con drag & drop accesible
-
-El panel se reordena arrastrando bloques. El bloque arrastrado sigue al puntero, los demás se desplazan y la configuración se guarda al soltar.
-
-La misma acción está disponible con teclado desde el asa de cada bloque: Enter o espacio para tomar el bloque, flechas para moverlo, Enter o espacio para soltar y Escape para cancelar y volver a la posición anterior. El asa conserva el foco y expone su estado con `aria-pressed` mientras se reordena. El orden y la configuración se guardan por usuario.
-
-### 4.10 Widgets
+### 4.9 Widgets
 
 El catálogo actual incluye:
 
@@ -216,9 +203,13 @@ El catálogo actual incluye:
 - **Distribución de saldos:** proporción del dinero líquido por cuenta.
 - **Promedio diario de gasto:** gasto medio y días cubiertos.
 
-Cada widget puede añadirse más de una vez y tiene filtros propios. El catálogo y la disposición se guardan por usuario y se conservan entre sesiones y dispositivos.
+Cada widget se muestra **una sola vez** y usa su configuración por defecto; ya no hay filtros configurables por widget.
 
-### 4.11 Identidad visual devsign y modo Noche
+El diálogo **Widgets del tablero** lista el catálogo con un `Switch` por widget y un botón **Guardar cambios**. La selección se guarda en `configuracion.widgets` con la forma `{ "activos": ["flujo-mensual", ...] }`, sin crear columnas nuevas ni romper filas existentes.
+
+La franja de widgets usa 1 columna para 1 widget, 2 para 2, 3 para 3, 2 para 4 y 3 para 5 o 6. Si no hay widgets activos, la franja no ocupa espacio.
+
+### 4.10 Identidad visual devsign y modo Noche
 
 La interfaz usa el sistema **devsign**: componentes y primitivas compartidas, tokens semánticos de color, tipografía, radios, sombras y movimiento. Los pares principales de color buscan contraste AA y el rojo se reserva para deuda, atraso, insuficiencia o acciones destructivas.
 
@@ -229,7 +220,7 @@ Existen dos temas intercambiables:
 
 El tema se elige desde la cabecera, se guarda en el dispositivo y se aplica antes de pintar para evitar destellos. Las animaciones explican cambios de estado y respetan `prefers-reduced-motion`.
 
-### 4.12 Sesión y comunicación
+### 4.11 Sesión y comunicación
 
 El acceso es con correo y contraseña. Incluye:
 
@@ -240,7 +231,7 @@ El acceso es con correo y contraseña. Incluye:
 
 Si Supabase ya crea la sesión al registrarse, Fynz entra directamente al panel. Si la confirmación por correo está activa, muestra el aviso para revisar el buzón.
 
-### 4.13 Poner al día
+### 4.12 Poner al día
 
 Cuando pasan días sin registrar movimientos, los saldos de Fynz dejan de reflejar la realidad. **Poner al día** permite reconciliar todo en un solo lugar sin borrar el historial.
 
@@ -259,7 +250,7 @@ El orden evita dobles conteos: el saldo escrito es el que queda después de los 
 
 ### 5.1 Pruebas automatizadas
 
-`bun test` cubre **173 pruebas en 16 archivos**, entre ellas:
+`bun test` cubre **147 pruebas en 14 archivos**, entre ellas:
 
 - Disponible Real y horizontes.
 - Transferencias y conservación de liquidez.
@@ -270,7 +261,7 @@ El orden evita dobles conteos: el saldo escrito es el que queda después de los 
 - Puesta al día: diferencias, validaciones y selección de pagos vencidos.
 - Frecuencias de pago: semanal +7, quincenal +14, mensual y único.
 - Formato de dinero en centavos y fechas de calendario.
-- Layout, presets, widgets y drag & drop.
+- Widgets activos, distribución de la franja y compatibilidad de shapes.
 - Errores, logs y recuperación.
 
 Los gates del proyecto son:
@@ -292,8 +283,9 @@ El recorrido E2E completo quedó **superado** con datos sintéticos en Supabase,
 - **P3:** altura automática del hero y semántica del estado inicial.
 
 - **Frecuencias:** se validaron altas, liquidación y adelanto semanal/quincenal, la conservación del monto planificado en el siguiente periodo y la conciliación de un pago semanal vencido con **Poner al día**.
+- **Bento Grid:** se validó el backfill de widgets legados, el grid fijo 7/5 y 5/7, las distribuciones de 0/1/2/3/4/6 widgets, el diálogo de switches, la persistencia al recargar y las vistas desktop/móvil en Fynz y Noche.
 
-El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos únicos, semanales (+7), quincenales (+14), mensuales, domiciliados y de tarjeta, adelanto de periodo, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
+El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos únicos, semanales (+7), quincenales (+14), mensuales, domiciliados y de tarjeta, adelanto de periodo, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, Bento Grid y selección de widgets, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
 
 ## 6. Seguridad e integridad
 

@@ -8,16 +8,6 @@ export interface FiltrosTablero {
   meses: 1 | 3 | 6
 }
 
-export interface WidgetInstancia {
-  key: string
-  tipo: string
-  filtros: FiltrosTablero
-}
-
-export interface ConfigTablero {
-  widgets: WidgetInstancia[]
-}
-
 export interface WidgetInfo {
   id: string
   nombre: string
@@ -38,107 +28,50 @@ export const FILTROS_DEFECTO: FiltrosTablero = {
   meses: 3,
 }
 
-export const TABLERO_DEFECTO: ConfigTablero = {
-  widgets: [],
-}
+const idsValidos = new Set(WIDGETS.map((widget) => widget.id))
 
-let contadorWidgets = 0
+/**
+ * Normaliza la selección de widgets activos. Acepta la forma nueva
+ * { activos: [...] }, el shape legado { widgets: [{ tipo }] } y un array
+ * directo de IDs. Devuelve una lista única y en el orden del catálogo.
+ */
+export function sanearWidgetsActivos(valor: unknown): string[] {
+  const seleccionados = new Set<string>()
 
-export function crearWidget(
-  tipo: string,
-  filtros: Partial<FiltrosTablero> = {}
-): WidgetInstancia {
-  contadorWidgets += 1
-  return {
-    key: `${tipo}-${Date.now()}-${contadorWidgets}`,
-    tipo,
-    filtros: { ...FILTROS_DEFECTO, ...filtros },
-  }
-}
-
-export function sanearFiltros(f: unknown): FiltrosTablero {
-  const crudo = (f ?? {}) as Partial<FiltrosTablero>
-  return {
-    horizonte:
-      crudo.horizonte === 7 || crudo.horizonte === 15 || crudo.horizonte === 30
-        ? crudo.horizonte
-        : null,
-    metodo:
-      crudo.metodo === 'liquido' || crudo.metodo === 'tarjetas' || crudo.metodo === 'todos'
-        ? crudo.metodo
-        : 'todos',
-    meses: crudo.meses === 1 || crudo.meses === 3 || crudo.meses === 6 ? crudo.meses : 3,
-  }
-}
-
-const idsValidos = new Set(WIDGETS.map((w) => w.id))
-
-export function sanearTablero(valor: unknown): ConfigTablero {
-  const crudo = (valor ?? {}) as Record<string, unknown>
-
-  let candidatos: { key: unknown; tipo: unknown; filtros: unknown }[] = []
-
-  if (Array.isArray(crudo.widgets)) {
-    candidatos = crudo.widgets as { key: unknown; tipo: unknown; filtros: unknown }[]
-  } else if (Array.isArray(crudo.activos)) {
-    // Migración del shape anterior: { activos, filtros }
-    const filtros = sanearFiltros(crudo.filtros)
-    const activos = crudo.activos.filter(
-      (id): id is string => typeof id === 'string' && idsValidos.has(id)
-    )
-    candidatos = activos.map((tipo, indice) => ({
-      key: `${tipo}-${indice}`,
-      tipo,
-      filtros,
-    }))
-  }
-
-  const usadas = new Set<string>()
-  const widgets: WidgetInstancia[] = []
-
-  for (const candidato of candidatos) {
-    if (!candidato || typeof candidato !== 'object') continue
-
-    const tipo = typeof candidato.tipo === 'string' && idsValidos.has(candidato.tipo)
-      ? candidato.tipo
-      : null
-    if (!tipo) continue
-
-    let key = typeof candidato.key === 'string' && candidato.key.trim() !== ''
-      ? candidato.key
-      : `${tipo}-${widgets.length}`
-
-    if (usadas.has(key)) {
-      let sufijo = widgets.length
-      while (usadas.has(`${tipo}-${sufijo}`)) sufijo += 1
-      key = `${tipo}-${sufijo}`
+  if (Array.isArray(valor)) {
+    for (const id of valor) {
+      if (typeof id === 'string' && idsValidos.has(id)) seleccionados.add(id)
     }
-    usadas.add(key)
+  } else if (valor && typeof valor === 'object') {
+    const crudo = valor as Record<string, unknown>
 
-    widgets.push({
-      key,
-      tipo,
-      filtros: sanearFiltros(candidato.filtros),
-    })
+    if (Array.isArray(crudo.activos)) {
+      for (const id of crudo.activos) {
+        if (typeof id === 'string' && idsValidos.has(id)) seleccionados.add(id)
+      }
+    } else if (Array.isArray(crudo.widgets)) {
+      for (const item of crudo.widgets) {
+        if (!item || typeof item !== 'object') continue
+        const tipo = (item as Record<string, unknown>).tipo
+        if (typeof tipo === 'string' && idsValidos.has(tipo)) {
+          seleccionados.add(tipo)
+        }
+      }
+    }
   }
 
-  return { widgets }
+  return WIDGETS.map((widget) => widget.id).filter((id) =>
+    seleccionados.has(id)
+  )
 }
 
-export function reordenarLista<T>(lista: T[], desde: number, hasta: number): T[] {
-  if (
-    desde === hasta ||
-    desde < 0 ||
-    hasta < 0 ||
-    desde >= lista.length ||
-    hasta >= lista.length
-  ) {
-    return lista
-  }
-  const copia = [...lista]
-  const [movido] = copia.splice(desde, 1)
-  copia.splice(hasta, 0, movido)
-  return copia
+/** Columnas de la franja de widgets según cuántos estén activos. */
+export function columnasWidgets(cantidad: number): 1 | 2 | 3 {
+  if (cantidad <= 1) return 1
+  if (cantidad === 2) return 2
+  if (cantidad === 3) return 3
+  if (cantidad === 4) return 2
+  return 3
 }
 
 export interface FlujoMensual {

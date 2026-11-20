@@ -10,31 +10,11 @@ import { FynzLogo } from '@/components/ui/fynz-logo'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ThemeSwitcher } from '@/components/theme/theme-switcher'
-import { PanelLayout } from '@/components/dashboard/panel'
+import { BentoDashboard, type BentoDashboardProps } from '@/components/dashboard/bento-dashboard'
 import { cn } from '@/lib/utils/cn'
-import type { ReactNode } from 'react'
-import type { Cuenta, DatosDashboard, ProximoPago, Vista } from '@/lib/acciones'
 
 const LIMITE = 4
 
-interface DashboardMovilProps {
-  datos: DatosDashboard
-  hoy: string
-  horizonteControl: ReactNode
-  modo: Vista
-  onNuevoGasto: () => void
-  onNuevoIngreso: () => void
-  onTransferir: () => void
-  onNuevaCuenta: () => void
-  onPonerAlDia: () => void
-  onEditarCuenta: (cuenta: Cuenta) => void
-  onEliminarCuenta: (cuenta: Cuenta) => void
-  onNuevoPago: () => void
-  onEditarPago: (pago: ProximoPago) => void
-  onEliminarPago: (pago: ProximoPago) => void
-  onPagarPago: (pago: ProximoPago) => void
-  onAdelantarPago: (pago: ProximoPago) => void
-}
 
 const TABS = [
   { id: 0, label: 'Inicio', Icon: Home },
@@ -42,7 +22,7 @@ const TABS = [
   { id: 2, label: 'Historial', Icon: History },
 ] as const
 
-export function DashboardMovil(props: DashboardMovilProps) {
+export function DashboardMovil(props: BentoDashboardProps) {
   const { datos, hoy } = props
   const [tab, setTab] = useState(0)
   const [verMasPagos, setVerMasPagos] = useState(false)
@@ -64,7 +44,7 @@ export function DashboardMovil(props: DashboardMovilProps) {
         <div>
           {tab === 0 && (
             <div className="px-6 pb-8 pt-4">
-              <PanelLayout {...props} />
+              <BentoDashboard {...props} />
             </div>
           )}
 

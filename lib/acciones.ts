@@ -1,12 +1,10 @@
 import type { AlertaDomiciliado as Alerta } from './logica-financiera'
 import type { Horizonte } from './horizonte'
 import type { Frecuencia } from './recurrencia'
-import type { ConfiguracionLayout } from './layout'
-import type { FlujoMensual, ConfigTablero } from './tablero'
+import type { FlujoMensual } from './tablero'
 
 export type { Horizonte, TipoHorizonte } from './horizonte'
 export type { Frecuencia } from './recurrencia'
-export type { BloqueLayout, ConfiguracionLayout, TipoBloque } from './layout'
 
 export type Metodo = 'debito' | 'credito' | 'efectivo'
 export type TipoMovimiento = 'ingreso' | 'egreso'
@@ -74,8 +72,7 @@ export interface DatosDashboard {
   proximoIngreso: string | null
   actualizado: string | null
   desactualizado: boolean
-  tablero: ConfigTablero
-  layout: ConfiguracionLayout
+  widgetsActivos: string[]
   categorias: Record<string, string>
   movimientosAnalitica: Array<{
     tipo: TipoMovimiento
@@ -87,8 +84,3 @@ export interface DatosDashboard {
 }
 
 export type MovimientoLista = Transaccion & { cuenta_nombre: string }
-
-export interface ConfiguracionUsuario {
-  vista: Vista
-  tablero: ConfigTablero
-}

@@ -1,14 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import {
-  TABLERO_DEFECTO,
   agregarFlujoMensual,
   cargaAcumulada,
-  crearWidget,
+  columnasWidgets,
   filtrarCuentasPorMetodo,
   filtrarPagosPorHorizonte,
   pagoMayor,
-  reordenarLista,
-  sanearTablero,
+  sanearWidgetsActivos,
 } from './tablero'
 import type { Cuenta, ProximoPago } from './acciones'
 
@@ -44,90 +42,52 @@ function pago(overrides: Partial<ProximoPago> = {}): ProximoPago {
   }
 }
 
-describe('sanearTablero', () => {
-  test('por defecto no hay widgets (layout original en la primera sesión)', () => {
-    expect(sanearTablero(undefined)).toEqual(TABLERO_DEFECTO)
-    expect(sanearTablero(null)).toEqual(TABLERO_DEFECTO)
-    expect(sanearTablero('texto')).toEqual(TABLERO_DEFECTO)
+describe('sanearWidgetsActivos', () => {
+  test('acepta la forma nueva { activos } y descarta desconocidos', () => {
+    expect(
+      sanearWidgetsActivos({
+        activos: ['carga-pagos', 'no-existe', 'saldo-por-cuenta'],
+      })
+    ).toEqual(['saldo-por-cuenta', 'carga-pagos'])
   })
 
-  test('conserva instancias válidas con sus filtros', () => {
-    const resultado = sanearTablero({
-      widgets: [
-        {
-          key: 'a-1',
-          tipo: 'carga-pagos',
-          filtros: { horizonte: 15, metodo: 'tarjetas', meses: 6 },
-        },
-      ],
-    })
-
-    expect(resultado.widgets).toHaveLength(1)
-    expect(resultado.widgets[0]).toEqual({
-      key: 'a-1',
-      tipo: 'carga-pagos',
-      filtros: { horizonte: 15, metodo: 'tarjetas', meses: 6 },
-    })
+  test('migra el shape legado { widgets: [{ tipo }] }', () => {
+    expect(
+      sanearWidgetsActivos({
+        widgets: [
+          { key: 'a', tipo: 'carga-pagos' },
+          { key: 'b', tipo: 'flujo-mensual' },
+          { key: 'c', tipo: 'no-existe' },
+        ],
+      })
+    ).toEqual(['flujo-mensual', 'carga-pagos'])
   })
 
-  test('descarta tipos desconocidos y saneja filtros inválidos', () => {
-    const resultado = sanearTablero({
-      widgets: [
-        { key: 'x', tipo: 'no-existe' },
-        { key: 'y', tipo: 'flujo-mensual', filtros: { horizonte: 99, metodo: 'raro', meses: 12 } },
-      ],
-    })
-
-    expect(resultado.widgets).toHaveLength(1)
-    expect(resultado.widgets[0].tipo).toBe('flujo-mensual')
-    expect(resultado.widgets[0].filtros).toEqual({ horizonte: null, metodo: 'todos', meses: 3 })
+  test('elimina duplicados y ordena según el catálogo', () => {
+    expect(
+      sanearWidgetsActivos({
+        activos: ['promedio-diario', 'saldo-por-cuenta', 'promedio-diario'],
+      })
+    ).toEqual(['saldo-por-cuenta', 'promedio-diario'])
   })
 
-  test('regenera claves duplicadas', () => {
-    const resultado = sanearTablero({
-      widgets: [
-        { key: 'mismo', tipo: 'saldo-por-cuenta' },
-        { key: 'mismo', tipo: 'saldo-por-cuenta' },
-      ],
-    })
-
-    expect(resultado.widgets).toHaveLength(2)
-    expect(resultado.widgets[0].key).not.toBe(resultado.widgets[1].key)
-  })
-
-  test('migra el shape anterior { activos, filtros }', () => {
-    const resultado = sanearTablero({
-      activos: ['saldo-por-cuenta', 'no-existe', 'carga-pagos'],
-      filtros: { horizonte: 30, metodo: 'todos', meses: 3 },
-    })
-
-    expect(resultado.widgets).toHaveLength(2)
-    expect(resultado.widgets[0]).toEqual({
-      key: 'saldo-por-cuenta-0',
-      tipo: 'saldo-por-cuenta',
-      filtros: { horizonte: 30, metodo: 'todos', meses: 3 },
-    })
-    expect(resultado.widgets[1].tipo).toBe('carga-pagos')
+  test('sin datos o con valores inválidos devuelve una lista vacía', () => {
+    expect(sanearWidgetsActivos(undefined)).toEqual([])
+    expect(sanearWidgetsActivos(null)).toEqual([])
+    expect(sanearWidgetsActivos('texto')).toEqual([])
+    expect(sanearWidgetsActivos({ activos: 'no-es-array' })).toEqual([])
   })
 })
 
-describe('crearWidget y reordenarLista', () => {
-  test('crea instancias con claves únicas y filtros por defecto', () => {
-    const a = crearWidget('saldo-por-cuenta')
-    const b = crearWidget('saldo-por-cuenta')
-    expect(a.tipo).toBe('saldo-por-cuenta')
-    expect(a.key).not.toBe(b.key)
-    expect(a.filtros).toEqual({ horizonte: null, metodo: 'todos', meses: 3 })
-    expect(crearWidget('carga-pagos', { horizonte: 30 }).filtros.horizonte).toBe(30)
-  })
-
-  test('reordena la lista en ambos sentidos', () => {
-    const lista = ['a', 'b', 'c']
-    expect(reordenarLista(lista, 2, 0)).toEqual(['c', 'a', 'b'])
-    expect(reordenarLista(lista, 0, 2)).toEqual(['b', 'c', 'a'])
-    expect(reordenarLista(lista, 1, 1)).toEqual(lista)
-    expect(reordenarLista(lista, 5, 0)).toEqual(lista)
-    expect(reordenarLista(lista, 0, -1)).toEqual(lista)
+describe('columnasWidgets', () => {
+  test('distribuye la franja de widgets', () => {
+    expect(columnasWidgets(0)).toBe(1)
+    expect(columnasWidgets(1)).toBe(1)
+    expect(columnasWidgets(2)).toBe(2)
+    expect(columnasWidgets(3)).toBe(3)
+    expect(columnasWidgets(4)).toBe(2)
+    expect(columnasWidgets(5)).toBe(3)
+    expect(columnasWidgets(6)).toBe(3)
   })
 })
 
@@ -152,9 +112,7 @@ describe('agregarFlujoMensual', () => {
 
   test('ignora movimientos fuera del periodo', () => {
     const resultado = agregarFlujoMensual(
-      [
-        { tipo: 'ingreso', monto: 50000, fecha: '2020-01-01' },
-      ],
+      [{ tipo: 'ingreso', monto: 50000, fecha: '2020-01-01' }],
       1,
       '2026-05-15'
     )

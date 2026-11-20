@@ -15,9 +15,8 @@ import {
   calcularSaldos,
   detectarAlertas,
 } from './logica-financiera'
-import { sanearLayout } from './layout'
 import { esFrecuencia, esRecurrente, fechaInicialPago, type Frecuencia } from './recurrencia'
-import { agregarFlujoMensual, sanearTablero } from './tablero'
+import { agregarFlujoMensual, sanearWidgetsActivos } from './tablero'
 import type {
   Cuenta,
   DatosDashboard,
@@ -698,7 +697,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     buscarMovimientosRecientes(usuarioId, cliente),
     cliente
       .from('configuracion')
-      .select('vista, widgets, layout, proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
+      .select('vista, widgets, proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
       .eq('usuario_id', usuarioId)
       .maybeSingle(),
     buscarFlujoMensual(usuarioId, cliente),
@@ -719,7 +718,6 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
   const configuracion = respuestaConfig.data as {
     vista?: string | null
     widgets?: unknown
-    layout?: unknown
     proximo_ingreso?: string | null
     horizonte_preferido?: number | null
     horizonte_fecha?: string | null
@@ -765,8 +763,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     })),
     alertas: detectarAlertas(cuentas, pagosConNombre),
     vista: configuracion?.vista === 'escritorio' ? 'escritorio' : 'movil',
-    tablero: sanearTablero(configuracion?.widgets),
-    layout: sanearLayout(configuracion?.layout ?? { widgets: configuracion?.widgets ?? null }),
+    widgetsActivos: sanearWidgetsActivos(configuracion?.widgets),
     categorias: Object.fromEntries(
       (respuestaAnalitica[1].data ?? []).map((c: { categoria_id: number; nombre: string }) => [
         String(c.categoria_id),
@@ -1425,8 +1422,10 @@ export async function ponerAlDia(
   }
 }
 
-export async function guardarTablero(tablero: unknown): Promise<Respuesta> {
-  return intentar('guardarTablero', async () => {
+export async function guardarWidgetsActivos(
+  activos: string[]
+): Promise<Respuesta> {
+  return intentar('guardarWidgetsActivos', async () => {
     const cliente = await clienteAutenticado()
     if (!cliente) throw new Error('no_autorizado')
     const {
@@ -1434,9 +1433,11 @@ export async function guardarTablero(tablero: unknown): Promise<Respuesta> {
     } = await cliente.auth.getUser()
     if (!user) throw new Error('no_autorizado')
 
+    const widgets = sanearWidgetsActivos({ activos })
+
     const { error } = await cliente.rpc('fynz_guardar_configuracion', {
       p_usuario: user.id,
-      p_widgets: tablero,
+      p_widgets: { activos: widgets },
       p_vista: null,
       p_proximo_ingreso: null,
       p_horizonte_preferido: null,
@@ -1549,23 +1550,6 @@ export async function guardarMontoManualTarjeta(
     } catch {
       // Se re-sincroniza con la siguiente operación.
     }
-  })
-}
-
-export async function guardarLayout(layout: unknown): Promise<Respuesta> {
-  return intentar('guardarLayout', async () => {
-    const cliente = await clienteAutenticado()
-    if (!cliente) throw new Error('no_autorizado')
-    const {
-      data: { user },
-    } = await cliente.auth.getUser()
-    if (!user) throw new Error('no_autorizado')
-
-    const { error } = await cliente.rpc('fynz_guardar_layout', {
-      p_usuario: user.id,
-      p_layout: layout,
-    })
-    if (error) throw errorDesdeRpc(error)
   })
 }
 
