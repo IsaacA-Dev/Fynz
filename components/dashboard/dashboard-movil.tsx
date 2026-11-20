@@ -35,7 +35,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
   return (
     <main className="min-h-dvh bg-surface-muted pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-md">
-        <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-6">
+        <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
             <FynzLogo height={26} />
           </Link>
