@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { History, Home, Plus, Receipt } from 'lucide-react'
 import { LogoutButton } from '@/components/dashboard/logout-button'
+import { InstallPwaButton } from '@/components/pwa/install-pwa-button'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { FynzLogo } from '@/components/ui/fynz-logo'
@@ -40,6 +41,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
             <FynzLogo height={26} />
           </Link>
           <div className="flex items-center gap-1">
+            <InstallPwaButton />
             <ThemeSwitcher />
             <LogoutButton />
           </div>

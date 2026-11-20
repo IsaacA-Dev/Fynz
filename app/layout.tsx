@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { PwaInstallProvider } from "@/components/pwa/pwa-install-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ToastProvider, ToastViewport } from "@/components/ui/toast";
 
@@ -55,10 +56,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <ToastProvider>
-            {children}
-            <ToastViewport />
-          </ToastProvider>
+          <PwaInstallProvider>
+            <ToastProvider>
+              {children}
+              <ToastViewport />
+            </ToastProvider>
+          </PwaInstallProvider>
         </ThemeProvider>
       </body>
     </html>

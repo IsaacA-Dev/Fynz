@@ -42,9 +42,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // El manifest y los iconos PWA deben ser públicos para que el navegador
-  // pueda ofrecer la instalación incluso antes de iniciar sesión.
+  // El manifest, los iconos y el service worker PWA deben ser públicos para
+  // que el navegador pueda instalar la app incluso antes de iniciar sesión.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
