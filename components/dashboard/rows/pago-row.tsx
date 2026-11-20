@@ -113,7 +113,7 @@ export function PagoRow({
               variant="ghost"
               size="icon"
               onClick={onAdelantar}
-              aria-label="Adelantar siguiente periodo"
+              aria-label={`Adelantar siguiente periodo de ${pago.descripcion}`}
               title="Adelantar siguiente periodo"
               className="size-8 text-fg-muted hover:bg-brand-soft hover:text-brand"
             >
@@ -125,7 +125,7 @@ export function PagoRow({
             variant="ghost"
             size="icon"
             onClick={onEditar}
-            aria-label="Editar pago"
+            aria-label={`Editar ${pago.descripcion}`}
             className="size-8 text-fg-muted hover:bg-brand-soft hover:text-brand"
           >
             <Pencil className="size-4" aria-hidden />
@@ -135,7 +135,7 @@ export function PagoRow({
             variant="ghost"
             size="icon"
             onClick={onEliminar}
-            aria-label="Eliminar pago"
+            aria-label={`Eliminar ${pago.descripcion}`}
             className="size-8 text-fg-muted hover:bg-danger-soft hover:text-danger"
           >
             <Trash2 className="size-4" aria-hidden />

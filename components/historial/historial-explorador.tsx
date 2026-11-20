@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Link2, RotateCcw, Search } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, Link2, RotateCcw, Search } from 'lucide-react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -109,14 +110,25 @@ export function HistorialExplorador() {
     <main className="min-h-dvh bg-surface-muted">
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
         <header className="flex items-center justify-between gap-2">
-          <FynzLogo height={26} />
+          <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
+            <FynzLogo height={26} />
+          </Link>
           <div className="flex items-center gap-2">
             <ThemeSwitcher />
             <LogoutButton />
           </div>
         </header>
 
-        <div className="mt-6">
+        <div className="sticky top-0 z-30 -mx-4 mt-4 border-b border-line bg-surface-muted/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/">
+              <ArrowLeft className="size-4" aria-hidden />
+              Volver a Inicio
+            </Link>
+          </Button>
+        </div>
+
+        <div className="mt-4">
           <h1 className="text-2xl font-semibold tracking-tight text-fg">
             Historial de movimientos
           </h1>
