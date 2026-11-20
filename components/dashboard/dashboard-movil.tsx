@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ThemeSwitcher } from '@/components/theme/theme-switcher'
 import { BentoDashboard, type BentoDashboardProps } from '@/components/dashboard/bento-dashboard'
+import { pagosParaProximos } from '@/lib/checklist-semanal'
 import { cn } from '@/lib/utils/cn'
 
 const LIMITE = 4
@@ -27,7 +28,8 @@ export function DashboardMovil(props: BentoDashboardProps) {
   const [tab, setTab] = useState(0)
   const [verMasPagos, setVerMasPagos] = useState(false)
 
-  const pagosMostrados = verMasPagos ? datos.pagos : datos.pagos.slice(0, LIMITE)
+  const pagos = pagosParaProximos(datos.pagos, hoy)
+  const pagosMostrados = verMasPagos ? pagos : pagos.slice(0, LIMITE)
   const movimientosMostrados = datos.movimientos.slice(0, LIMITE)
 
   return (
@@ -69,21 +71,35 @@ export function DashboardMovil(props: BentoDashboardProps) {
                 </Button>
               </div>
 
-              {datos.pagos.length === 0 ? (
+              {pagos.length === 0 ? (
                 <Card variant="soft" className="p-6 text-center">
                   <p className="text-sm text-fg-muted">
-                    No hay pagos pendientes por el momento.
+                    {datos.pagos.length > 0
+                      ? 'Los pagos semanales de esta semana están en el checklist de Inicio.'
+                      : 'No hay pagos pendientes por el momento.'}
                   </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={props.onNuevoPago}
-                    className="mt-3"
-                  >
-                    <Plus className="size-3.5" aria-hidden />
-                    Nuevo pago
-                  </Button>
+                  {datos.pagos.length > 0 ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setTab(0)}
+                      className="mt-3"
+                    >
+                      Ir a Inicio
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={props.onNuevoPago}
+                      className="mt-3"
+                    >
+                      <Plus className="size-3.5" aria-hidden />
+                      Nuevo pago
+                    </Button>
+                  )}
                 </Card>
               ) : (
                 <Card className="divide-y divide-line">
@@ -106,7 +122,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
                 </Card>
               )}
 
-              {datos.pagos.length > LIMITE && (
+              {pagos.length > LIMITE && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -116,7 +132,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
                 >
                   {verMasPagos
                     ? 'Ver menos'
-                    : `Ver más (${datos.pagos.length - LIMITE})`}
+                    : `Ver más (${pagos.length - LIMITE})`}
                 </Button>
               )}
             </div>

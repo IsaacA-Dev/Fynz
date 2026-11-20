@@ -23,6 +23,7 @@ import {
   guardarHorizonte,
   guardarProximoIngreso,
   guardarWidgetsActivos,
+  liquidarPago,
   obtenerDatosDashboard,
 } from '@/lib/acciones-servidor'
 import { hoyLocal } from '@/lib/fechas'
@@ -86,6 +87,27 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
   const cerrar = () => {
     setSheet(null)
     void actualizarDatos()
+  }
+
+  const pagarSemanal = async (pago: ProximoPago, cuentaId: number) => {
+    const resultado = await liquidarPago(pago.proximo_pago_id, {
+      cuentaId,
+      monto: pago.monto,
+    })
+
+    if (!resultado.ok) {
+      addToast(resultado.error, 'error')
+      try {
+        await actualizarDatos()
+      } catch {
+        // El checklist se reconcilia en la próxima actualización.
+      }
+      return false
+    }
+
+    addToast('Pago semanal completado', 'success')
+    await actualizarDatos()
+    return true
   }
 
   const guardarWidgets = async (activos: string[]) => {
@@ -170,6 +192,7 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
     onEditarPago: abrirEdicionPago,
     onEliminarPago: (pago: ProximoPago) => setEliminandoPago(pago),
     onPagarPago: (pago: ProximoPago) => setSheet({ tipo: 'liquidar', pago }),
+    onPagarSemanal: pagarSemanal,
     onAdelantarPago: (pago: ProximoPago) => setAdelantandoPago(pago),
   }
 

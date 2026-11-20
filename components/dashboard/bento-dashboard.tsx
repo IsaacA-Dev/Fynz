@@ -20,9 +20,11 @@ import { CuentaRow } from '@/components/dashboard/rows/cuenta-row'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
 import { REGISTRO_WIDGETS } from '@/components/dashboard/widgets/registry'
+import { ChecklistSemanal } from '@/components/dashboard/checklist-semanal'
 import { cn } from '@/lib/utils/cn'
 import { formatearDinero, formatearFecha } from '@/lib/utils/format'
 import { FILTROS_DEFECTO, columnasWidgets } from '@/lib/tablero'
+import { pagosParaProximos } from '@/lib/checklist-semanal'
 import type {
   Cuenta,
   DatosDashboard,
@@ -49,6 +51,7 @@ export interface BentoDashboardProps {
   onEliminarPago: (pago: ProximoPago) => void
   onPagarPago: (pago: ProximoPago) => void
   onAdelantarPago: (pago: ProximoPago) => void
+  onPagarSemanal: (pago: ProximoPago, cuentaId: number) => Promise<boolean>
   onEditarWidgets: () => void
 }
 
@@ -88,6 +91,15 @@ function BentoEscritorio(props: BentoDashboardProps) {
     <div className="space-y-4">
       <PanelHeader onEditarWidgets={onEditarWidgets} />
 
+      <ChecklistSemanal
+        pagos={datos.pagos}
+        cuentas={datos.cuentas}
+        hoy={props.hoy}
+        onPagar={props.onPagarSemanal}
+        onEditarPago={props.onEditarPago}
+        onNuevaCuenta={props.onNuevaCuenta}
+      />
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <Hero {...props} />
@@ -121,6 +133,14 @@ function BentoMovil(props: BentoDashboardProps) {
   return (
     <div className="space-y-4">
       <PanelHeader onEditarWidgets={onEditarWidgets} />
+      <ChecklistSemanal
+        pagos={datos.pagos}
+        cuentas={datos.cuentas}
+        hoy={props.hoy}
+        onPagar={props.onPagarSemanal}
+        onEditarPago={props.onEditarPago}
+        onNuevaCuenta={props.onNuevaCuenta}
+      />
       <Hero {...props} />
       <Cuentas {...props} />
 
@@ -315,7 +335,8 @@ function Pagos(props: BentoDashboardProps) {
     onAdelantarPago,
   } = props
   const [verMas, setVerMas] = useState(false)
-  const mostrados = verMas ? datos.pagos : datos.pagos.slice(0, LIMITE)
+  const pagos = pagosParaProximos(datos.pagos, hoy)
+  const mostrados = verMas ? pagos : pagos.slice(0, LIMITE)
 
   return (
     <Card className="flex h-full flex-col p-4">
@@ -335,10 +356,12 @@ function Pagos(props: BentoDashboardProps) {
         </Button>
       </div>
 
-      {datos.pagos.length === 0 ? (
+      {pagos.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-4 text-center">
           <p className="text-sm text-fg-muted">
-            No hay pagos pendientes por el momento.
+            {datos.pagos.length > 0
+              ? 'Los pagos semanales de esta semana están en el checklist de arriba.'
+              : 'No hay pagos pendientes por el momento.'}
           </p>
           <Button type="button" variant="secondary" size="sm" onClick={onNuevoPago}>
             <Plus className="size-3.5" aria-hidden />
@@ -366,7 +389,7 @@ function Pagos(props: BentoDashboardProps) {
         </div>
       )}
 
-      {datos.pagos.length > LIMITE && (
+      {pagos.length > LIMITE && (
         <Button
           type="button"
           variant="ghost"
@@ -374,7 +397,7 @@ function Pagos(props: BentoDashboardProps) {
           onClick={() => setVerMas((valor) => !valor)}
           className="mt-auto w-full"
         >
-          {verMas ? 'Ver menos' : `Ver más (${datos.pagos.length - LIMITE})`}
+          {verMas ? 'Ver menos' : `Ver más (${pagos.length - LIMITE})`}
         </Button>
       )}
     </Card>

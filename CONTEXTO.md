@@ -192,6 +192,18 @@ No existe modo edición, arrastre, presets, ni controles de columnas o filas. La
 
 En móvil se usa el mismo Bento apilado en una columna. Se conservan las pestañas **Inicio**, **Pagos** e **Historial** y la navegación inferior fija. El botón **Widgets** está disponible tanto en escritorio como en móvil.
 
+#### Checklist semanal
+
+Cuando hay pagos semanales pendientes que vencen en los próximos dos días (incluidos los vencidos), aparece un **Checklist semanal** por encima del Hero, tanto en escritorio como en el Inicio móvil.
+
+- Cada fila tiene un checkbox para liquidar el **monto completo** en un toque, la descripción, el monto, la fecha y la cuenta.
+- Se usa la cuenta domiciliada si es válida; si no, se preselecciona la primera cuenta líquida activa. El selector compacto aparece solo cuando hay más de una cuenta líquida.
+- El lápiz abre el formulario de edición del pago.
+- Los semanales dentro de la ventana se ocultan de **Próximos pagos** y de la pestaña **Pagos** móvil para no duplicarlos; los semanales a más de dos días siguen visibles en Próximos pagos.
+- Si Próximos pagos queda vacío porque todo está en el checklist, se muestra un aviso; en móvil incluye un acceso a Inicio.
+- Al liquidar se genera el siguiente periodo **+7 días**. Ese compromiso sigue contando en el Disponible Real y aparece en Próximos pagos cuando se aleja de la ventana.
+- Si no hay cuentas líquidas, el checkbox se deshabilita y se ofrece crear una cuenta.
+
 ### 4.9 Widgets
 
 El catálogo actual incluye:
@@ -250,7 +262,7 @@ El orden evita dobles conteos: el saldo escrito es el que queda después de los 
 
 ### 5.1 Pruebas automatizadas
 
-`bun test` cubre **147 pruebas en 14 archivos**, entre ellas:
+`bun test` cubre **159 pruebas en 15 archivos**, entre ellas:
 
 - Disponible Real y horizontes.
 - Transferencias y conservación de liquidez.
@@ -260,6 +272,7 @@ El orden evita dobles conteos: el saldo escrito es el que queda después de los 
 - Categorías, historial y filtros.
 - Puesta al día: diferencias, validaciones y selección de pagos vencidos.
 - Frecuencias de pago: semanal +7, quincenal +14, mensual y único.
+- Checklist semanal: ventana de 2 días, cuenta sugerida, exclusión de Próximos y coherencia del Disponible.
 - Formato de dinero en centavos y fechas de calendario.
 - Widgets activos, distribución de la franja y compatibilidad de shapes.
 - Errores, logs y recuperación.
@@ -284,8 +297,9 @@ El recorrido E2E completo quedó **superado** con datos sintéticos en Supabase,
 
 - **Frecuencias:** se validaron altas, liquidación y adelanto semanal/quincenal, la conservación del monto planificado en el siguiente periodo y la conciliación de un pago semanal vencido con **Poner al día**.
 - **Bento Grid:** se validó el backfill de widgets legados, el grid fijo 7/5 y 5/7, las distribuciones de 0/1/2/3/4/6 widgets, el diálogo de switches, la persistencia al recargar y las vistas desktop/móvil en Fynz y Noche.
+- **Checklist semanal:** se validó la ventana de 2 días, el pago en un toque, la exclusión de Próximos pagos, el selector con dos cuentas líquidas, el lápiz de edición, el siguiente +7 y los avisos de lista vacía en desktop y móvil.
 
-El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos únicos, semanales (+7), quincenales (+14), mensuales, domiciliados y de tarjeta, adelanto de periodo, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, Bento Grid y selección de widgets, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
+El flujo probado incluye registro, login, recuperación, cuentas de los tres métodos, pagos únicos, semanales (+7), quincenales (+14), mensuales, domiciliados y de tarjeta, adelanto de periodo, horizontes, simulador, gastos, ingresos, transferencias, abono a tarjeta, puesta al día de saldos y pagos vencidos, Bento Grid y selección de widgets, checklist semanal, historial con filtros y detalle, archivado de cuentas, temas y navegación móvil.
 
 ## 6. Seguridad e integridad
 
