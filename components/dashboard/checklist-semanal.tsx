@@ -63,7 +63,7 @@ export function ChecklistSemanal({
             Pagos que vencen en los próximos 2 días.
           </p>
         </div>
-        <Badge variant="brand" size="sm">
+        <Badge variant="brand" size="sm" className="shrink-0">
           {items.length} {items.length === 1 ? 'pendiente' : 'pendientes'}
         </Badge>
       </div>
@@ -106,17 +106,17 @@ export function ChecklistSemanal({
                   className="mt-0.5 size-4 shrink-0 accent-brand"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center gap-1.5">
+                  <span className="flex min-w-0 items-center gap-1.5">
                     <span
                       className={cn(
-                        'truncate text-sm font-medium',
+                        'min-w-0 flex-1 truncate text-sm font-medium',
                         atrasado ? 'text-danger' : 'text-fg'
                       )}
                     >
                       {pago.descripcion}
                     </span>
                     {atrasado && (
-                      <Badge variant="danger" size="sm">
+                      <Badge variant="danger" size="sm" className="shrink-0">
                         <AlertTriangle className="size-3" aria-hidden />
                         Atrasado
                       </Badge>
@@ -134,16 +134,31 @@ export function ChecklistSemanal({
                 </span>
               </label>
 
-              <p
-                className={cn(
-                  'shrink-0 text-sm font-semibold',
-                  atrasado ? 'text-danger' : 'text-fg'
-                )}
-              >
-                {formatearDinero(pago.monto)}
-              </p>
+              <div className="flex shrink-0 items-center gap-1">
+                <p
+                  className={cn(
+                    'text-right text-sm font-semibold tabular-nums',
+                    atrasado ? 'text-danger' : 'text-fg'
+                  )}
+                >
+                  {formatearDinero(pago.monto)}
+                </p>
 
-              {pagando && <Spinner size="sm" label="Pagando pago semanal" />}
+                {pagando && <Spinner size="sm" label="Pagando pago semanal" />}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEditarPago(pago)}
+                  disabled={pagandoId !== null}
+                  aria-label={`Editar ${pago.descripcion}`}
+                  title="Editar pago"
+                  className="size-8 shrink-0 text-fg-muted hover:bg-brand-soft hover:text-brand"
+                >
+                  <Pencil className="size-4" aria-hidden />
+                </Button>
+              </div>
 
               {selector && (
                 <div className="w-full sm:w-44">
@@ -170,19 +185,6 @@ export function ChecklistSemanal({
                   </Select>
                 </div>
               )}
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onEditarPago(pago)}
-                disabled={pagandoId !== null}
-                aria-label={`Editar ${pago.descripcion}`}
-                title="Editar pago"
-                className="size-8 shrink-0 text-fg-muted hover:bg-brand-soft hover:text-brand"
-              >
-                <Pencil className="size-4" aria-hidden />
-              </Button>
             </div>
           )
         })}

@@ -19,7 +19,7 @@ export function MovimientoRow({ movimiento, onVer }: MovimientoRowProps) {
 
   const contenido = (
     <>
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <span
           className={cn(
             'flex size-9 shrink-0 items-center justify-center rounded-full @lg:size-11',
@@ -34,25 +34,25 @@ export function MovimientoRow({ movimiento, onVer }: MovimientoRowProps) {
             <ArrowUpRight className="size-4 @lg:size-5" aria-hidden />
           )}
         </span>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="truncate text-sm font-medium text-fg @lg:text-base">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="min-w-0 flex-1 truncate text-sm font-medium text-fg @lg:text-base">
               {movimiento.descripcion ?? (esIngreso ? 'Ingreso' : 'Egreso')}
             </p>
             {etiquetaOp && (
-              <Badge variant="neutral" size="sm">
+              <Badge variant="neutral" size="sm" className="shrink-0">
                 {etiquetaOp}
               </Badge>
             )}
           </div>
-          <p className="text-xs text-fg-muted @lg:text-sm">
+          <p className="truncate text-xs text-fg-muted @lg:text-sm">
             {movimiento.cuenta_nombre} · {formatearFecha(movimiento.fecha)}
           </p>
         </div>
       </div>
       <p
         className={cn(
-          'shrink-0 text-sm font-semibold @lg:text-base',
+          'shrink-0 text-right text-sm font-semibold tabular-nums @lg:text-base',
           esIngreso ? 'text-success' : 'text-fg'
         )}
       >

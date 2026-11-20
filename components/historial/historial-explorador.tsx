@@ -108,7 +108,7 @@ export function HistorialExplorador() {
 
   return (
     <main className="min-h-dvh bg-surface-muted">
-      <div className="mx-auto max-w-4xl px-4 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] sm:px-6">
+      <div className="mx-auto max-w-4xl px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:px-6">
         <header className="flex items-center justify-between gap-2">
           <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
             <FynzLogo height={26} />

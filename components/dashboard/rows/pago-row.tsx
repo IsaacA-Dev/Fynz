@@ -40,18 +40,18 @@ export function PagoRow({
   return (
     <div className="space-y-2 py-3">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5">
             <p
               className={cn(
-                'truncate text-sm font-medium @lg:text-base',
+                'min-w-0 flex-1 truncate text-sm font-medium @lg:text-base',
                 atrasado ? 'text-danger' : 'text-fg'
               )}
             >
               {pago.descripcion}
             </p>
             {atrasado && (
-              <Badge variant="danger" size="sm">
+              <Badge variant="danger" size="sm" className="shrink-0">
                 <AlertTriangle className="size-3" aria-hidden />
                 Atrasado
               </Badge>
@@ -59,7 +59,7 @@ export function PagoRow({
           </div>
           <p
             className={cn(
-              'text-xs @lg:text-sm',
+              'truncate text-xs @lg:text-sm',
               atrasado ? 'text-danger' : 'text-fg-muted'
             )}
           >
@@ -71,7 +71,7 @@ export function PagoRow({
         </div>
         <p
           className={cn(
-            'shrink-0 text-sm font-semibold @lg:text-base',
+            'shrink-0 text-right text-sm font-semibold tabular-nums @lg:text-base',
             atrasado ? 'text-danger' : 'text-fg'
           )}
         >
@@ -80,21 +80,21 @@ export function PagoRow({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           {pago.recurrente && (
-            <Badge variant="brand" size="sm">
+            <Badge variant="brand" size="sm" className="shrink-0">
               <Repeat className="size-3" aria-hidden />
               {etiquetaFrecuencia(pago.frecuencia, pago.dia_cobro)}
             </Badge>
           )}
           {pago.domiciliado && (
-            <Badge variant="neutral" size="sm">
+            <Badge variant="neutral" size="sm" className="shrink-0">
               <Repeat className="size-3" aria-hidden />
               Domiciliado
             </Badge>
           )}
           {pago.es_tarjeta && (
-            <Badge variant="neutral" size="sm">
+            <Badge variant="neutral" size="sm" className="shrink-0">
               <CreditCard className="size-3" aria-hidden />
               Tarjeta
             </Badge>
@@ -103,7 +103,7 @@ export function PagoRow({
 
         <div
           className={cn(
-            'flex items-center',
+            'ml-auto flex shrink-0 items-center',
             escritorio ? 'gap-0.5' : 'gap-1'
           )}
         >
