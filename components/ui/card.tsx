@@ -6,7 +6,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 
 const cardVariants = cva(
-  "rounded-card border text-fg transition-all duration-500 ease-out",
+  "rounded-card border text-fg select-none transition-all duration-500 ease-out",
   {
     variants: {
       variant: {
@@ -15,7 +15,8 @@ const cardVariants = cva(
         outline: "border-line bg-surface",
       },
       interactive: {
-        true: "hover:border-line-strong hover:shadow-lift",
+        true:
+          "hover:border-line-strong hover:shadow-lift active:scale-[0.98] active:duration-100",
         false: "",
       },
     },

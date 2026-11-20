@@ -33,7 +33,7 @@ export function MovimientoDetalle({
     : false
 
   return (
-    <div className="space-y-4">
+    <div className="select-text space-y-4">
       <div className="flex items-center justify-between gap-3">
         <span
           className={`flex size-10 shrink-0 items-center justify-center rounded-full ${

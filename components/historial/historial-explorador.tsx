@@ -109,7 +109,7 @@ export function HistorialExplorador() {
   return (
     <main className="min-h-dvh bg-surface-muted">
       <div className="mx-auto max-w-4xl px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:px-6">
-        <header className="flex items-center justify-between gap-2">
+        <header className="flex select-none items-center justify-between gap-2">
           <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
             <FynzLogo height={26} />
           </Link>
@@ -119,7 +119,7 @@ export function HistorialExplorador() {
           </div>
         </header>
 
-        <div className="sticky top-[env(safe-area-inset-top)] z-30 -mx-4 mt-4 border-b border-line bg-surface-muted/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="sticky top-[env(safe-area-inset-top)] z-30 -mx-4 mt-4 select-none border-b border-line/60 bg-surface/85 px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6">
           <Button asChild variant="secondary" size="sm">
             <Link href="/">
               <ArrowLeft className="size-4" aria-hidden />
@@ -354,6 +354,7 @@ export function HistorialExplorador() {
               <MovimientoRow
                 key={m.transaccion_id}
                 movimiento={m}
+                categoria={m.categoria_nombre}
                 onVer={() => abrirDetalle(m.transaccion_id)}
               />
             ))}

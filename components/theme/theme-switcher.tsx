@@ -17,7 +17,7 @@ const contenedor = cva("", {
 });
 
 const opcion = cva(
-  "inline-flex items-center justify-center transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex select-none items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 active:scale-[0.98] active:duration-100 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {

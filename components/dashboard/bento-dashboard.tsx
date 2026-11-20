@@ -327,7 +327,6 @@ function Pagos(props: BentoDashboardProps) {
   const {
     datos,
     hoy,
-    modo,
     onNuevoPago,
     onEditarPago,
     onEliminarPago,
@@ -375,7 +374,6 @@ function Pagos(props: BentoDashboardProps) {
               key={pago.proximo_pago_id}
               pago={pago}
               hoy={hoy}
-              modo={modo}
               onEditar={() => onEditarPago(pago)}
               onEliminar={() => onEliminarPago(pago)}
               onPagar={() => onPagarPago(pago)}
@@ -511,6 +509,11 @@ function Historial({ datos }: BentoDashboardProps) {
             <MovimientoRow
               key={movimiento.transaccion_id}
               movimiento={movimiento}
+              categoria={
+                movimiento.categoria_id != null
+                  ? datos.categorias[String(movimiento.categoria_id)] ?? null
+                  : null
+              }
             />
           ))}
         </div>

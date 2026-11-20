@@ -6,7 +6,7 @@ import { useState, type HTMLAttributes, type MouseEvent } from "react";
 import { cn } from "@/lib/utils/cn";
 
 const chipVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full border font-medium transition-colors duration-300",
+  "inline-flex select-none items-center gap-1.5 rounded-full border font-medium transition-all duration-200",
   {
     variants: {
       variant: {
@@ -22,7 +22,7 @@ const chipVariants = cva(
         md: "px-2.5 py-1 text-xs",
       },
       interactive: {
-        true: "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80",
+        true: "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 active:scale-[0.98] active:duration-100",
         false: "",
       },
     },
