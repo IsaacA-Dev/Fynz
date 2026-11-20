@@ -1,22 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { History, Home, Plus, Receipt } from 'lucide-react'
-import { LogoutButton } from '@/components/dashboard/logout-button'
-import { InstallPwaButton } from '@/components/pwa/install-pwa-button'
 import { PagoRow } from '@/components/dashboard/rows/pago-row'
 import { MovimientoRow } from '@/components/dashboard/rows/movimiento-row'
-import { FynzLogo } from '@/components/ui/fynz-logo'
+import { ProfileMenu } from '@/components/dashboard/profile-menu'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { ThemeSwitcher } from '@/components/theme/theme-switcher'
+import { Chip } from '@/components/ui/chip'
 import { BentoDashboard, type BentoDashboardProps } from '@/components/dashboard/bento-dashboard'
-import { pagosParaProximos } from '@/lib/checklist-semanal'
 import { cn } from '@/lib/utils/cn'
-
-const LIMITE = 4
-
 
 const TABS = [
   { id: 0, label: 'Inicio', Icon: Home },
@@ -24,26 +16,65 @@ const TABS = [
   { id: 2, label: 'Historial', Icon: History },
 ] as const
 
+const FILTROS = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'gastos', label: 'Gastos' },
+  { id: 'ingresos', label: 'Ingresos' },
+  { id: 'transferencias', label: 'Transferencias' },
+] as const
+
+type FiltroHistorial = (typeof FILTROS)[number]['id']
+
 export function DashboardMovil(props: BentoDashboardProps) {
   const { datos, hoy } = props
   const [tab, setTab] = useState(0)
-  const [verMasPagos, setVerMasPagos] = useState(false)
+  const [filtro, setFiltro] = useState<FiltroHistorial>('todos')
 
-  const pagos = pagosParaProximos(datos.pagos, hoy)
-  const pagosMostrados = verMasPagos ? pagos : pagos.slice(0, LIMITE)
-  const movimientosMostrados = datos.movimientos.slice(0, LIMITE)
+  const titulo = TABS.find((item) => item.id === tab)?.label ?? 'Inicio'
+
+  const movimientos = datos.movimientos.filter((movimiento) => {
+    if (filtro === 'todos') return true
+    if (filtro === 'transferencias') {
+      return movimiento.operacion === 'transferencia'
+    }
+    if (filtro === 'gastos') {
+      return (
+        movimiento.tipo === 'egreso' &&
+        movimiento.operacion !== 'transferencia'
+      )
+    }
+    return (
+      movimiento.tipo === 'ingreso' &&
+      movimiento.operacion !== 'transferencia'
+    )
+  })
 
   return (
     <main className="min-h-dvh bg-surface-muted pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-md">
-        <header className="sticky top-0 z-30 flex select-none items-center justify-between gap-2 border-b border-line/60 bg-surface/85 px-6 pb-2 pt-[calc(1.5rem+env(safe-area-inset-top))] backdrop-blur-md">
-          <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
-            <FynzLogo height={26} />
-          </Link>
-          <div className="flex items-center gap-1">
-            <InstallPwaButton />
-            <ThemeSwitcher />
-            <LogoutButton />
+        <header className="sticky top-0 z-30 grid select-none grid-cols-[2.5rem_1fr_2.5rem] items-center border-b border-line/60 bg-surface/85 px-6 pb-2 pt-[calc(1.5rem+env(safe-area-inset-top))] backdrop-blur-md">
+          <div className="flex justify-start">
+            <ProfileMenu />
+          </div>
+          <h1 className="truncate text-center text-base font-semibold text-fg">
+            {titulo}
+          </h1>
+          <div className="flex justify-end">
+            {tab === 1 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={props.onNuevoPago}
+                aria-label="Nuevo pago"
+                title="Nuevo pago"
+                className="size-9 text-brand hover:bg-brand-soft"
+              >
+                <Plus className="size-4" aria-hidden />
+              </Button>
+            ) : (
+              <span aria-hidden className="size-9" />
+            )}
           </div>
         </header>
 
@@ -57,86 +88,47 @@ export function DashboardMovil(props: BentoDashboardProps) {
           {tab === 1 && (
             <div
               key="tab-pagos"
-              className="animate-fade-in space-y-3 px-6 pb-8 pt-4"
+              className="animate-fade-in px-6 pb-4 pt-3"
             >
-              <div className="flex items-center justify-between gap-2 px-1">
-                <h3 className="text-eyebrow uppercase text-fg-subtle">
-                  Próximos pagos
-                </h3>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={props.onNuevoPago}
-                  aria-label="Nuevo pago"
-                  className="size-8 text-brand hover:bg-brand-soft"
-                >
-                  <Plus className="size-4" aria-hidden />
-                </Button>
-              </div>
+              <p className="px-1 pb-2 text-xs text-fg-muted">
+                {datos.pagos.length}{' '}
+                {datos.pagos.length === 1 ? 'pago pendiente' : 'pagos pendientes'}
+              </p>
 
-              {pagos.length === 0 ? (
-                <Card variant="soft" className="p-6 text-center">
+              {datos.pagos.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
                   <p className="text-sm text-fg-muted">
-                    {datos.pagos.length > 0
-                      ? 'Los pagos semanales de esta semana están en el checklist de Inicio.'
-                      : 'No hay pagos pendientes por el momento.'}
+                    No hay pagos pendientes por el momento.
                   </p>
-                  {datos.pagos.length > 0 ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setTab(0)}
-                      className="mt-3"
-                    >
-                      Ir a Inicio
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={props.onNuevoPago}
-                      className="mt-3"
-                    >
-                      <Plus className="size-3.5" aria-hidden />
-                      Nuevo pago
-                    </Button>
-                  )}
-                </Card>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={props.onNuevoPago}
+                  >
+                    <Plus className="size-3.5" aria-hidden />
+                    Nuevo pago
+                  </Button>
+                </div>
               ) : (
-                <Card className="divide-y divide-line">
-                  {pagosMostrados.map((p) => (
-                    <PagoRow
-                      key={p.proximo_pago_id}
-                      pago={p}
-                      hoy={hoy}
-                      onEditar={() => props.onEditarPago(p)}
-                      onEliminar={() => props.onEliminarPago(p)}
-                      onPagar={() => props.onPagarPago(p)}
-                      onAdelantar={
-                        p.recurrente && !p.es_tarjeta
-                          ? () => props.onAdelantarPago(p)
-                          : undefined
-                      }
-                    />
+                <div className="-mx-6 divide-y divide-line">
+                  {datos.pagos.map((pago) => (
+                    <div key={pago.proximo_pago_id} className="px-6">
+                      <PagoRow
+                        pago={pago}
+                        hoy={hoy}
+                        onEditar={() => props.onEditarPago(pago)}
+                        onEliminar={() => props.onEliminarPago(pago)}
+                        onPagar={() => props.onPagarPago(pago)}
+                        onAdelantar={
+                          pago.recurrente && !pago.es_tarjeta
+                            ? () => props.onAdelantarPago(pago)
+                            : undefined
+                        }
+                      />
+                    </div>
                   ))}
-                </Card>
-              )}
-
-              {pagos.length > LIMITE && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setVerMasPagos((v) => !v)}
-                  className="w-full"
-                >
-                  {verMasPagos
-                    ? 'Ver menos'
-                    : `Ver más (${pagos.length - LIMITE})`}
-                </Button>
+                </div>
               )}
             </div>
           )}
@@ -144,50 +136,63 @@ export function DashboardMovil(props: BentoDashboardProps) {
           {tab === 2 && (
             <div
               key="tab-historial"
-              className="animate-fade-in space-y-3 px-6 pb-8 pt-4"
+              className="animate-fade-in px-6 pb-4 pt-3"
             >
-              <div className="flex items-center justify-between gap-2 px-1">
-                <h3 className="text-eyebrow uppercase text-fg-subtle">
-                  Historial reciente
-                </h3>
-                <Link
-                  href="/historial"
-                  className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
-                >
-                  Ver todo
-                </Link>
+              <div
+                role="group"
+                aria-label="Filtrar historial"
+                className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {FILTROS.map((opcion) => (
+                  <Chip
+                    key={opcion.id}
+                    role="button"
+                    tabIndex={0}
+                    interactive
+                    size="sm"
+                    variant={filtro === opcion.id ? 'brand' : 'neutral'}
+                    aria-pressed={filtro === opcion.id}
+                    onClick={() => setFiltro(opcion.id)}
+                    onKeyDown={(evento) => {
+                      if (
+                        evento.key === 'Enter' ||
+                        evento.key === ' '
+                      ) {
+                        evento.preventDefault()
+                        setFiltro(opcion.id)
+                      }
+                    }}
+                    className="shrink-0"
+                  >
+                    {opcion.label}
+                  </Chip>
+                ))}
               </div>
 
-              {datos.movimientos.length === 0 ? (
-                <Card variant="soft" className="p-6 text-center">
-                  <p className="text-sm text-fg-muted">
-                    Tus movimientos aparecerán aquí.
-                  </p>
-                </Card>
+              {movimientos.length === 0 ? (
+                <p className="py-10 text-center text-sm text-fg-muted">
+                  No hay movimientos en este filtro.
+                </p>
               ) : (
-                <Card className="divide-y divide-line">
-                  {movimientosMostrados.map((t) => (
-                    <MovimientoRow
-                      key={t.transaccion_id}
-                      movimiento={t}
-                      categoria={
-                        t.categoria_id != null
-                          ? datos.categorias[String(t.categoria_id)] ?? null
-                          : null
-                      }
-                    />
+                <div className="-mx-6 divide-y divide-line">
+                  {movimientos.map((movimiento) => (
+                    <div
+                      key={movimiento.transaccion_id}
+                      className="px-6"
+                    >
+                      <MovimientoRow
+                        movimiento={movimiento}
+                        categoria={
+                          movimiento.categoria_id != null
+                            ? datos.categorias[
+                                String(movimiento.categoria_id)
+                              ] ?? null
+                            : null
+                        }
+                      />
+                    </div>
                   ))}
-                </Card>
-              )}
-
-              {datos.movimientos.length > LIMITE && (
-                <Link
-                  href="/historial"
-                  className="block w-full text-center text-xs font-medium text-brand transition-colors hover:text-brand-hover"
-                >
-                  Ver todo ({datos.movimientos.length - LIMITE} movimientos
-                  recientes más)
-                </Link>
+                </div>
               )}
             </div>
           )}

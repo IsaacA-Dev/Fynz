@@ -698,7 +698,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
   ] = await Promise.all([
     buscarCuentasConSaldo(usuarioId, cliente),
     buscarPagosProximos(usuarioId, cliente),
-    buscarMovimientosRecientes(usuarioId, cliente),
+    buscarMovimientosRecientes(usuarioId, cliente, 100),
     cliente
       .from('configuracion')
       .select('vista, widgets, proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
