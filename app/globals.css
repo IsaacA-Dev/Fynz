@@ -236,6 +236,7 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
   }
 
   body {
@@ -243,6 +244,32 @@
     color: var(--ds-fg);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  .select-text {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -webkit-touch-callout: default;
+  }
+
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select {
+      font-size: max(1rem, 1em) !important;
+    }
   }
 
   ::selection {

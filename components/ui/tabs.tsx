@@ -154,7 +154,7 @@ export const TabsTrigger = forwardRef<
         if (!evento.defaultPrevented) setValue(value);
       }}
       className={cn(
-        "inline-flex h-8 items-center justify-center gap-1.5 rounded-panel px-3 text-xs font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80",
+        "inline-flex h-8 select-none items-center justify-center gap-1.5 rounded-panel px-3 text-xs font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 active:scale-[0.98] active:duration-100",
         seleccionado
           ? "bg-surface text-fg shadow-soft ring-1 ring-input"
           : "text-fg-muted hover:text-fg",

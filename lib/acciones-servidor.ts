@@ -201,6 +201,10 @@ async function buscarMovimientosRecientes(
     monto: aEntero(t.monto),
     fecha: t.fecha,
     descripcion: t.descripcion,
+    operacion: t.operacion ?? null,
+    categoria_id: t.categoria_id ?? null,
+    pago_id: t.pago_id ?? null,
+    relacionada_id: t.relacionada_id ?? null,
   }))
 }
 

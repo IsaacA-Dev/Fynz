@@ -39,7 +39,11 @@ export function Sheet({ open, title, onClose, children }: SheetProps) {
       onClose={alCerrarNativo}
       className="group m-0 mt-auto max-h-none w-full max-w-none border-0 bg-transparent p-0 text-fg outline-none sm:ml-auto sm:mr-0 sm:mt-0 sm:h-dvh sm:max-w-md"
     >
-      <div className="relative flex max-h-[85dvh] w-full animate-fade-in flex-col overflow-y-auto rounded-t-card border border-line bg-surface p-6 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-lift group-data-[saliendo=true]:animate-fade-out sm:h-full sm:max-h-none sm:rounded-none sm:rounded-l-card sm:border-y-0 sm:border-r-0 sm:animate-slide-in-right sm:group-data-[saliendo=true]:animate-slide-out-right">
+      <div className="relative flex max-h-[85dvh] w-full animate-fade-in flex-col overflow-y-auto rounded-t-3xl border border-line bg-surface p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-lift group-data-[saliendo=true]:animate-fade-out sm:h-full sm:max-h-none sm:rounded-none sm:rounded-l-card sm:border-y-0 sm:border-r-0 sm:animate-slide-in-right sm:group-data-[saliendo=true]:animate-slide-out-right">
+        <span
+          aria-hidden
+          className="mx-auto -mt-3 mb-4 block h-1 w-10 shrink-0 rounded-full bg-line sm:hidden"
+        />
         <div className="flex items-center justify-between gap-4 pb-4">
           <h2
             id={titleId}

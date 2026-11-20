@@ -36,7 +36,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
   return (
     <main className="min-h-dvh bg-surface-muted pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-md">
-        <header className="flex items-center justify-between gap-2 px-6 pb-2 pt-[calc(1.5rem+env(safe-area-inset-top))]">
+        <header className="sticky top-0 z-30 flex select-none items-center justify-between gap-2 border-b border-line/60 bg-surface/85 px-6 pb-2 pt-[calc(1.5rem+env(safe-area-inset-top))] backdrop-blur-md">
           <Link href="/" aria-label="Ir a Inicio" className="inline-flex">
             <FynzLogo height={26} />
           </Link>
@@ -112,7 +112,6 @@ export function DashboardMovil(props: BentoDashboardProps) {
                       key={p.proximo_pago_id}
                       pago={p}
                       hoy={hoy}
-                      modo="movil"
                       onEditar={() => props.onEditarPago(p)}
                       onEliminar={() => props.onEliminarPago(p)}
                       onPagar={() => props.onPagarPago(p)}
@@ -171,6 +170,11 @@ export function DashboardMovil(props: BentoDashboardProps) {
                     <MovimientoRow
                       key={t.transaccion_id}
                       movimiento={t}
+                      categoria={
+                        t.categoria_id != null
+                          ? datos.categorias[String(t.categoria_id)] ?? null
+                          : null
+                      }
                     />
                   ))}
                 </Card>
@@ -192,7 +196,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
 
       <nav
         aria-label="Navegación principal"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 select-none border-t border-line bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
         <div className="mx-auto grid max-w-md grid-cols-3">
           {TABS.map(({ id, label, Icon }) => (
@@ -202,7 +206,7 @@ export function DashboardMovil(props: BentoDashboardProps) {
               onClick={() => setTab(id)}
               aria-current={tab === id ? 'page' : undefined}
               className={cn(
-                'flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80',
+                'flex select-none flex-col items-center gap-1 py-3 text-[11px] font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/80 active:scale-[0.98] active:duration-100',
                 tab === id
                   ? 'text-brand'
                   : 'text-fg-muted hover:text-fg'

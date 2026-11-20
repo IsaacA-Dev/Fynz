@@ -54,7 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overscroll-y-none">
         <ThemeProvider>
           <PwaInstallProvider>
             <ToastProvider>
