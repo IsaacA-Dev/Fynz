@@ -69,7 +69,7 @@ export function CuentaRow({ cuenta, onEditar, onEliminar }: CuentaRowProps) {
                 {cuenta.nombre}
               </p>
               {esCredito && (
-                <Badge variant="danger" size="sm">
+                <Badge variant="danger" size="sm" className="shrink-0">
                   Crédito
                 </Badge>
               )}
@@ -83,7 +83,7 @@ export function CuentaRow({ cuenta, onEditar, onEliminar }: CuentaRowProps) {
         <div className="flex shrink-0 items-center gap-1">
           <p
             className={cn(
-              'mr-1 text-sm font-semibold @lg:text-base',
+              'mr-1 text-right text-sm font-semibold tabular-nums @lg:text-base',
               esCredito ? 'text-danger' : 'text-fg'
             )}
           >
@@ -95,7 +95,7 @@ export function CuentaRow({ cuenta, onEditar, onEliminar }: CuentaRowProps) {
 
       {esCredito && (
         <div className="mt-1.5 flex items-center justify-between gap-2 pl-12 @lg:pl-14">
-          <p className="min-w-0 text-[11px] leading-snug text-fg-muted @lg:text-xs">
+          <p className="min-w-0 text-[11px] leading-snug text-fg-muted tabular-nums @lg:text-xs">
             {cuenta.limite != null && (
               <>
                 Límite {formatearDinero(cuenta.limite)}

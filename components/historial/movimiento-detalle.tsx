@@ -50,7 +50,7 @@ export function MovimientoDetalle({
         </span>
         <div className="min-w-0 text-right">
           <p
-            className={`text-2xl font-semibold ${
+            className={`text-right text-2xl font-semibold tabular-nums ${
               esIngreso ? 'text-success' : 'text-fg'
             }`}
           >
