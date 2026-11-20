@@ -31,7 +31,6 @@ export function LoginForm() {
   const [recuperando, setRecuperando] = useState(false);
   const [recuperacionEnviada, setRecuperacionEnviada] = useState(false);
 
-  const supabase = createBrowserSupabase();
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -66,6 +65,10 @@ export function LoginForm() {
     setLoading(true);
 
     try {
+      // Se instancia dentro del handler para que /login pueda prerenderizarse
+      // sin necesitar las variables de Supabase en tiempo de compilación.
+      const supabase = createBrowserSupabase();
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email: emailNormalizado,
