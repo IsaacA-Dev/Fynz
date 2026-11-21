@@ -1,6 +1,11 @@
 import type { Cuenta, Metodo, ProximoPago, TipoMovimiento } from './acciones'
 import { aCentavos } from './dinero'
-import { ordenarPorFecha } from './fechas'
+import {
+  esAnteriorOIgual,
+  esAtrasado,
+  hoyLocal,
+  ordenarPorFecha,
+} from './fechas'
 
 export interface MovimientoSaldo {
   cuenta_id: number
@@ -79,10 +84,18 @@ export function tipoAjusteSaldo(delta: number, metodo: Metodo): TipoMovimiento {
 
 export function detectarAlertas(
   cuentas: Cuenta[],
-  pagos: ProximoPago[]
+  pagos: ProximoPago[],
+  limite: string | null = null,
+  hoy = hoyLocal()
 ): AlertaDomiciliado[] {
   const pendientes = pagos.filter(
-    (p) => p.domiciliado && !p.pagado && p.cuenta_id != null
+    (p) =>
+      p.domiciliado &&
+      !p.pagado &&
+      p.cuenta_id != null &&
+      (limite == null ||
+        esAtrasado(p.fecha_vencimiento, hoy) ||
+        esAnteriorOIgual(p.fecha_vencimiento, limite))
   )
 
   const porCuenta = new Map<number, ProximoPago[]>()

@@ -246,3 +246,74 @@ describe('alertas de domiciliados', () => {
     expect(detectarAlertas(cuentas, pagos)).toHaveLength(0)
   })
 })
+
+describe('alertas de domiciliados con horizonte', () => {
+  const HOY = '2026-03-10'
+  const LIMITE = '2026-03-17'
+
+  test('ignora un domiciliado posterior al próximo ingreso', () => {
+    const cuentas = [cuenta({ cuenta_id: 5, saldo: 500 })]
+    const pagos = [
+      pago({
+        monto: 600,
+        fecha_vencimiento: '2026-03-25',
+        domiciliado: true,
+        cuenta_id: 5,
+      }),
+    ]
+
+    expect(detectarAlertas(cuentas, pagos, LIMITE, HOY)).toHaveLength(0)
+  })
+
+  test('alerta un domiciliado antes del próximo ingreso si no alcanza', () => {
+    const cuentas = [cuenta({ cuenta_id: 5, saldo: 500 })]
+    const pagos = [
+      pago({
+        monto: 600,
+        fecha_vencimiento: '2026-03-15',
+        domiciliado: true,
+        cuenta_id: 5,
+      }),
+    ]
+
+    const alertas = detectarAlertas(cuentas, pagos, LIMITE, HOY)
+    expect(alertas).toHaveLength(1)
+    expect(alertas[0].faltante).toBe(100)
+  })
+
+  test('alerta un domiciliado vencido aunque el horizonte sea futuro', () => {
+    const cuentas = [cuenta({ cuenta_id: 5, saldo: 500 })]
+    const pagos = [
+      pago({
+        monto: 600,
+        fecha_vencimiento: '2026-03-05',
+        domiciliado: true,
+        cuenta_id: 5,
+      }),
+    ]
+
+    expect(detectarAlertas(cuentas, pagos, LIMITE, HOY)).toHaveLength(1)
+  })
+
+  test('no acumula el pago lejano para hacer fallar el cercano', () => {
+    const cuentas = [cuenta({ cuenta_id: 5, saldo: 500 })]
+    const pagos = [
+      pago({
+        proximo_pago_id: 1,
+        monto: 400,
+        fecha_vencimiento: '2026-03-15',
+        domiciliado: true,
+        cuenta_id: 5,
+      }),
+      pago({
+        proximo_pago_id: 2,
+        monto: 600,
+        fecha_vencimiento: '2026-03-25',
+        domiciliado: true,
+        cuenta_id: 5,
+      }),
+    ]
+
+    expect(detectarAlertas(cuentas, pagos, LIMITE, HOY)).toHaveLength(0)
+  })
+})
