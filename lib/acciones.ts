@@ -1,5 +1,6 @@
 import type { AlertaDomiciliado as Alerta } from './logica-financiera'
 import type { Horizonte } from './horizonte'
+import type { FrecuenciaProximoIngreso } from './proximo-ingreso'
 import type { Frecuencia } from './recurrencia'
 import type { FlujoMensual } from './tablero'
 
@@ -70,6 +71,7 @@ export interface DatosDashboard {
   horizonte: Horizonte
   presionFutura: ProximoPago[]
   proximoIngreso: string | null
+  frecuenciaProximoIngreso: FrecuenciaProximoIngreso
   actualizado: string | null
   desactualizado: boolean
   widgetsActivos: string[]
