@@ -12,6 +12,11 @@ import {
 import type { FiltrosHistorial } from './historial'
 import { calcularDisponible, calcularHorizonte } from './horizonte'
 import {
+  esFrecuenciaProximoIngreso,
+  siguienteFechaProximoIngreso,
+  type FrecuenciaProximoIngreso,
+} from './proximo-ingreso'
+import {
   calcularSaldos,
   detectarAlertas,
 } from './logica-financiera'
@@ -701,7 +706,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     buscarMovimientosRecientes(usuarioId, cliente, 100),
     cliente
       .from('configuracion')
-      .select('vista, widgets, proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
+      .select('vista, widgets, proximo_ingreso, frecuencia_proximo_ingreso, horizonte_preferido, horizonte_fecha, actualizado')
       .eq('usuario_id', usuarioId)
       .maybeSingle(),
     buscarFlujoMensual(usuarioId, cliente),
@@ -723,6 +728,7 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     vista?: string | null
     widgets?: unknown
     proximo_ingreso?: string | null
+    frecuencia_proximo_ingreso?: string | null
     horizonte_preferido?: number | null
     horizonte_fecha?: string | null
     actualizado?: string | null
@@ -746,10 +752,19 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
   }))
 
   const hoy = hoyLocal()
+  const frecuenciaProximoIngreso: FrecuenciaProximoIngreso =
+    esFrecuenciaProximoIngreso(configuracion?.frecuencia_proximo_ingreso)
+      ? configuracion.frecuencia_proximo_ingreso
+      : 'unica'
+  const proximoIngreso = siguienteFechaProximoIngreso(
+    configuracion?.proximo_ingreso ?? null,
+    frecuenciaProximoIngreso,
+    hoy
+  )
 
   const horizonte = calcularHorizonte(
     {
-      proximoIngreso: configuracion?.proximo_ingreso ?? null,
+      proximoIngreso,
       preferido: configuracion?.horizonte_preferido ?? null,
       preferidoFecha: configuracion?.horizonte_fecha ?? null,
     },
@@ -788,7 +803,8 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
     disponibleReal: resultado.disponible,
     horizonte,
     presionFutura: resultado.presionFutura,
-    proximoIngreso: configuracion?.proximo_ingreso ?? null,
+    proximoIngreso,
+    frecuenciaProximoIngreso,
     actualizado: configuracion?.actualizado ?? null,
     desactualizado:
       configuracion?.actualizado != null &&
@@ -1472,7 +1488,8 @@ export async function guardarHorizonte(datos: {
 }
 
 export async function guardarProximoIngreso(
-  fecha: string | null
+  fecha: string | null,
+  frecuencia: FrecuenciaProximoIngreso = 'unica'
 ): Promise<Respuesta> {
   return intentar('guardarProximoIngreso', async () => {
     const cliente = await clienteAutenticado()
@@ -1482,9 +1499,17 @@ export async function guardarProximoIngreso(
     } = await cliente.auth.getUser()
     if (!user) throw new Error('no_autorizado')
 
+    const frecuenciaNormalizada: FrecuenciaProximoIngreso =
+      fecha == null
+        ? 'unica'
+        : esFrecuenciaProximoIngreso(frecuencia)
+          ? frecuencia
+          : 'unica'
+
     const { error } = await cliente.rpc('fynz_guardar_proximo_ingreso', {
       p_usuario: user.id,
       p_proximo_ingreso: fecha?.slice(0, 10) ?? null,
+      p_frecuencia: frecuenciaNormalizada,
     })
     if (error) throw errorDesdeRpc(error)
   })

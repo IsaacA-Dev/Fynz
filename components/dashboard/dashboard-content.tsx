@@ -28,6 +28,7 @@ import {
   obtenerDatosDashboard,
 } from '@/lib/acciones-servidor'
 import { hoyLocal } from '@/lib/fechas'
+import type { FrecuenciaProximoIngreso } from '@/lib/proximo-ingreso'
 import type {
   Cuenta,
   DatosDashboard,
@@ -77,9 +78,12 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
     if (resultado.ok) await actualizarDatos()
   }
 
-  const persistirIngreso = async (fecha: string | null) => {
+  const persistirIngreso = async (
+    fecha: string | null,
+    frecuencia: FrecuenciaProximoIngreso
+  ) => {
     setGuardandoHorizonte(true)
-    const resultado = await guardarProximoIngreso(fecha)
+    const resultado = await guardarProximoIngreso(fecha, frecuencia)
     if (!resultado.ok) addToast(resultado.error, 'error')
     setGuardandoHorizonte(false)
     if (resultado.ok) await actualizarDatos()
@@ -170,6 +174,7 @@ export function DashboardContent({ datos: datosInicial }: DashboardContentProps)
     <HorizonteControl
       horizonte={datos.horizonte}
       proximoIngreso={datos.proximoIngreso}
+      frecuenciaProximoIngreso={datos.frecuenciaProximoIngreso}
       guardando={guardandoHorizonte}
       onPersistirPreferido={persistirHorizonte}
       onPersistirIngreso={persistirIngreso}

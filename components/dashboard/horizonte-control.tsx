@@ -6,27 +6,43 @@ import { Button } from '@/components/ui/button'
 import { Chip } from '@/components/ui/chip'
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/utils/cn'
+import { hoyLocal } from '@/lib/fechas'
 import { formatearFecha } from '@/lib/utils/format'
+import {
+  FRECUENCIAS_PROXIMO_INGRESO,
+  etiquetaFrecuenciaProximoIngreso,
+  siguienteFechaProximoIngreso,
+  type FrecuenciaProximoIngreso,
+} from '@/lib/proximo-ingreso'
 import type { Horizonte } from '@/lib/acciones'
 
 interface HorizonteControlProps {
   horizonte: Horizonte
   proximoIngreso: string | null
+  frecuenciaProximoIngreso: FrecuenciaProximoIngreso
   guardando: boolean
   onPersistirPreferido: (preferido: number | null, fecha: string | null) => void
-  onPersistirIngreso: (fecha: string | null) => void
+  onPersistirIngreso: (
+    fecha: string | null,
+    frecuencia: FrecuenciaProximoIngreso
+  ) => void
 }
 
 export function HorizonteControl({
   horizonte,
   proximoIngreso,
+  frecuenciaProximoIngreso,
   guardando,
   onPersistirPreferido,
   onPersistirIngreso,
 }: HorizonteControlProps) {
   const [mostrarIngreso, setMostrarIngreso] = useState(false)
   const [fechaIngreso, setFechaIngreso] = useState(proximoIngreso ?? '')
+  const [frecuenciaIngreso, setFrecuenciaIngreso] = useState(
+    frecuenciaProximoIngreso
+  )
 
   const esFecha = horizonte.preferidoFecha != null
 
@@ -63,12 +79,46 @@ export function HorizonteControl({
   ]
 
   const guardarIngreso = (valor: string) => {
-    setFechaIngreso(valor)
     if (valor === '') {
-      onPersistirIngreso(null)
-    } else if (valor.length >= 10) {
-      onPersistirIngreso(valor.slice(0, 10))
+      setFechaIngreso('')
+      setFrecuenciaIngreso('unica')
+      onPersistirIngreso(null, 'unica')
+      return
     }
+
+    if (valor.length < 10) {
+      setFechaIngreso(valor)
+      return
+    }
+
+    const fecha = siguienteFechaProximoIngreso(
+      valor.slice(0, 10),
+      frecuenciaIngreso,
+      hoyLocal()
+    )
+    const fechaEfectiva = fecha ?? valor.slice(0, 10)
+    setFechaIngreso(fechaEfectiva)
+    onPersistirIngreso(fechaEfectiva, frecuenciaIngreso)
+  }
+
+  const cambiarFrecuencia = (valor: FrecuenciaProximoIngreso) => {
+    setFrecuenciaIngreso(valor)
+    if (fechaIngreso === '') return
+
+    const fecha = siguienteFechaProximoIngreso(
+      fechaIngreso,
+      valor,
+      hoyLocal()
+    )
+    const fechaEfectiva = fecha ?? fechaIngreso
+    setFechaIngreso(fechaEfectiva)
+    onPersistirIngreso(fechaEfectiva, valor)
+  }
+
+  const quitarIngreso = () => {
+    setFechaIngreso('')
+    setFrecuenciaIngreso('unica')
+    onPersistirIngreso(null, 'unica')
   }
 
   return (
@@ -136,6 +186,7 @@ export function HorizonteControl({
           onClick={() => {
             setMostrarIngreso((v) => !v)
             setFechaIngreso(proximoIngreso ?? '')
+            setFrecuenciaIngreso(frecuenciaProximoIngreso)
           }}
           aria-expanded={mostrarIngreso}
           aria-controls="campo-proximo-ingreso"
@@ -143,40 +194,76 @@ export function HorizonteControl({
         >
           <Sparkles className="size-3" aria-hidden />
           {proximoIngreso
-            ? `Próximo ingreso: ${formatearFecha(proximoIngreso)}`
+            ? `Próximo ingreso: ${formatearFecha(proximoIngreso)}${
+                frecuenciaProximoIngreso !== 'unica'
+                  ? ` · ${etiquetaFrecuenciaProximoIngreso(frecuenciaProximoIngreso)}`
+                  : ''
+              }`
             : 'Registrar próximo ingreso'}
         </Button>
 
         {mostrarIngreso && (
-          <div className="flex w-full items-end gap-2">
-            <FormField
-              htmlFor="campo-proximo-ingreso"
-              label="Fecha del próximo ingreso"
-              className="flex-1"
-            >
-              <Input
-                type="date"
-                value={fechaIngreso}
-                onChange={(evento) => guardarIngreso(evento.target.value)}
-              />
-            </FormField>
-            {proximoIngreso && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={guardando}
-                onClick={() => {
-                  setFechaIngreso('')
-                  onPersistirIngreso(null)
-                }}
-                aria-label="Quitar próximo ingreso"
-                className="mb-0.5 text-danger hover:bg-danger-soft hover:text-danger"
+          <div className="w-full space-y-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_7.25rem] items-end gap-2">
+              <FormField
+                htmlFor="campo-proximo-ingreso"
+                label="Fecha del próximo ingreso"
+                className="min-w-0"
               >
-                <X className="size-3" aria-hidden />
-                Quitar
-              </Button>
-            )}
+                <Input
+                  type="date"
+                  value={fechaIngreso}
+                  onChange={(evento) => guardarIngreso(evento.target.value)}
+                  disabled={guardando}
+                />
+              </FormField>
+
+              <FormField label="Repetición">
+                <Select
+                  value={frecuenciaIngreso}
+                  onChange={(evento) =>
+                    cambiarFrecuencia(
+                      evento.target.value as FrecuenciaProximoIngreso
+                    )
+                  }
+                  disabled={guardando || fechaIngreso === ''}
+                  aria-label="Frecuencia del próximo ingreso"
+                  className="h-10"
+                >
+                  {FRECUENCIAS_PROXIMO_INGRESO.map((opcion) => (
+                    <option key={opcion.valor} value={opcion.valor}>
+                      {opcion.etiqueta}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] text-fg-muted">
+                {fechaIngreso === ''
+                  ? 'Elige una fecha para configurar la repetición.'
+                  : frecuenciaIngreso === 'unica'
+                    ? 'Solo se usa esta fecha.'
+                    : `Se repite cada ${
+                        frecuenciaIngreso === 'semanal' ? 7 : 14
+                      } días.`}
+              </p>
+              {proximoIngreso && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={guardando}
+                  onClick={quitarIngreso}
+                  aria-label="Quitar próximo ingreso"
+                  className="h-7 shrink-0 px-2 text-danger hover:bg-danger-soft hover:text-danger"
+                >
+                  <X className="size-3" aria-hidden />
+                  Quitar
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
