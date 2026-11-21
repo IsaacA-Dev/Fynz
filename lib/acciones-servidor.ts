@@ -10,7 +10,11 @@ import {
   type DatosGuardadosCiclo,
 } from './ciclos-tarjeta'
 import type { FiltrosHistorial } from './historial'
-import { calcularDisponible, calcularHorizonte } from './horizonte'
+import {
+  calcularDisponible,
+  calcularHorizonte,
+  limiteAlertasHorizonte,
+} from './horizonte'
 import {
   esFrecuenciaProximoIngreso,
   siguienteFechaProximoIngreso,
@@ -780,7 +784,12 @@ export async function obtenerDatosDashboard(): Promise<DatosDashboard | null> {
       ...t,
       cuenta_nombre: nombrePorCuenta.get(t.cuenta_id) ?? 'Cuenta',
     })),
-    alertas: detectarAlertas(cuentas, pagosConNombre),
+    alertas: detectarAlertas(
+      cuentas,
+      pagosConNombre,
+      limiteAlertasHorizonte(horizonte, hoy),
+      hoy
+    ),
     vista: configuracion?.vista === 'escritorio' ? 'escritorio' : 'movil',
     widgetsActivos: sanearWidgetsActivos(configuracion?.widgets),
     categorias: Object.fromEntries(

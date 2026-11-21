@@ -20,6 +20,7 @@ export interface OpcionesHorizonte {
 }
 
 export const HORIZONTE_POR_DEFECTO_DIAS = 30
+export const DIAS_ALERTAS_AUTO = 7
 
 export function calcularHorizonte(
   opciones: OpcionesHorizonte,
@@ -73,6 +74,25 @@ export function calcularHorizonte(
     preferido: null,
     preferidoFecha: null,
   }
+}
+
+/**
+ * Límite para alertas de domiciliados.
+ *
+ * El horizonte Auto sin próximo ingreso usa 30 días para el Disponible Real,
+ * pero las alertas se limitan a la semana activa para no avisar de pagos
+ * lejanos. Con próximo ingreso efectivo o un horizonte manual se respeta la
+ * fecha límite elegida.
+ */
+export function limiteAlertasHorizonte(
+  horizonte: Horizonte,
+  hoy = hoyLocal()
+): string {
+  if (horizonte.tipo === 'dias' && horizonte.preferido == null) {
+    return sumarDias(hoy, DIAS_ALERTAS_AUTO)
+  }
+
+  return horizonte.fechaLimite
 }
 
 export interface ResultadoDisponible {

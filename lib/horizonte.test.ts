@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test'
-import { calcularDisponible, calcularHorizonte } from './horizonte'
+import {
+  calcularDisponible,
+  calcularHorizonte,
+  limiteAlertasHorizonte,
+} from './horizonte'
 import type { Cuenta, ProximoPago } from './acciones'
 
 const HOY = '2026-03-10'
@@ -35,6 +39,42 @@ function pago(overrides: Partial<ProximoPago> = {}): ProximoPago {
     ...overrides,
   }
 }
+
+
+describe('limiteAlertasHorizonte', () => {
+  test('Auto sin próximo ingreso usa una ventana de 7 días', () => {
+    const horizonte = calcularHorizonte(
+      { proximoIngreso: null, preferido: null, preferidoFecha: null },
+      HOY
+    )
+
+    expect(horizonte.fechaLimite).toBe('2026-04-09')
+    expect(limiteAlertasHorizonte(horizonte, HOY)).toBe('2026-03-17')
+  })
+
+  test('Auto con próximo ingreso usa la fecha efectiva', () => {
+    const horizonte = calcularHorizonte(
+      { proximoIngreso: '2026-03-20', preferido: null, preferidoFecha: null },
+      HOY
+    )
+
+    expect(limiteAlertasHorizonte(horizonte, HOY)).toBe('2026-03-20')
+  })
+
+  test('los horizontes manuales conservan su propia fecha límite', () => {
+    const quince = calcularHorizonte(
+      { proximoIngreso: null, preferido: 15, preferidoFecha: null },
+      HOY
+    )
+    const fecha = calcularHorizonte(
+      { proximoIngreso: null, preferido: null, preferidoFecha: '2026-04-02' },
+      HOY
+    )
+
+    expect(limiteAlertasHorizonte(quince, HOY)).toBe('2026-03-25')
+    expect(limiteAlertasHorizonte(fecha, HOY)).toBe('2026-04-02')
+  })
+})
 
 describe('calcularHorizonte', () => {
   test('prioridad: fecha explícita gana sobre días', () => {

@@ -3,7 +3,7 @@ import type { Horizonte } from './horizonte'
 import { aCentavos } from './dinero'
 import { aDiaNumero, esAnteriorOIgual, hoyLocal } from './fechas'
 import { detectarAlertas } from './logica-financiera'
-import { calcularDisponible } from './horizonte'
+import { calcularDisponible, limiteAlertasHorizonte } from './horizonte'
 import { ciclosDeTarjeta } from './ciclos-tarjeta'
 
 export interface AlertaImpacto {
@@ -46,6 +46,8 @@ export function impactoCompra(opciones: {
   const cuenta = opciones.cuentas.find((c) => c.cuenta_id === opciones.cuentaId)
   if (!cuenta) return null
 
+  const hoy = opciones.hoy ?? hoyLocal()
+
   if (cuenta.metodo !== 'credito') {
     const disponibleDespues = opciones.disponibleReal - monto
 
@@ -55,7 +57,12 @@ export function impactoCompra(opciones: {
         : c
     )
 
-    const alertas = detectarAlertas(cuentasSimuladas, opciones.pagos).map((a) => ({
+    const alertas = detectarAlertas(
+      cuentasSimuladas,
+      opciones.pagos,
+      limiteAlertasHorizonte(opciones.horizonte, hoy),
+      hoy
+    ).map((a) => ({
       descripcion: a.descripcion,
       cuentaNombre: a.cuentaNombre,
       faltante: a.faltante,
@@ -69,7 +76,6 @@ export function impactoCompra(opciones: {
     }
   }
 
-  const hoy = opciones.hoy ?? hoyLocal()
   let vencimientoCiclo: string | null = null
   let montoCompromiso: number | null = null
 

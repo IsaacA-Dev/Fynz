@@ -303,3 +303,63 @@ describe('impactoCompra — casos nulos', () => {
     ).toBeNull()
   })
 })
+
+describe('impactoCompra — alertas dentro de la semana activa', () => {
+  const horizonteAuto = calcularHorizonte(
+    { proximoIngreso: null, preferido: null, preferidoFecha: null },
+    HOY
+  )
+
+  test('no alerta por un domiciliado posterior al corte semanal', () => {
+    const cuentas = [cuenta({ cuenta_id: 1, saldo: 30000 })]
+    const pagos = [
+      pago({
+        monto: 20000,
+        fecha_vencimiento: '2026-03-25',
+        domiciliado: true,
+        cuenta_id: 1,
+      }),
+    ]
+
+    const resultado = impactoCompra({
+      monto: 25000,
+      cuentaId: 1,
+      cuentas,
+      pagos,
+      horizonte: horizonteAuto,
+      disponibleReal: 30000,
+      hoy: HOY,
+    })
+
+    expect(resultado?.tipo).toBe('liquido')
+    if (resultado?.tipo !== 'liquido') return
+    expect(resultado.alertas).toEqual([])
+  })
+
+  test('sí alerta si el domiciliado cae antes del corte semanal', () => {
+    const cuentas = [cuenta({ cuenta_id: 1, saldo: 30000 })]
+    const pagos = [
+      pago({
+        monto: 20000,
+        fecha_vencimiento: '2026-03-15',
+        domiciliado: true,
+        cuenta_id: 1,
+      }),
+    ]
+
+    const resultado = impactoCompra({
+      monto: 25000,
+      cuentaId: 1,
+      cuentas,
+      pagos,
+      horizonte: horizonteAuto,
+      disponibleReal: 30000,
+      hoy: HOY,
+    })
+
+    expect(resultado?.tipo).toBe('liquido')
+    if (resultado?.tipo !== 'liquido') return
+    expect(resultado.alertas).toHaveLength(1)
+    expect(resultado.alertas[0].faltante).toBe(15000)
+  })
+})
